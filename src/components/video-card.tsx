@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
@@ -105,13 +105,8 @@ function ImprintSheetContent() {
   )
 }
 
-export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [showControls, setShowControls] = useState(false);
+function SettingsSheetContent() {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const auth = useAuth();
   const { user } = useUser();
@@ -135,6 +130,100 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
       });
     }
   };
+
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+      <SheetHeader>
+        <SheetTitle>Settings</SheetTitle>
+      </SheetHeader>
+      <div className="p-4">
+        <ul className="space-y-4">
+          {user ? (
+            <li className="space-y-2">
+              <p className="text-sm font-medium">Your Anonymous ID</p>
+              <div className="flex items-center gap-2">
+                <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
+                <Button variant="outline" size="icon" onClick={handleCopy}>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <Button onClick={handleLogout} variant="outline" className="w-full">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </li>
+          ) : (
+            <li>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Log in</p>
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="Enter existing anonymous ID" 
+                    value={anonymousIdInput}
+                    onChange={(e) => setAnonymousIdInput(e.target.value)}
+                    className="flex-grow"
+                  />
+                  <Button onClick={() => {
+                    if (auth) {
+                      initiateAnonymousSignIn(auth);
+                      toast({
+                        title: "Logged in with ID",
+                        description: `You are now using the anonymous ID: ${anonymousIdInput}`,
+                      });
+                    }
+                  }} variant={anonymousIdInput ? "default" : "outline"}>
+                    Go
+                  </Button>
+                </div>
+                <Button onClick={() => {
+                  if (auth) {
+                    initiateAnonymousSignIn(auth);
+                    toast({
+                      title: "Logged in",
+                      description: "You have a new anonymous profile.",
+                    });
+                  }
+                }} variant="link" className="p-0 h-auto text-sm">
+                  Or create a new anonymous profile
+                </Button>
+              </div>
+            </li>
+          )}
+          <li>
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                  <span>Privacy Policy</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </SheetTrigger>
+              <PrivacyPolicySheetContent />
+            </Sheet>
+          </li>
+          <li>
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                  <span>Imprint</span>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </button>
+              </SheetTrigger>
+              <ImprintSheetContent />
+            </Sheet>
+          </li>
+        </ul>
+      </div>
+    </SheetContent>
+  );
+}
+
+
+export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [showControls, setShowControls] = useState(false);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -239,91 +328,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                 <Settings size={24} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
-              <SheetHeader>
-                <SheetTitle>Settings</SheetTitle>
-              </SheetHeader>
-              <div className="p-4">
-                <ul className="space-y-4">
-                  {user ? (
-                    <li className="space-y-2">
-                      <p className="text-sm font-medium">Your Anonymous ID</p>
-                      <div className="flex items-center gap-2">
-                        <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
-                        <Button variant="outline" size="icon" onClick={handleCopy}>
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Button onClick={handleLogout} variant="outline" className="w-full">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Logout
-                      </Button>
-                    </li>
-                  ) : (
-                    <li>
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Log in</p>
-                        <div className="flex gap-2">
-                          <Input 
-                            placeholder="Enter existing anonymous ID" 
-                            value={anonymousIdInput}
-                            onChange={(e) => setAnonymousIdInput(e.target.value)}
-                            className="flex-grow"
-                          />
-                          <Button onClick={() => {
-                            if (auth) {
-                              // This is a conceptual login. In a real app, you would need a backend
-                              // to properly associate the anonymousId with a session.
-                              toast({
-                                title: "Logged in with ID",
-                                description: `You are now using the anonymous ID: ${anonymousIdInput}`,
-                              });
-                              // In a real scenario, you might have a custom token flow
-                              // that takes this ID and gives you a valid Firebase session.
-                            }
-                          }} variant={anonymousIdInput ? "default" : "outline"}>
-                            Go
-                          </Button>
-                        </div>
-                        <Button onClick={() => {
-                          if (auth) {
-                            initiateAnonymousSignIn(auth);
-                            toast({
-                              title: "Logged in",
-                              description: "You have a new anonymous profile.",
-                            });
-                          }
-                        }} variant="link" className="p-0 h-auto text-sm">
-                          Or create a new anonymous profile
-                        </Button>
-                      </div>
-                    </li>
-                  )}
-                  <li>
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                          <span>Privacy Policy</span>
-                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </button>
-                      </SheetTrigger>
-                      <PrivacyPolicySheetContent />
-                    </Sheet>
-                  </li>
-                  <li>
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                          <span>Imprint</span>
-                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </button>
-                      </SheetTrigger>
-                      <ImprintSheetContent />
-                    </Sheet>
-                  </li>
-                </ul>
-              </div>
-            </SheetContent>
+            <SettingsSheetContent />
           </Sheet>
         </div>
 
