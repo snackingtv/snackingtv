@@ -43,7 +43,6 @@ export function VideoFeed() {
               video={video}
               avatarUrl={avatarMap.get(video.avatarId) || ''}
               isActive={index === activeIndex}
-              isMuted={false}
             />
           </div>
         ))}

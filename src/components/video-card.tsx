@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface VideoCardProps {
   video: Video;
   avatarUrl: string;
   isActive: boolean;
-  isMuted: boolean;
 }
 
-export function VideoCard({ video, avatarUrl, isActive, isMuted }: VideoCardProps) {
+export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -27,7 +27,7 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted }: VideoCardProp
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    videoElement.muted = isMuted;
+    videoElement.muted = false;
 
     if (isActive) {
       const playPromise = videoElement.play();
@@ -39,15 +39,6 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted }: VideoCardProp
           .catch((error) => {
             console.error("Video play failed:", error);
             setIsPlaying(false);
-            // Autoplay with sound is often blocked. Since we are always muted, this part might not be strictly necessary
-            // but we'll leave it in case browser policies change or for edge cases.
-            if (!isMuted) {
-              toast({
-                title: "Playback Error",
-                description: "Your browser blocked unmuted autoplay. Tap to play or enable sound for autoplay.",
-                variant: "destructive",
-              });
-            }
           });
       }
     } else {
@@ -58,7 +49,7 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted }: VideoCardProp
       setIsPlaying(false);
       setProgress(0);
     }
-  }, [isActive, isMuted, toast]);
+  }, [isActive, toast]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -121,21 +112,35 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted }: VideoCardProp
       <div
         className={`absolute inset-0 transition-opacity duration-300 ${
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
-        } flex flex-col justify-between p-4 md:p-6 pointer-events-none`}
+        } flex flex-col justify-between p-4 md:p-6`}
       >
         <div className="flex justify-end">
-          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white">
+                <Settings size={24} />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-lg">
+              <SheetHeader>
+                <SheetTitle>Settings</SheetTitle>
+              </SheetHeader>
+              <div className="p-4">
+                <p>Hier könnten Ihre Einstellungen sein.</p>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {!isPlaying && (
-            <div onClick={handleVideoClick} className="pointer-events-auto">
+            <div className="pointer-events-auto">
               
             </div>
           )}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 pointer-events-none">
           <div className="flex items-center gap-3 text-white">
             <Avatar className="h-12 w-12 border-2 border-white/50">
               <AvatarImage src={avatarUrl} alt={video.author} />
