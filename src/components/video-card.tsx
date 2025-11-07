@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
 import { signOut, User } from 'firebase/auth';
@@ -110,8 +110,9 @@ function SettingsSheetContent() {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
-  const { user, isUserLoading } = useUser();
-  const [localUser, setLocalUser] = useState<User | null | { uid: string, isAnonymous: boolean }>(null);
+  
+  // A local state to manage the user object for immediate UI updates
+  const [localUser, setLocalUser] = useState<User | { uid: string, isAnonymous: boolean } | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -120,18 +121,29 @@ function SettingsSheetContent() {
     const manualUserJson = localStorage.getItem('manualUser');
     if (manualUserJson) {
       setLocalUser(JSON.parse(manualUserJson));
-    } else if (user) {
-      setLocalUser(user);
-    } else {
-      setLocalUser(null);
     }
-  }, [user]);
+    
+    // Subscribe to auth state changes from Firebase
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          // Firebase auth state takes precedence if user is logged in via Firebase
+          setLocalUser(firebaseUser);
+          localStorage.removeItem('manualUser'); // Clean up manual user
+        } else if (!localStorage.getItem('manualUser')) {
+          // If no firebase user and no manual user, then logged out
+          setLocalUser(null);
+        }
+      });
+      return () => unsubscribe(); // Cleanup subscription
+    }
+  }, [auth]);
 
   const handleLogout = () => {
     if (auth && auth.currentUser) {
       signOut(auth).then(() => {
-        setLocalUser(null);
         localStorage.removeItem('manualUser');
+        setLocalUser(null);
         toast({
           title: "Logged out",
           description: "You have been successfully logged out.",
@@ -141,10 +153,10 @@ function SettingsSheetContent() {
       // Also clear manual user from localStorage
       localStorage.removeItem('manualUser');
       setLocalUser(null);
-       toast({
-          title: "Logged out",
-          description: "You have been successfully logged out.",
-        });
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
     }
   };
 
@@ -174,10 +186,23 @@ function SettingsSheetContent() {
   };
   
   const handleManualSignIn = (id: string) => {
-    if (!id) return;
+    if (!id.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Invalid ID",
+        description: "Please enter a valid user ID.",
+      });
+      return;
+    }
     const fakeUser = { uid: id, isAnonymous: true };
     localStorage.setItem('manualUser', JSON.stringify(fakeUser));
     setLocalUser(fakeUser);
+    
+    // If there's an active firebase user, sign them out.
+    if(auth.currentUser) {
+      signOut(auth);
+    }
+    
     toast({
         title: "Logged in with ID",
         description: `You are now using the anonymous ID: ${id}`,
@@ -186,17 +211,13 @@ function SettingsSheetContent() {
 
   const handleNewAnonymousProfile = () => {
     if (auth) {
-      localStorage.removeItem('manualUser');
+      localStorage.removeItem('manualUser'); // Clean up any manual user
       initiateAnonymousSignIn(auth);
-      // The useEffect listening to `user` will handle setting the localUser
-       toast({
-          title: "Logged in",
-          description: "A new anonymous profile has been created.",
-        });
+      // The onAuthStateChanged listener will handle setting the localUser and showing the toast.
     }
   }
   
-  if (!isClient || (isUserLoading && !localUser)) {
+  if (!isClient) {
     return (
       <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
         <SheetHeader>
