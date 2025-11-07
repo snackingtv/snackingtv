@@ -141,8 +141,8 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted, toggleMute }: V
 
         <div className="absolute inset-0 flex items-center justify-center">
           {!isPlaying && (
-            <div className="bg-black/50 rounded-full p-4 pointer-events-auto" onClick={handleVideoClick}>
-              
+            <div onClick={handleVideoClick} className="pointer-events-auto">
+              <Play size={48} className="text-white" fill="white" />
             </div>
           )}
         </div>
