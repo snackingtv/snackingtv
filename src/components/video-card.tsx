@@ -447,22 +447,22 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         <div className="absolute top-4 right-4 md:top-6 md:right-6">
            <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white">
-                <Settings size={24} />
+              <Button variant="ghost" size="icon" className="text-white bg-black/20 hover:bg-black/40 rounded-full h-12 w-12">
+                <Settings size={28} className="drop-shadow-md"/>
               </Button>
             </SheetTrigger>
             <SettingsSheetContent />
           </Sheet>
         </div>
 
-        <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
-              <Plus size={24} />
+        <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-6">
+            <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
+              <Plus size={32} className="drop-shadow-md" />
             </Button>
            <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
-                  <Tv2 size={24} />
+                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
+                  <Tv2 size={32} className="drop-shadow-md" />
                 </Button>
               </SheetTrigger>
               <ChannelListSheetContent />
@@ -479,15 +479,15 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         </div>
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
-          <div className="space-y-3 pointer-events-none text-white w-full max-w-[calc(100%-80px)]">
+          <div className="space-y-3 pointer-events-none text-white w-full max-w-[calc(100%-80px)] drop-shadow-md">
             <div className="flex items-center gap-3">
               <Avatar className="h-12 w-12 border-2 border-white/50">
                 <AvatarImage src={avatarUrl} alt={video.author} />
                 <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-headline text-lg font-bold drop-shadow-md">{video.title}</h3>
-                <p className="text-sm text-gray-200 drop-shadow-sm">{video.author}</p>
+                <h3 className="font-headline text-lg font-bold">{video.title}</h3>
+                <p className="text-sm">{video.author}</p>
               </div>
             </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
