@@ -54,6 +54,6 @@
   "noChannels": "No channels added yet.",
   "invalidLinkTitle": "Invalid Link",
   "invalidLinkDescription": "Please enter a valid channel link starting with http.",
-  "channelAddedTitle": "Channel Added",
-  "channelAddedDescription": "The channel link has been added: {link}"
+  "channelAddedTitle": "Channels Added",
+  "channelAddedDescription": "{count} channels have been added from the list."
 }

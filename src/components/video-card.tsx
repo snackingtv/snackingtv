@@ -15,6 +15,8 @@ import { Input } from '@/components/ui/input';
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
 import { jsPDF } from 'jspdf';
 import { useTranslation } from '@/lib/i18n';
+import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
+import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 
 interface VideoCardProps {
   video: Video;
@@ -24,7 +26,7 @@ interface VideoCardProps {
 
 // Define the Channel type
 interface Channel {
-  id: number;
+  id: string;
   name: string;
   logo: string;
   url: string; // Add url for the channel
@@ -123,12 +125,13 @@ function ChannelListSheetContent({ channels }: { channels: Channel[] }) {
   );
 }
 
-function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (url: string) => void }) {
+function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3uChannel[]) => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [channelLink, setChannelLink] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleAddChannel = () => {
+  const handleAddChannel = async () => {
     if (!channelLink || !channelLink.startsWith('http')) {
       toast({
         variant: 'destructive',
@@ -137,12 +140,29 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (url: string) 
       });
       return;
     }
-    onAddChannel(channelLink);
-    toast({
-      title: t('channelAddedTitle'),
-      description: t('channelAddedDescription', { link: channelLink }),
-    });
-    setChannelLink('');
+    setIsLoading(true);
+    try {
+      const m3uContent = await fetchM3u({ url: channelLink });
+      if (!m3uContent) {
+        throw new Error("Could not fetch M3U content.");
+      }
+      const parsedChannels = parseM3u(m3uContent);
+      onAddChannel(parsedChannels);
+      toast({
+        title: t('channelAddedTitle'),
+        description: t('channelAddedDescription', { count: parsedChannels.length }),
+      });
+      setChannelLink('');
+    } catch (error) {
+      console.error("Failed to add channel:", error);
+      toast({
+        variant: 'destructive',
+        title: "Fehler beim Hinzufügen der Kanäle",
+        description: "Die M3U-Datei konnte nicht verarbeitet werden.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -158,10 +178,11 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (url: string) 
             placeholder="https://..."
             value={channelLink}
             onChange={(e) => setChannelLink(e.target.value)}
+            disabled={isLoading}
           />
         </div>
-        <Button onClick={handleAddChannel} className="w-full">
-          {t('add')}
+        <Button onClick={handleAddChannel} className="w-full" disabled={isLoading}>
+          {isLoading ? t('loading') : t('add')}
         </Button>
       </div>
     </SheetContent>
@@ -397,15 +418,19 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
 
   const [channels, setChannels] = useState<Channel[]>([]);
 
-  const handleAddChannel = (url: string) => {
-    // This is a simplified logic. In a real app, you'd fetch channel info from the URL.
-    const newChannel: Channel = {
-      id: Date.now(),
-      name: `Kanal ${channels.length + 1}`,
-      logo: `https://picsum.photos/seed/ch${channels.length + 1}/64/64`,
-      url: url,
-    };
-    setChannels(prevChannels => [...prevChannels, newChannel]);
+  const handleAddChannel = (newChannels: M3uChannel[]) => {
+    const transformedChannels: Channel[] = newChannels.map(c => ({
+      id: c.url, // Use URL as a unique ID
+      name: c.name,
+      logo: c.logo,
+      url: c.url,
+    }));
+
+    setChannels(prevChannels => {
+      const existingUrls = new Set(prevChannels.map(c => c.url));
+      const filteredNewChannels = transformedChannels.filter(c => !existingUrls.has(c.url));
+      return [...prevChannels, ...filteredNewChannels];
+    });
   };
 
 

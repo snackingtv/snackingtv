@@ -54,6 +54,6 @@
   "noChannels": "Keine Kanäle hinzugefügt.",
   "invalidLinkTitle": "Ungültiger Link",
   "invalidLinkDescription": "Bitte geben Sie einen gültigen Kanal-Link ein, der mit http beginnt.",
-  "channelAddedTitle": "Kanal hinzugefügt",
-  "channelAddedDescription": "Der Kanal-Link wurde hinzugefügt: {link}"
+  "channelAddedTitle": "Kanäle hinzugefügt",
+  "channelAddedDescription": "{count} Kanäle wurden aus der Liste hinzugefügt."
 }
