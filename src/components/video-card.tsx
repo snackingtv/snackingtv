@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogIn } from 'lucide-react';
+import { Settings, ChevronRight, User as UserIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import Link from 'next/link';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { Input } from '@/components/ui/input';
 
 interface VideoCardProps {
   video: Video;
@@ -109,13 +110,25 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showControls, setShowControls] = useState(false);
+  const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const auth = useAuth();
   const { user } = useUser();
 
   const handleLogin = () => {
-    initiateAnonymousSignIn(auth);
+    // This is a simplified "login". In a real app, you'd use this ID 
+    // to fetch settings, but anonymous auth will still create a new user session.
+    if (anonymousIdInput) {
+      toast({
+        title: "Logged in with existing ID",
+        description: `Using ID: ${anonymousIdInput}. Note: This is a demo.`,
+      });
+      // In a real app, you would now use this ID to fetch user data from Firestore.
+      // For this demo, we'll just show a toast.
+    } else {
+      initiateAnonymousSignIn(auth);
+    }
   };
 
   useEffect(() => {
@@ -226,13 +239,31 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                 <SheetTitle>Settings</SheetTitle>
               </SheetHeader>
               <div className="p-4">
-                <ul className="space-y-2">
-                  {!user && (
+                <ul className="space-y-4">
+                  {user ? (
+                    <li className="space-y-2">
+                      <p className="text-sm font-medium">Your Anonymous ID</p>
+                      <p className="text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
+                    </li>
+                  ) : (
                     <li>
-                      <button onClick={handleLogin} className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                        <span className="flex items-center gap-2"><LogIn size={18} /> Anonymous Login</span>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                      </button>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Log in</p>
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="Enter existing anonymous ID" 
+                            value={anonymousIdInput}
+                            onChange={(e) => setAnonymousIdInput(e.target.value)}
+                            className="flex-grow"
+                          />
+                          <Button onClick={handleLogin} variant={anonymousIdInput ? "default" : "outline"}>
+                            Go
+                          </Button>
+                        </div>
+                        <Button onClick={() => initiateAnonymousSignIn(auth)} variant="link" className="p-0 h-auto text-sm">
+                          Or create a new anonymous profile
+                        </Button>
+                      </div>
                     </li>
                   )}
                   <li>
@@ -279,7 +310,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
             </Avatar>
             <div>
               <h3 className="font-headline text-lg font-bold drop-shadow-md">{video.title}</h3>
-              <p className="text-sm text-gray-200 drop-shadow-sm">{user ? `UID: ${user.uid}` : video.author}</p>
+              <p className="text-sm text-gray-200 drop-shadow-sm">{video.author}</p>
             </div>
           </div>
           <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
