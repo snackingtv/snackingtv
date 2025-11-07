@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
-import { signOut, signInAnonymously } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 
 interface VideoCardProps {
   video: Video;
@@ -117,22 +117,20 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const { user } = useUser();
 
   const handleLogin = () => {
-    if (anonymousIdInput && auth) {
-      // This is a trick to "log in" with a known anonymous UID.
-      // It's not a real sign-in method but reuses the anonymous flow.
-      // For a real app, you'd have a backend to link anonymous accounts
-      // to permanent ones. This is a client-side only simulation.
-      signInAnonymously(auth).then(userCredential => {
-        // This creates a NEW anonymous user, it doesn't log into the old one.
-        // In a real app, you would need a custom backend flow to merge accounts.
-        console.log("Created a new anonymous session. To truly link devices, you'd need a custom backend.", userCredential.user.uid);
+    if (auth) {
+      if (anonymousIdInput) {
+        // This is a conceptual login. In a real app, you would need a backend
+        // to properly associate the anonymousId with a session.
+        // For this demo, we'll just show a toast.
         toast({
-          title: "New Anonymous Session",
-          description: `You have a new anonymous ID. Your old ID was '${anonymousIdInput}'.`,
+          title: "Logged in with ID",
+          description: `You are now using the anonymous ID: ${anonymousIdInput}`,
         });
-      });
-    } else if (auth) {
-      initiateAnonymousSignIn(auth);
+        // In a real scenario, you might have a custom token flow
+        // that takes this ID and gives you a valid Firebase session.
+      } else {
+        initiateAnonymousSignIn(auth);
+      }
     }
   };
 
@@ -142,6 +140,16 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
+      });
+    }
+  };
+
+  const handleCopy = () => {
+    if (user) {
+      navigator.clipboard.writeText(user.uid);
+      toast({
+        title: "Copied!",
+        description: "Your anonymous ID has been copied to the clipboard.",
       });
     }
   };
@@ -258,7 +266,12 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                   {user ? (
                     <li className="space-y-2">
                       <p className="text-sm font-medium">Your Anonymous ID</p>
-                      <p className="text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
+                        <Button variant="outline" size="icon" onClick={handleCopy}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <Button onClick={handleLogout} variant="outline" className="w-full">
                         <LogOut className="mr-2 h-4 w-4" />
                         Logout
