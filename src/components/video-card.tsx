@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
-import { signOut } from 'firebase/auth';
+import { signOut, signInAnonymously } from 'firebase/auth';
 
 interface VideoCardProps {
   video: Video;
@@ -117,16 +117,21 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const { user } = useUser();
 
   const handleLogin = () => {
-    // This is a simplified "login". In a real app, you'd use this ID 
-    // to fetch settings, but anonymous auth will still create a new user session.
-    if (anonymousIdInput) {
-      toast({
-        title: "Logged in with existing ID",
-        description: `Using ID: ${anonymousIdInput}. Note: This is a demo.`,
+    if (anonymousIdInput && auth) {
+      // This is a trick to "log in" with a known anonymous UID.
+      // It's not a real sign-in method but reuses the anonymous flow.
+      // For a real app, you'd have a backend to link anonymous accounts
+      // to permanent ones. This is a client-side only simulation.
+      signInAnonymously(auth).then(userCredential => {
+        // This creates a NEW anonymous user, it doesn't log into the old one.
+        // In a real app, you would need a custom backend flow to merge accounts.
+        console.log("Created a new anonymous session. To truly link devices, you'd need a custom backend.", userCredential.user.uid);
+        toast({
+          title: "New Anonymous Session",
+          description: `You have a new anonymous ID. Your old ID was '${anonymousIdInput}'.`,
+        });
       });
-      // In a real app, you would now use this ID to fetch user data from Firestore.
-      // For this demo, we'll just show a toast.
-    } else {
+    } else if (auth) {
       initiateAnonymousSignIn(auth);
     }
   };
