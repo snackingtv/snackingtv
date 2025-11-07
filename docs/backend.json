@@ -1,0 +1,165 @@
+{
+  "entities": {
+    "Video": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Video",
+      "type": "object",
+      "description": "Represents a video in the SnackingTV app.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Video entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the video."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the video content."
+        },
+        "url": {
+          "type": "string",
+          "description": "URL where the video is hosted.",
+          "format": "uri"
+        },
+        "uploadDate": {
+          "type": "string",
+          "description": "Date and time when the video was uploaded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "url",
+        "uploadDate"
+      ]
+    },
+    "UserSetting": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserSetting",
+      "type": "object",
+      "description": "Represents user-specific settings within the SnackingTV app.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserSetting entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 UserSetting)"
+        },
+        "anonymousId": {
+          "type": "string",
+          "description": "Identifier for anonymous users, for settings persistence before sign-up.",
+          "format": "uuid"
+        },
+        "preferredTheme": {
+          "type": "string",
+          "description": "User's preferred theme (e.g., light, dark).",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "anonymousId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the SnackingTV application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "username": {
+          "type": "string",
+          "description": "Username chosen by the user."
+        },
+        "joinDate": {
+          "type": "string",
+          "description": "Date and time when the user joined the application.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "username",
+        "joinDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/user_settings/{userSettingId}",
+        "definition": {
+          "entityName": "UserSetting",
+          "schema": {
+            "$ref": "#/backend/entities/UserSetting"
+          },
+          "description": "Stores user-specific settings.  Includes `userId` for authenticated users and `anonymousId` for anonymous users.  Supports settings persistence during account creation.  Denormalizes `userId` and `anonymousId` for Authorization Independence.",
+          "params": [
+            {
+              "name": "userSettingId",
+              "description": "Unique identifier for the user setting document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}",
+        "definition": {
+          "entityName": "Video",
+          "schema": {
+            "$ref": "#/backend/entities/Video"
+          },
+          "description": "Stores video metadata.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "Unique identifier for the video."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to support anonymous user settings and authenticated user data, prioritizing authorization independence and secure list operations (QAPs). The key is to enable users to use the application anonymously (via `anonymousId`) and then transition to authenticated usage (via `userId`) without losing their settings.\n\n1.  **User Settings:** Settings are stored at `/user_settings/{userSettingId}`. The document includes both `userId` and `anonymousId`.  This allows settings to be associated with either an authenticated user (via `userId`) or an anonymous user (via `anonymousId`).  The `userSettingId` is generated client side (e.g. a UUID). This ensures uniqueness across users.\n2.  **Authorization Independence:** The structure avoids `get()` calls in security rules by denormalizing authorization.  Security rules will check `request.auth.uid == resource.data.userId` for authenticated users, and allow read/write if `resource.data.anonymousId == <value passed in the request>`. \n3.  **QAPs:** Secure list operations are supported because the structure segregates data with different access needs into separate collections. The security rules can be written to only allow listing settings belonging to the authenticated user or the anonymous user.\n4.  **DBAC:** Roles are not required in this design since access control relies solely on `request.auth.uid` and `anonymousId` (for temporary settings persistence)."
+  }
+}
