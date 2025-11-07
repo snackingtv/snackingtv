@@ -128,21 +128,13 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted, toggleMute }: V
         } flex flex-col justify-between p-4 md:p-6 pointer-events-none`}
       >
         <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleToggleMute}
-            className="text-white bg-black/30 hover:bg-black/50 pointer-events-auto"
-            aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-          >
-            {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
-          </Button>
+          
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center">
           {!isPlaying && (
             <div onClick={handleVideoClick} className="pointer-events-auto">
-              <Play size={48} className="text-white" fill="white" />
+              
             </div>
           )}
         </div>
