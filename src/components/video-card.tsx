@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Play, Pause, Settings } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -60,7 +60,12 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     }
   };
 
-  const handleVideoClick = () => {
+  const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Prevent click from propagating to the video if it's on the sheet trigger
+    if ((e.target as HTMLElement).closest('[data-radix-collection-item]')) {
+      return;
+    }
+
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
@@ -117,7 +122,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         <div className="flex justify-end">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 hover:text-white m-2">
                 <Settings size={24} />
               </Button>
             </SheetTrigger>
