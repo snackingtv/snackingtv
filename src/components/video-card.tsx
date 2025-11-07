@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, User as UserIcon } from 'lucide-react';
+import { Settings, ChevronRight, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import Link from 'next/link';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
+import { signOut } from 'firebase/auth';
 
 interface VideoCardProps {
   video: Video;
@@ -97,7 +97,7 @@ function ImprintSheetContent() {
 
           <h2 className="text-2xl font-semibold mt-6">Register entry</h2>
           <p>Registered in the commercial register.</p>
-          <p>Register court: Delaware</p>
+          <p>Register court: Delaware</p>p>
           <p>Registration number: 12345678</p>
         </div>
       </div>
@@ -131,11 +131,17 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     }
   };
 
+  const handleLogout = () => {
+    signOut(auth);
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+  };
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
-
-    videoElement.muted = false;
 
     if (isActive) {
       const playPromise = videoElement.play();
@@ -244,6 +250,10 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                     <li className="space-y-2">
                       <p className="text-sm font-medium">Your Anonymous ID</p>
                       <p className="text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
+                      <Button onClick={handleLogout} variant="outline" className="w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                      </Button>
                     </li>
                   ) : (
                     <li>
