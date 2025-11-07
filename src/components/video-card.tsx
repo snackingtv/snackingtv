@@ -121,7 +121,6 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
       if (anonymousIdInput) {
         // This is a conceptual login. In a real app, you would need a backend
         // to properly associate the anonymousId with a session.
-        // For this demo, we'll just show a toast.
         toast({
           title: "Logged in with ID",
           description: `You are now using the anonymous ID: ${anonymousIdInput}`,
