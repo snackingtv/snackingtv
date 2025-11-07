@@ -13,10 +13,9 @@ interface VideoCardProps {
   avatarUrl: string;
   isActive: boolean;
   isMuted: boolean;
-  toggleMute: () => void;
 }
 
-export function VideoCard({ video, avatarUrl, isActive, isMuted, toggleMute }: VideoCardProps) {
+export function VideoCard({ video, avatarUrl, isActive, isMuted }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -40,6 +39,8 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted, toggleMute }: V
           .catch((error) => {
             console.error("Video play failed:", error);
             setIsPlaying(false);
+            // Autoplay with sound is often blocked. Since we are always muted, this part might not be strictly necessary
+            // but we'll leave it in case browser policies change or for edge cases.
             if (!isMuted) {
               toast({
                 title: "Playback Error",
@@ -77,11 +78,6 @@ export function VideoCard({ video, avatarUrl, isActive, isMuted, toggleMute }: V
       }
       setIsPlaying(!isPlaying);
     }
-  };
-
-  const handleToggleMute = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleMute();
   };
 
   const handleInteraction = useCallback(() => {

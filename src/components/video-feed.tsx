@@ -13,7 +13,6 @@ export function VideoFeed() {
     loop: true,
   });
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
 
   const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
     setActiveIndex(emblaApi.selectedScrollSnap());
@@ -35,10 +34,6 @@ export function VideoFeed() {
 
   const avatarMap = new Map(PlaceHolderImages.map(img => [img.id, img.imageUrl]));
 
-  const toggleMute = useCallback(() => {
-    setIsMuted(prev => !prev);
-  }, []);
-
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
@@ -48,8 +43,7 @@ export function VideoFeed() {
               video={video}
               avatarUrl={avatarMap.get(video.avatarId) || ''}
               isActive={index === activeIndex}
-              isMuted={isMuted}
-              toggleMute={toggleMute}
+              isMuted={true}
             />
           </div>
         ))}
