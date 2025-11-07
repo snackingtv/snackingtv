@@ -14,6 +14,7 @@ import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
 import { jsPDF } from 'jspdf';
+import { useTranslation } from '@/lib/i18n';
 
 interface VideoCardProps {
   video: Video;
@@ -22,55 +23,28 @@ interface VideoCardProps {
 }
 
 function PrivacyPolicySheetContent() {
+  const { t } = useTranslation();
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
       <SheetHeader>
-        <SheetTitle>Privacy Policy</SheetTitle>
+        <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-full">
         <div className="space-y-4">
-          <p>
-            Your privacy is important to us. It is our policy to respect your
-            privacy regarding any information we may collect from you across our
-            website.
-          </p>
-          <h2 className="text-2xl font-semibold">1. Information we collect</h2>
-          <p>
-            We only ask for personal information when we truly need it to provide a
-            service to you. We collect it by fair and lawful means, with your
-            knowledge and consent. We also let you know why we’re collecting it and
-            how it will be used.
-          </p>
+          <p>{t('privacyPolicyP1')}</p>
+          <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_1')}</h2>
+          <p>{t('privacyPolicyP2')}</p>
 
-          <h2 className="text-2xl font-semibold">2. How we use your information</h2>
-          <p>
-            We only retain collected information for as long as necessary to
-            provide you with your requested service. What data we store, we’ll
-            protect within commercially acceptable means to prevent loss and
-            theft, as well as unauthorized access, disclosure, copying, use or
-            modification.
-          </p>
+          <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_2')}</h2>
+          <p>{t('privacyPolicyP3')}</p>
 
-          <h2 className="text-2xl font-semibold">3. Cookies</h2>
-          <p>
-            We use cookies to improve your experience on our site. By using our
-            site, you consent to our use of cookies.
-          </p>
+          <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_3')}</h2>
+          <p>{t('privacyPolicyP4')}</p>
 
-          <h2 className="text-2xl font-semibold">4. Links to other sites</h2>
-          <p>
-            Our website may link to external sites that are not operated by us.
-            Please be aware that we have no control over the content and
-            practices of these sites, and cannot accept responsibility or
-            liability for their respective privacy policies.
-          </p>
-          <p>
-            Your continued use of our website will be regarded as acceptance of
-            our practices around privacy and personal information. If you have any
-            questions about how we handle user data and personal information, feel
-            free to contact us.
-          </p>
-          <p>This policy is effective as of 1 August 2024.</p>
+          <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
+          <p>{t('privacyPolicyP5')}</p>
+          <p>{t('privacyPolicyP6')}</p>
+          <p>{t('privacyPolicyP7')}</p>
         </div>
       </div>
     </SheetContent>
@@ -78,10 +52,11 @@ function PrivacyPolicySheetContent() {
 }
 
 function ImprintSheetContent() {
+  const { t } = useTranslation();
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
       <SheetHeader>
-        <SheetTitle>Imprint</SheetTitle>
+        <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-full">
         <div className="space-y-4">
@@ -90,17 +65,16 @@ function ImprintSheetContent() {
           <p>Food City, 98765</p>
           <p>United States</p>
 
-          <h2 className="text-2xl font-semibold mt-6">Contact</h2>
+          <h2 className="text-2xl font-semibold mt-6">{t('imprintContact')}</h2>
           <p>Email: contact@snacking.tv</p>
           <p>Phone: +1 (555) 123-4567</p>
 
-          <h2 className="text-2xl font-semibold mt-6">Represented by</h2>
+          <h2 className="text-2xl font-semibold mt-6">{t('imprintRepresentedBy')}</h2>
           <p>John Doe, CEO</p>
 
-          <h2 className="text-2xl font-semibold mt-6">Register entry</h2>
-          <p>Registered in the commercial register.</p>
-          <p>Register court: Delaware</p>
-          <p>Registration number: 12345678</p>
+          <h2 className="text-2xl font-semibold mt-6">{t('imprintRegisterEntry')}</h2>
+          <p>{t('imprintRegisterCourt')}</p>
+          <p>{t('imprintRegisterNumber')}</p>
         </div>
       </div>
     </SheetContent>
@@ -108,6 +82,7 @@ function ImprintSheetContent() {
 }
 
 function ChannelListSheetContent() {
+  const { t } = useTranslation();
   // Dummy channel data
   const channels = [
     { id: 1, name: 'Kanal 1', logo: 'https://picsum.photos/seed/ch1/64/64' },
@@ -123,7 +98,7 @@ function ChannelListSheetContent() {
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
       <SheetHeader>
-        <SheetTitle>Kanäle</SheetTitle>
+        <SheetTitle>{t('channels')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-full">
         <ul className="space-y-2">
@@ -152,6 +127,7 @@ function SettingsSheetContent() {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
+  const { t, language, setLanguage } = useTranslation();
   
   const [localUser, setLocalUser] = useState<User | { uid: string, isAnonymous: boolean } | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -179,13 +155,13 @@ function SettingsSheetContent() {
           updateLocalUser(firebaseUser);
           if (firebaseUser.isAnonymous) {
              toast({
-              title: "Angemeldet!",
-              description: "Du bist jetzt anonym angemeldet.",
+              title: t('loggedIn'),
+              description: t('nowLoggedInAnonymously'),
             });
           } else {
             toast({
-              title: "Angemeldet!",
-              description: "Du bist jetzt angemeldet.",
+              title: t('loggedIn'),
+              description: t('nowLoggedIn'),
             });
           }
         } else if (!localStorage.getItem('manualUser')) {
@@ -194,15 +170,15 @@ function SettingsSheetContent() {
       });
       return () => unsubscribe();
     }
-  }, [auth, toast]);
+  }, [auth, toast, t]);
 
   const handleLogout = () => {
     const performLogout = () => {
       localStorage.removeItem('manualUser');
       setLocalUser(null);
       toast({
-        title: "Abgemeldet",
-        description: "Du wurdest erfolgreich abgemeldet.",
+        title: t('loggedOut'),
+        description: t('loggedOutSuccessfully'),
       });
     };
 
@@ -218,8 +194,8 @@ function SettingsSheetContent() {
     if (localUser) {
       navigator.clipboard.writeText(localUser.uid);
       toast({
-        title: "Kopiert!",
-        description: "Deine anonyme ID wurde in die Zwischenablage kopiert.",
+        title: t('copied'),
+        description: t('anonymousIdCopied'),
       });
     }
   };
@@ -227,14 +203,14 @@ function SettingsSheetContent() {
   const handleSaveAsPdf = () => {
     if (localUser) {
       const doc = new jsPDF();
-      doc.text("SnackingTV - Anonyme Benutzer-ID", 10, 10);
-      doc.text("Bitte bewahre diese ID sicher auf, um auf anderen Geräten auf dein Konto zuzugreifen.", 10, 20);
+      doc.text(t('pdfTitle'), 10, 10);
+      doc.text(t('pdfNotice'), 10, 20);
       doc.setFont('courier');
       doc.text(localUser.uid, 10, 30);
       doc.save("snacking-tv-user-id.pdf");
       toast({
-        title: "PDF gespeichert!",
-        description: "Deine Benutzer-ID wurde als PDF gespeichert.",
+        title: t('pdfSaved'),
+        description: t('userIdSavedAsPdf'),
       });
     }
   };
@@ -243,8 +219,8 @@ function SettingsSheetContent() {
     if (!id.trim()) {
       toast({
         variant: "destructive",
-        title: "Ungültige ID",
-        description: "Bitte gebe eine gültige Benutzer-ID ein.",
+        title: t('invalidId'),
+        description: t('pleaseEnterValidId'),
       });
       return;
     }
@@ -257,8 +233,8 @@ function SettingsSheetContent() {
     }
     
     toast({
-        title: "Mit ID angemeldet",
-        description: `Du verwendest jetzt die anonyme ID: ${id}`,
+        title: t('loggedInWithId'),
+        description: t('nowUsingAnonymousId').replace('{id}', id),
     });
   }
 
@@ -273,9 +249,9 @@ function SettingsSheetContent() {
     return (
       <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
         <SheetHeader>
-          <SheetTitle>Settings</SheetTitle>
+          <SheetTitle>{t('settings')}</SheetTitle>
         </SheetHeader>
-        <div className="p-4">Laden...</div>
+        <div className="p-4">{t('loading')}</div>
       </SheetContent>
     )
   }
@@ -283,13 +259,13 @@ function SettingsSheetContent() {
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
       <SheetHeader>
-        <SheetTitle>Einstellungen</SheetTitle>
+        <SheetTitle>{t('settings')}</SheetTitle>
       </SheetHeader>
       <div className="p-4">
         <ul className="space-y-4">
           {localUser ? (
             <li className="space-y-2">
-              <p className="text-sm font-medium">Deine anonyme ID</p>
+              <p className="text-sm font-medium">{t('yourAnonymousId')}</p>
               <div className="flex items-center gap-2">
                 <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{localUser.uid}</p>
                 <Button variant="outline" size="icon" onClick={handleCopy}>
@@ -301,35 +277,46 @@ function SettingsSheetContent() {
               </div>
               <Button onClick={handleLogout} variant="outline" className="w-full">
                 <LogOut className="mr-2 h-4 w-4" />
-                Abmelden
+                {t('logout')}
               </Button>
             </li>
           ) : (
             <li>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Anmelden</p>
+                <p className="text-sm font-medium">{t('login')}</p>
                 <div className="flex gap-2">
                   <Input 
-                    placeholder="Bestehende anonyme ID eingeben" 
+                    placeholder={t('enterExistingAnonymousId')}
                     value={anonymousIdInput}
                     onChange={(e) => setAnonymousIdInput(e.target.value)}
                     className="flex-grow"
                   />
                   <Button onClick={() => handleManualSignIn(anonymousIdInput)} disabled={!anonymousIdInput} variant={anonymousIdInput ? "default" : "outline"}>
-                    Los
+                    {t('go')}
                   </Button>
                 </div>
                 <Button onClick={handleNewAnonymousProfile} variant="link" className="p-0 h-auto text-sm">
-                  Oder erstelle ein neues anonymes Profil
+                  {t('orCreateNewAnonymousProfile')}
                 </Button>
               </div>
             </li>
           )}
+           <li className="space-y-2">
+              <p className="text-sm font-medium">{t('language')}</p>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setLanguage('de')} variant={language === 'de' ? 'default' : 'outline'} className="flex-1">
+                  {t('german')}
+                </Button>
+                <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
+                  {t('english')}
+                </Button>
+              </div>
+            </li>
           <li>
             <Sheet>
               <SheetTrigger asChild>
                 <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                  <span>Datenschutz-Bestimmungen</span>
+                  <span>{t('privacyPolicy')}</span>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
@@ -340,7 +327,7 @@ function SettingsSheetContent() {
             <Sheet>
               <SheetTrigger asChild>
                 <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                  <span>Impressum</span>
+                  <span>{t('imprint')}</span>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
@@ -360,6 +347,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const [progress, setProgress] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const videoElement = videoRef.current;
