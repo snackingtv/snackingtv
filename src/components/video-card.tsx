@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose 
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
-import { signOut } from 'firebase/auth';
+import { signOut, User } from 'firebase/auth';
 
 interface VideoCardProps {
   video: Video;
@@ -77,7 +77,7 @@ function PrivacyPolicySheetContent() {
 
 function ImprintSheetContent() {
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3.4">
       <SheetHeader>
         <SheetTitle>Imprint</SheetTitle>
       </SheetHeader>
@@ -110,16 +110,26 @@ function SettingsSheetContent() {
   const { toast } = useToast();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
-  // We need a local state to force re-render when auth state changes in a way
-  // that `useUser` doesn't catch immediately (e.g. after manual sign-in).
-  const [localUser, setLocalUser] = useState(user);
+  const [localUser, setLocalUser] = useState<User | null | { uid: string, isAnonymous: boolean }>(null);
 
   useEffect(() => {
-    setLocalUser(user);
+    // On component mount, check localStorage for a persisted manual user
+    const manualUserJson = localStorage.getItem('manualUser');
+    if (manualUserJson) {
+      setLocalUser(JSON.parse(manualUserJson));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setLocalUser(user);
+      // If a real Firebase user exists, we clear any manual user from localStorage
+      localStorage.removeItem('manualUser');
+    }
   }, [user]);
 
   const handleLogout = () => {
-    if(auth) {
+    if(auth && auth.currentUser) {
       signOut(auth);
       setLocalUser(null);
       toast({
@@ -127,6 +137,9 @@ function SettingsSheetContent() {
         description: "You have been successfully logged out.",
       });
     }
+    // Also clear manual user from localStorage
+    localStorage.removeItem('manualUser');
+    setLocalUser(null);
   };
 
   const handleCopy = () => {
@@ -141,11 +154,8 @@ function SettingsSheetContent() {
   
   const handleManualSignIn = (id: string) => {
     if (!auth) return;
-    // This is a simulated sign-in. We are not actually creating a new user,
-    // but re-using the ID. The user object is faked.
-    // In a real app, you would link anonymous accounts to permanent ones.
     const fakeUser = { uid: id, isAnonymous: true };
-    // @ts-ignore
+    localStorage.setItem('manualUser', JSON.stringify(fakeUser));
     setLocalUser(fakeUser);
     toast({
         title: "Logged in with ID",
@@ -155,12 +165,9 @@ function SettingsSheetContent() {
 
   const handleNewAnonymousProfile = () => {
     if (auth) {
+      // Clear manual user when creating a new real anonymous profile
+      localStorage.removeItem('manualUser');
       initiateAnonymousSignIn(auth);
-      // We can't get the new user immediately, so we rely on the `useUser` hook to update.
-      toast({
-        title: "Logged in",
-        description: "You have a new anonymous profile. It will appear shortly.",
-      });
     }
   }
   
