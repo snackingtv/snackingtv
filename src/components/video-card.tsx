@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useAuth } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
-import { signOut, User } from 'firebase/auth';
+import { signOut, User, onAuthStateChanged } from 'firebase/auth';
 import { jsPDF } from 'jspdf';
 
 interface VideoCardProps {
