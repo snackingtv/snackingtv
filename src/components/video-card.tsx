@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, X } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
 import { signOut, User } from 'firebase/auth';
+import { jsPDF } from 'jspdf';
 
 interface VideoCardProps {
   video: Video;
@@ -111,19 +112,23 @@ function SettingsSheetContent() {
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const [localUser, setLocalUser] = useState<User | null | { uid: string, isAnonymous: boolean }>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     // On component mount, check localStorage for a persisted manual user
     const manualUserJson = localStorage.getItem('manualUser');
     if (manualUserJson) {
       setLocalUser(JSON.parse(manualUserJson));
     } else if (user) {
       setLocalUser(user);
+    } else {
+      setLocalUser(null);
     }
   }, [user]);
 
   const handleLogout = () => {
-    if(auth && auth.currentUser) {
+    if (auth && auth.currentUser) {
       signOut(auth).then(() => {
         setLocalUser(null);
         localStorage.removeItem('manualUser');
@@ -136,6 +141,10 @@ function SettingsSheetContent() {
       // Also clear manual user from localStorage
       localStorage.removeItem('manualUser');
       setLocalUser(null);
+       toast({
+          title: "Logged out",
+          description: "You have been successfully logged out.",
+        });
     }
   };
 
@@ -148,9 +157,24 @@ function SettingsSheetContent() {
       });
     }
   };
+
+  const handleSaveAsPdf = () => {
+    if (localUser) {
+      const doc = new jsPDF();
+      doc.text("SnackingTV - Anonymous User ID", 10, 10);
+      doc.text("Please keep this ID safe to access your account on other devices.", 10, 20);
+      doc.setFont('courier');
+      doc.text(localUser.uid, 10, 30);
+      doc.save("snacking-tv-user-id.pdf");
+      toast({
+        title: "PDF Saved!",
+        description: "Your user ID has been saved as a PDF.",
+      });
+    }
+  };
   
   const handleManualSignIn = (id: string) => {
-    if (!auth) return;
+    if (!id) return;
     const fakeUser = { uid: id, isAnonymous: true };
     localStorage.setItem('manualUser', JSON.stringify(fakeUser));
     setLocalUser(fakeUser);
@@ -162,13 +186,17 @@ function SettingsSheetContent() {
 
   const handleNewAnonymousProfile = () => {
     if (auth) {
-      // Clear manual user when creating a new real anonymous profile
       localStorage.removeItem('manualUser');
       initiateAnonymousSignIn(auth);
+      // The useEffect listening to `user` will handle setting the localUser
+       toast({
+          title: "Logged in",
+          description: "A new anonymous profile has been created.",
+        });
     }
   }
   
-  if (isUserLoading && !localUser) {
+  if (!isClient || (isUserLoading && !localUser)) {
     return (
       <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
         <SheetHeader>
@@ -193,6 +221,9 @@ function SettingsSheetContent() {
                 <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{localUser.uid}</p>
                 <Button variant="outline" size="icon" onClick={handleCopy}>
                   <Copy className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleSaveAsPdf}>
+                  <Download className="h-4 w-4" />
                 </Button>
               </div>
               <Button onClick={handleLogout} variant="outline" className="w-full">
