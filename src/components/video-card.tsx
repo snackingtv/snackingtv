@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Settings, ChevronRight, LogOut, Copy, Download, Heart, MessageCircle, Share2, Tv2 } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -106,12 +107,52 @@ function ImprintSheetContent() {
   )
 }
 
+function ChannelListSheetContent() {
+  // Dummy channel data
+  const channels = [
+    { id: 1, name: 'Kanal 1', logo: 'https://picsum.photos/seed/ch1/64/64' },
+    { id: 2, name: 'Kanal 2', logo: 'https://picsum.photos/seed/ch2/64/64' },
+    { id: 3, name: 'Kanal 3', logo: 'https://picsum.photos/seed/ch3/64/64' },
+    { id: 4, name: 'Kanal 4', logo: 'https://picsum.photos/seed/ch4/64/64' },
+    { id: 5, name: 'Kanal 5', logo: 'https://picsum.photos/seed/ch5/64/64' },
+    { id: 6, name: 'Kanal 6', logo: 'https://picsum.photos/seed/ch6/64/64' },
+    { id: 7, name: 'Kanal 7', logo: 'https://picsum.photos/seed/ch7/64/64' },
+    { id: 8, name: 'Kanal 8', logo: 'https://picsum.photos/seed/ch8/64/64' },
+  ];
+
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
+      <SheetHeader>
+        <SheetTitle>Kanäle</SheetTitle>
+      </SheetHeader>
+      <div className="p-4 overflow-y-auto h-full">
+        <ul className="space-y-2">
+          {channels.map((channel) => (
+            <li key={channel.id}>
+              <button className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left">
+                <Image
+                  src={channel.logo}
+                  alt={channel.name}
+                  width={40}
+                  height={40}
+                  className="rounded-md"
+                />
+                <span className="font-medium">{channel.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </SheetContent>
+  );
+}
+
+
 function SettingsSheetContent() {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
   
-  // A local state to manage the user object for immediate UI updates
   const [localUser, setLocalUser] = useState<User | { uid: string, isAnonymous: boolean } | null>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -127,28 +168,31 @@ function SettingsSheetContent() {
       }
     };
     
-    // On component mount, check localStorage for a persisted manual user
     const manualUserJson = localStorage.getItem('manualUser');
     if (manualUserJson) {
       updateLocalUser(JSON.parse(manualUserJson));
     }
     
-    // Subscribe to auth state changes from Firebase
     if (auth) {
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          // Firebase auth state takes precedence if user is logged in via Firebase
           updateLocalUser(firebaseUser);
-          toast({
-            title: "Logged In",
-            description: "You are now logged in.",
-          });
+          if (firebaseUser.isAnonymous) {
+             toast({
+              title: "Angemeldet!",
+              description: "Du bist jetzt anonym angemeldet.",
+            });
+          } else {
+            toast({
+              title: "Angemeldet!",
+              description: "Du bist jetzt angemeldet.",
+            });
+          }
         } else if (!localStorage.getItem('manualUser')) {
-          // If no firebase user and no manual user, then logged out
           updateLocalUser(null);
         }
       });
-      return () => unsubscribe(); // Cleanup subscription
+      return () => unsubscribe();
     }
   }, [auth, toast]);
 
@@ -157,13 +201,13 @@ function SettingsSheetContent() {
       localStorage.removeItem('manualUser');
       setLocalUser(null);
       toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
+        title: "Abgemeldet",
+        description: "Du wurdest erfolgreich abgemeldet.",
       });
     };
 
     if (auth && auth.currentUser) {
-      signOut(auth).then(performLogout);
+      signOut(auth).then(performLogout).catch(performLogout);
     } else {
       performLogout();
     }
@@ -174,8 +218,8 @@ function SettingsSheetContent() {
     if (localUser) {
       navigator.clipboard.writeText(localUser.uid);
       toast({
-        title: "Copied!",
-        description: "Your anonymous ID has been copied to the clipboard.",
+        title: "Kopiert!",
+        description: "Deine anonyme ID wurde in die Zwischenablage kopiert.",
       });
     }
   };
@@ -183,14 +227,14 @@ function SettingsSheetContent() {
   const handleSaveAsPdf = () => {
     if (localUser) {
       const doc = new jsPDF();
-      doc.text("SnackingTV - Anonymous User ID", 10, 10);
-      doc.text("Please keep this ID safe to access your account on other devices.", 10, 20);
+      doc.text("SnackingTV - Anonyme Benutzer-ID", 10, 10);
+      doc.text("Bitte bewahre diese ID sicher auf, um auf anderen Geräten auf dein Konto zuzugreifen.", 10, 20);
       doc.setFont('courier');
       doc.text(localUser.uid, 10, 30);
       doc.save("snacking-tv-user-id.pdf");
       toast({
-        title: "PDF Saved!",
-        description: "Your user ID has been saved as a PDF.",
+        title: "PDF gespeichert!",
+        description: "Deine Benutzer-ID wurde als PDF gespeichert.",
       });
     }
   };
@@ -199,8 +243,8 @@ function SettingsSheetContent() {
     if (!id.trim()) {
       toast({
         variant: "destructive",
-        title: "Invalid ID",
-        description: "Please enter a valid user ID.",
+        title: "Ungültige ID",
+        description: "Bitte gebe eine gültige Benutzer-ID ein.",
       });
       return;
     }
@@ -208,22 +252,20 @@ function SettingsSheetContent() {
     localStorage.setItem('manualUser', JSON.stringify(fakeUser));
     setLocalUser(fakeUser);
     
-    // If there's an active firebase user, sign them out.
     if(auth && auth.currentUser) {
       signOut(auth);
     }
     
     toast({
-        title: "Logged in with ID",
-        description: `You are now using the anonymous ID: ${id}`,
+        title: "Mit ID angemeldet",
+        description: `Du verwendest jetzt die anonyme ID: ${id}`,
     });
   }
 
   const handleNewAnonymousProfile = () => {
     if (auth) {
-      localStorage.removeItem('manualUser'); // Clean up any manual user
+      localStorage.removeItem('manualUser'); 
       initiateAnonymousSignIn(auth);
-      // The onAuthStateChanged listener will handle setting the localUser and showing the toast.
     }
   }
   
@@ -233,7 +275,7 @@ function SettingsSheetContent() {
         <SheetHeader>
           <SheetTitle>Settings</SheetTitle>
         </SheetHeader>
-        <div className="p-4">Loading...</div>
+        <div className="p-4">Laden...</div>
       </SheetContent>
     )
   }
@@ -241,13 +283,13 @@ function SettingsSheetContent() {
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
       <SheetHeader>
-        <SheetTitle>Settings</SheetTitle>
+        <SheetTitle>Einstellungen</SheetTitle>
       </SheetHeader>
       <div className="p-4">
         <ul className="space-y-4">
           {localUser ? (
             <li className="space-y-2">
-              <p className="text-sm font-medium">Your Anonymous ID</p>
+              <p className="text-sm font-medium">Deine anonyme ID</p>
               <div className="flex items-center gap-2">
                 <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{localUser.uid}</p>
                 <Button variant="outline" size="icon" onClick={handleCopy}>
@@ -259,26 +301,26 @@ function SettingsSheetContent() {
               </div>
               <Button onClick={handleLogout} variant="outline" className="w-full">
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                Abmelden
               </Button>
             </li>
           ) : (
             <li>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Log in</p>
+                <p className="text-sm font-medium">Anmelden</p>
                 <div className="flex gap-2">
                   <Input 
-                    placeholder="Enter existing anonymous ID" 
+                    placeholder="Bestehende anonyme ID eingeben" 
                     value={anonymousIdInput}
                     onChange={(e) => setAnonymousIdInput(e.target.value)}
                     className="flex-grow"
                   />
                   <Button onClick={() => handleManualSignIn(anonymousIdInput)} disabled={!anonymousIdInput} variant={anonymousIdInput ? "default" : "outline"}>
-                    Go
+                    Los
                   </Button>
                 </div>
                 <Button onClick={handleNewAnonymousProfile} variant="link" className="p-0 h-auto text-sm">
-                  Or create a new anonymous profile
+                  Oder erstelle ein neues anonymes Profil
                 </Button>
               </div>
             </li>
@@ -287,7 +329,7 @@ function SettingsSheetContent() {
             <Sheet>
               <SheetTrigger asChild>
                 <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                  <span>Privacy Policy</span>
+                  <span>Datenschutz-Bestimmungen</span>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
@@ -298,7 +340,7 @@ function SettingsSheetContent() {
             <Sheet>
               <SheetTrigger asChild>
                 <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                  <span>Imprint</span>
+                  <span>Impressum</span>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
@@ -357,7 +399,6 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   };
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    // Prevent click from propagating to the video if it's on the sheet trigger
     if ((e.target as HTMLElement).closest('[data-radix-collection-item]') || (e.target as HTMLElement).closest('button')) {
       return;
     }
@@ -450,9 +491,14 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
           </div>
 
           <div className="flex flex-col items-center space-y-4 text-white">
-            <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
-              <Tv2 size={24} />
-            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
+                  <Tv2 size={24} />
+                </Button>
+              </SheetTrigger>
+              <ChannelListSheetContent />
+            </Sheet>
           </div>
         </div>
       </div>
