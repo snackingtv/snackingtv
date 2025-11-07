@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Heart, MessageCircle, Share2, Tv2 } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Heart, MessageCircle, Share2, Tv2, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -456,6 +456,9 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         </div>
 
         <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 text-white">
+            <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
+              <Plus size={24} />
+            </Button>
            <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
