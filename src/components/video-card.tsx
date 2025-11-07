@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import Link from 'next/link';
 
 interface VideoCardProps {
   video: Video;
@@ -131,7 +132,20 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                 <SheetTitle>Settings</SheetTitle>
               </SheetHeader>
               <div className="p-4">
-                <p>Hier könnten Ihre Einstellungen sein.</p>
+                <ul className="space-y-2">
+                  <li>
+                    <Link href="/privacy" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent">
+                      <span>Privacy Policy</span>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/imprint" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent">
+                      <span>Imprint</span>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    </Link>
+                  </li>
+                </ul>
               </div>
             </SheetContent>
           </Sheet>
