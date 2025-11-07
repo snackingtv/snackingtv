@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight } from 'lucide-react';
+import { Settings, ChevronRight, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,8 @@ import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
+import { useAuth, useUser } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 
 interface VideoCardProps {
   video: Video;
@@ -109,6 +111,12 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const auth = useAuth();
+  const { user } = useUser();
+
+  const handleLogin = () => {
+    initiateAnonymousSignIn(auth);
+  };
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -219,6 +227,14 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
               </SheetHeader>
               <div className="p-4">
                 <ul className="space-y-2">
+                  {!user && (
+                    <li>
+                      <button onClick={handleLogin} className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                        <span className="flex items-center gap-2"><LogIn size={18} /> Anonymous Login</span>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      </button>
+                    </li>
+                  )}
                   <li>
                     <Sheet>
                       <SheetTrigger asChild>
@@ -263,7 +279,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
             </Avatar>
             <div>
               <h3 className="font-headline text-lg font-bold drop-shadow-md">{video.title}</h3>
-              <p className="text-sm text-gray-200 drop-shadow-sm">{video.author}</p>
+              <p className="text-sm text-gray-200 drop-shadow-sm">{user ? `UID: ${user.uid}` : video.author}</p>
             </div>
           </div>
           <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
