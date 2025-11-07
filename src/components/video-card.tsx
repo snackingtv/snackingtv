@@ -22,6 +22,14 @@ interface VideoCardProps {
   isActive: boolean;
 }
 
+// Define the Channel type
+interface Channel {
+  id: number;
+  name: string;
+  logo: string;
+  url: string; // Add url for the channel
+}
+
 function PrivacyPolicySheetContent() {
   const { t } = useTranslation();
   return (
@@ -81,19 +89,8 @@ function ImprintSheetContent() {
   )
 }
 
-function ChannelListSheetContent() {
+function ChannelListSheetContent({ channels }: { channels: Channel[] }) {
   const { t } = useTranslation();
-  // Dummy channel data
-  const channels = [
-    { id: 1, name: 'Kanal 1', logo: 'https://picsum.photos/seed/ch1/64/64' },
-    { id: 2, name: 'Kanal 2', logo: 'https://picsum.photos/seed/ch2/64/64' },
-    { id: 3, name: 'Kanal 3', logo: 'https://picsum.photos/seed/ch3/64/64' },
-    { id: 4, name: 'Kanal 4', logo: 'https://picsum.photos/seed/ch4/64/64' },
-    { id: 5, name: 'Kanal 5', logo: 'https://picsum.photos/seed/ch5/64/64' },
-    { id: 6, name: 'Kanal 6', logo: 'https://picsum.photos/seed/ch6/64/64' },
-    { id: 7, name: 'Kanal 7', logo: 'https://picsum.photos/seed/ch7/64/64' },
-    { id: 8, name: 'Kanal 8', logo: 'https://picsum.photos/seed/ch8/64/64' },
-  ];
 
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
@@ -101,47 +98,49 @@ function ChannelListSheetContent() {
         <SheetTitle>{t('channels')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-full">
-        <ul className="space-y-2">
-          {channels.map((channel) => (
-            <li key={channel.id}>
-              <button className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left">
-                <Image
-                  src={channel.logo}
-                  alt={channel.name}
-                  width={40}
-                  height={40}
-                  className="rounded-md"
-                />
-                <span className="font-medium">{channel.name}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {channels.length > 0 ? (
+          <ul className="space-y-2">
+            {channels.map((channel) => (
+              <li key={channel.id}>
+                <button className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left">
+                  <Image
+                    src={channel.logo}
+                    alt={channel.name}
+                    width={40}
+                    height={40}
+                    className="rounded-md"
+                  />
+                  <span className="font-medium">{channel.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground text-center">{t('noChannels')}</p>
+        )}
       </div>
     </SheetContent>
   );
 }
 
-function AddChannelSheetContent() {
+function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (url: string) => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [channelLink, setChannelLink] = useState('');
 
   const handleAddChannel = () => {
-    // Basic validation
     if (!channelLink || !channelLink.startsWith('http')) {
       toast({
         variant: 'destructive',
-        title: 'Ungültiger Link',
-        description: 'Bitte geben Sie einen gültigen Kanal-Link ein.',
+        title: t('invalidLinkTitle'),
+        description: t('invalidLinkDescription'),
       });
       return;
     }
-    // Logic to add the channel will go here
-    console.log('Adding channel:', channelLink);
+    onAddChannel(channelLink);
     toast({
-      title: 'Kanal hinzugefügt',
-      description: `Der Kanal-Link wurde hinzugefügt: ${channelLink}`,
+      title: t('channelAddedTitle'),
+      description: t('channelAddedDescription', { link: channelLink }),
     });
     setChannelLink('');
   };
@@ -396,6 +395,20 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
 
+  const [channels, setChannels] = useState<Channel[]>([]);
+
+  const handleAddChannel = (url: string) => {
+    // This is a simplified logic. In a real app, you'd fetch channel info from the URL.
+    const newChannel: Channel = {
+      id: Date.now(),
+      name: `Kanal ${channels.length + 1}`,
+      logo: `https://picsum.photos/seed/ch${channels.length + 1}/64/64`,
+      url: url,
+    };
+    setChannels(prevChannels => [...prevChannels, newChannel]);
+  };
+
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -509,7 +522,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                   <Plus size={32} className="drop-shadow-md" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent />
+              <AddChannelSheetContent onAddChannel={handleAddChannel} />
             </Sheet>
            <Sheet>
               <SheetTrigger asChild>
@@ -517,7 +530,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                   <Tv2 size={32} className="drop-shadow-md" />
                 </Button>
               </SheetTrigger>
-              <ChannelListSheetContent />
+              <ChannelListSheetContent channels={channels} />
             </Sheet>
         </div>
 

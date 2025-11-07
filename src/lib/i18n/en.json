@@ -50,5 +50,10 @@
   "pdfTitle": "SnackingTV - Anonymous User ID",
   "addChannel": "Add Channel",
   "channelLink": "Channel Link",
-  "add": "Add"
+  "add": "Add",
+  "noChannels": "No channels added yet.",
+  "invalidLinkTitle": "Invalid Link",
+  "invalidLinkDescription": "Please enter a valid channel link starting with http.",
+  "channelAddedTitle": "Channel Added",
+  "channelAddedDescription": "The channel link has been added: {link}"
 }

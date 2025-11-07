@@ -50,5 +50,10 @@
   "pdfTitle": "SnackingTV - Anonyme Benutzer-ID",
   "addChannel": "Kanal hinzufügen",
   "channelLink": "Kanal-Link",
-  "add": "Hinzufügen"
+  "add": "Hinzufügen",
+  "noChannels": "Keine Kanäle hinzugefügt.",
+  "invalidLinkTitle": "Ungültiger Link",
+  "invalidLinkDescription": "Bitte geben Sie einen gültigen Kanal-Link ein, der mit http beginnt.",
+  "channelAddedTitle": "Kanal hinzugefügt",
+  "channelAddedDescription": "Der Kanal-Link wurde hinzugefügt: {link}"
 }
