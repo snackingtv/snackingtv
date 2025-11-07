@@ -77,7 +77,7 @@ function PrivacyPolicySheetContent() {
 
 function ImprintSheetContent() {
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3.4">
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
       <SheetHeader>
         <SheetTitle>Imprint</SheetTitle>
       </SheetHeader>
@@ -117,29 +117,26 @@ function SettingsSheetContent() {
     const manualUserJson = localStorage.getItem('manualUser');
     if (manualUserJson) {
       setLocalUser(JSON.parse(manualUserJson));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) {
+    } else if (user) {
       setLocalUser(user);
-      // If a real Firebase user exists, we clear any manual user from localStorage
-      localStorage.removeItem('manualUser');
     }
   }, [user]);
 
   const handleLogout = () => {
     if(auth && auth.currentUser) {
-      signOut(auth);
-      setLocalUser(null);
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
+      signOut(auth).then(() => {
+        setLocalUser(null);
+        localStorage.removeItem('manualUser');
+        toast({
+          title: "Logged out",
+          description: "You have been successfully logged out.",
+        });
       });
+    } else {
+      // Also clear manual user from localStorage
+      localStorage.removeItem('manualUser');
+      setLocalUser(null);
     }
-    // Also clear manual user from localStorage
-    localStorage.removeItem('manualUser');
-    setLocalUser(null);
   };
 
   const handleCopy = () => {
@@ -171,7 +168,7 @@ function SettingsSheetContent() {
     }
   }
   
-  if (isUserLoading) {
+  if (isUserLoading && !localUser) {
     return (
       <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
         <SheetHeader>
