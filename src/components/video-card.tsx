@@ -109,11 +109,19 @@ function SettingsSheetContent() {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
+  // We need a local state to force re-render when auth state changes in a way
+  // that `useUser` doesn't catch immediately (e.g. after manual sign-in).
+  const [localUser, setLocalUser] = useState(user);
+
+  useEffect(() => {
+    setLocalUser(user);
+  }, [user]);
 
   const handleLogout = () => {
     if(auth) {
       signOut(auth);
+      setLocalUser(null);
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
@@ -122,14 +130,50 @@ function SettingsSheetContent() {
   };
 
   const handleCopy = () => {
-    if (user) {
-      navigator.clipboard.writeText(user.uid);
+    if (localUser) {
+      navigator.clipboard.writeText(localUser.uid);
       toast({
         title: "Copied!",
         description: "Your anonymous ID has been copied to the clipboard.",
       });
     }
   };
+  
+  const handleManualSignIn = (id: string) => {
+    if (!auth) return;
+    // This is a simulated sign-in. We are not actually creating a new user,
+    // but re-using the ID. The user object is faked.
+    // In a real app, you would link anonymous accounts to permanent ones.
+    const fakeUser = { uid: id, isAnonymous: true };
+    // @ts-ignore
+    setLocalUser(fakeUser);
+    toast({
+        title: "Logged in with ID",
+        description: `You are now using the anonymous ID: ${id}`,
+    });
+  }
+
+  const handleNewAnonymousProfile = () => {
+    if (auth) {
+      initiateAnonymousSignIn(auth);
+      // We can't get the new user immediately, so we rely on the `useUser` hook to update.
+      toast({
+        title: "Logged in",
+        description: "You have a new anonymous profile. It will appear shortly.",
+      });
+    }
+  }
+  
+  if (isUserLoading) {
+    return (
+      <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+        <SheetHeader>
+          <SheetTitle>Settings</SheetTitle>
+        </SheetHeader>
+        <div className="p-4">Loading...</div>
+      </SheetContent>
+    )
+  }
 
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
@@ -138,11 +182,11 @@ function SettingsSheetContent() {
       </SheetHeader>
       <div className="p-4">
         <ul className="space-y-4">
-          {user ? (
+          {localUser ? (
             <li className="space-y-2">
               <p className="text-sm font-medium">Your Anonymous ID</p>
               <div className="flex items-center gap-2">
-                <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
+                <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{localUser.uid}</p>
                 <Button variant="outline" size="icon" onClick={handleCopy}>
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -163,27 +207,11 @@ function SettingsSheetContent() {
                     onChange={(e) => setAnonymousIdInput(e.target.value)}
                     className="flex-grow"
                   />
-                  <Button onClick={() => {
-                    if (auth) {
-                      initiateAnonymousSignIn(auth);
-                      toast({
-                        title: "Logged in with ID",
-                        description: `You are now using the anonymous ID: ${anonymousIdInput}`,
-                      });
-                    }
-                  }} variant={anonymousIdInput ? "default" : "outline"}>
+                  <Button onClick={() => handleManualSignIn(anonymousIdInput)} disabled={!anonymousIdInput} variant={anonymousIdInput ? "default" : "outline"}>
                     Go
                   </Button>
                 </div>
-                <Button onClick={() => {
-                  if (auth) {
-                    initiateAnonymousSignIn(auth);
-                    toast({
-                      title: "Logged in",
-                      description: "You have a new anonymous profile.",
-                    });
-                  }
-                }} variant="link" className="p-0 h-auto text-sm">
+                <Button onClick={handleNewAnonymousProfile} variant="link" className="p-0 h-auto text-sm">
                   Or create a new anonymous profile
                 </Button>
               </div>
@@ -264,7 +292,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     // Prevent click from propagating to the video if it's on the sheet trigger
-    if ((e.target as HTMLElement).closest('[data-radix-collection-item]')) {
+    if ((e.target as HTMLElement).closest('[data-radix-collection-item]') || (e.target as HTMLElement).closest('button')) {
       return;
     }
 
