@@ -16,6 +16,92 @@ interface VideoCardProps {
   isActive: boolean;
 }
 
+function PrivacyPolicySheetContent() {
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+      <SheetHeader>
+        <SheetTitle>Privacy Policy</SheetTitle>
+      </SheetHeader>
+      <div className="p-4 overflow-y-auto h-full">
+        <div className="space-y-4">
+          <p>
+            Your privacy is important to us. It is our policy to respect your
+            privacy regarding any information we may collect from you across our
+            website.
+          </p>
+          <h2 className="text-2xl font-semibold">1. Information we collect</h2>
+          <p>
+            We only ask for personal information when we truly need it to provide a
+            service to you. We collect it by fair and lawful means, with your
+            knowledge and consent. We also let you know why we’re collecting it and
+            how it will be used.
+          </p>
+
+          <h2 className="text-2xl font-semibold">2. How we use your information</h2>
+          <p>
+            We only retain collected information for as long as necessary to
+            provide you with your requested service. What data we store, we’ll
+            protect within commercially acceptable means to prevent loss and
+            theft, as well as unauthorized access, disclosure, copying, use or
+            modification.
+          </p>
+
+          <h2 className="text-2xl font-semibold">3. Cookies</h2>
+          <p>
+            We use cookies to improve your experience on our site. By using our
+            site, you consent to our use of cookies.
+          </p>
+
+          <h2 className="text-2xl font-semibold">4. Links to other sites</h2>
+          <p>
+            Our website may link to external sites that are not operated by us.
+            Please be aware that we have no control over the content and
+            practices of these sites, and cannot accept responsibility or
+            liability for their respective privacy policies.
+          </p>
+          <p>
+            Your continued use of our website will be regarded as acceptance of
+            our practices around privacy and personal information. If you have any
+            questions about how we handle user data and personal information, feel
+            free to contact us.
+          </p>
+          <p>This policy is effective as of 1 August 2024.</p>
+        </div>
+      </div>
+    </SheetContent>
+  )
+}
+
+function ImprintSheetContent() {
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+      <SheetHeader>
+        <SheetTitle>Imprint</SheetTitle>
+      </SheetHeader>
+      <div className="p-4 overflow-y-auto h-full">
+        <div className="space-y-4">
+          <p>SnackingTV Inc.</p>
+          <p>123 Snack Street</p>
+          <p>Food City, 98765</p>
+          <p>United States</p>
+
+          <h2 className="text-2xl font-semibold mt-6">Contact</h2>
+          <p>Email: contact@snacking.tv</p>
+          <p>Phone: +1 (555) 123-4567</p>
+
+          <h2 className="text-2xl font-semibold mt-6">Represented by</h2>
+          <p>John Doe, CEO</p>
+
+          <h2 className="text-2xl font-semibold mt-6">Register entry</h2>
+          <p>Registered in the commercial register.</p>
+          <p>Register court: Delaware</p>
+          <p>Registration number: 12345678</p>
+        </div>
+      </div>
+    </SheetContent>
+  )
+}
+
 export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -134,16 +220,26 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
               <div className="p-4">
                 <ul className="space-y-2">
                   <li>
-                    <Link href="/privacy" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent">
-                      <span>Privacy Policy</span>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </Link>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                          <span>Privacy Policy</span>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </button>
+                      </SheetTrigger>
+                      <PrivacyPolicySheetContent />
+                    </Sheet>
                   </li>
                   <li>
-                    <Link href="/imprint" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent">
-                      <span>Imprint</span>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </Link>
+                    <Sheet>
+                      <SheetTrigger asChild>
+                        <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                          <span>Imprint</span>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        </button>
+                      </SheetTrigger>
+                      <ImprintSheetContent />
+                    </Sheet>
                   </li>
                 </ul>
               </div>
