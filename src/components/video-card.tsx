@@ -121,7 +121,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                 <Settings size={24} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-lg">
+            <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
               <SheetHeader>
                 <SheetTitle>Settings</SheetTitle>
               </SheetHeader>
