@@ -47,5 +47,8 @@
   "imprintRegisterCourt": "Registergericht: Delaware",
   "imprintRegisterNumber": "Registrierungsnummer: 12345678",
   "pdfNotice": "Bitte bewahre diese ID sicher auf, um auf anderen Geräten auf dein Konto zuzugreifen.",
-  "pdfTitle": "SnackingTV - Anonyme Benutzer-ID"
+  "pdfTitle": "SnackingTV - Anonyme Benutzer-ID",
+  "addChannel": "Kanal hinzufügen",
+  "channelLink": "Kanal-Link",
+  "add": "Hinzufügen"
 }

@@ -122,6 +122,53 @@ function ChannelListSheetContent() {
   );
 }
 
+function AddChannelSheetContent() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const [channelLink, setChannelLink] = useState('');
+
+  const handleAddChannel = () => {
+    // Basic validation
+    if (!channelLink || !channelLink.startsWith('http')) {
+      toast({
+        variant: 'destructive',
+        title: 'Ungültiger Link',
+        description: 'Bitte geben Sie einen gültigen Kanal-Link ein.',
+      });
+      return;
+    }
+    // Logic to add the channel will go here
+    console.log('Adding channel:', channelLink);
+    toast({
+      title: 'Kanal hinzugefügt',
+      description: `Der Kanal-Link wurde hinzugefügt: ${channelLink}`,
+    });
+    setChannelLink('');
+  };
+
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
+      <SheetHeader>
+        <SheetTitle>{t('addChannel')}</SheetTitle>
+      </SheetHeader>
+      <div className="p-4 space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
+          <Input
+            id="channel-link"
+            placeholder="https://..."
+            value={channelLink}
+            onChange={(e) => setChannelLink(e.target.value)}
+          />
+        </div>
+        <Button onClick={handleAddChannel} className="w-full">
+          {t('add')}
+        </Button>
+      </div>
+    </SheetContent>
+  );
+}
+
 
 function SettingsSheetContent() {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
@@ -456,9 +503,14 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         </div>
 
         <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-6">
-            <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
-              <Plus size={32} className="drop-shadow-md" />
-            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
+                  <Plus size={32} className="drop-shadow-md" />
+                </Button>
+              </SheetTrigger>
+              <AddChannelSheetContent />
+            </Sheet>
            <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
@@ -486,8 +538,8 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                 <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-headline text-lg font-bold">{video.title}</h3>
-                <p className="text-sm">{video.author}</p>
+                <h3 className="font-headline text-lg font-bold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>{video.title}</h3>
+                <p className="text-sm" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>{video.author}</p>
               </div>
             </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
