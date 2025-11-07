@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Heart, MessageCircle, Share2, Tv2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -117,10 +117,20 @@ function SettingsSheetContent() {
 
   useEffect(() => {
     setIsClient(true);
+    
+    const updateLocalUser = (user: User | { uid: string; isAnonymous: boolean } | null) => {
+      setLocalUser(user);
+      if (user) {
+        localStorage.setItem('manualUser', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('manualUser');
+      }
+    };
+    
     // On component mount, check localStorage for a persisted manual user
     const manualUserJson = localStorage.getItem('manualUser');
     if (manualUserJson) {
-      setLocalUser(JSON.parse(manualUserJson));
+      updateLocalUser(JSON.parse(manualUserJson));
     }
     
     // Subscribe to auth state changes from Firebase
@@ -128,37 +138,37 @@ function SettingsSheetContent() {
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
           // Firebase auth state takes precedence if user is logged in via Firebase
-          setLocalUser(firebaseUser);
-          localStorage.removeItem('manualUser'); // Clean up manual user
+          updateLocalUser(firebaseUser);
+          toast({
+            title: "Logged In",
+            description: "You are now logged in.",
+          });
         } else if (!localStorage.getItem('manualUser')) {
           // If no firebase user and no manual user, then logged out
-          setLocalUser(null);
+          updateLocalUser(null);
         }
       });
       return () => unsubscribe(); // Cleanup subscription
     }
-  }, [auth]);
+  }, [auth, toast]);
 
   const handleLogout = () => {
-    if (auth && auth.currentUser) {
-      signOut(auth).then(() => {
-        localStorage.removeItem('manualUser');
-        setLocalUser(null);
-        toast({
-          title: "Logged out",
-          description: "You have been successfully logged out.",
-        });
-      });
-    } else {
-      // Also clear manual user from localStorage
+    const performLogout = () => {
       localStorage.removeItem('manualUser');
       setLocalUser(null);
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
+    };
+
+    if (auth && auth.currentUser) {
+      signOut(auth).then(performLogout);
+    } else {
+      performLogout();
     }
   };
+
 
   const handleCopy = () => {
     if (localUser) {
@@ -199,7 +209,7 @@ function SettingsSheetContent() {
     setLocalUser(fakeUser);
     
     // If there's an active firebase user, sign them out.
-    if(auth.currentUser) {
+    if(auth && auth.currentUser) {
       signOut(auth);
     }
     
@@ -424,18 +434,26 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
           )}
         </div>
 
-        <div className="space-y-3 pointer-events-none">
-          <div className="flex items-center gap-3 text-white">
-            <Avatar className="h-12 w-12 border-2 border-white/50">
-              <AvatarImage src={avatarUrl} alt={video.author} />
-              <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-headline text-lg font-bold drop-shadow-md">{video.title}</h3>
-              <p className="text-sm text-gray-200 drop-shadow-sm">{video.author}</p>
+        <div className="flex justify-between items-end">
+          <div className="space-y-3 pointer-events-none text-white w-full max-w-[calc(100%-80px)]">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-12 w-12 border-2 border-white/50">
+                <AvatarImage src={avatarUrl} alt={video.author} />
+                <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-headline text-lg font-bold drop-shadow-md">{video.title}</h3>
+                <p className="text-sm text-gray-200 drop-shadow-sm">{video.author}</p>
+              </div>
             </div>
+            <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>
-          <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
+
+          <div className="flex flex-col items-center space-y-4 text-white">
+            <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white hover:bg-white/20 hover:text-white">
+              <Tv2 size={24} />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
