@@ -132,7 +132,8 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddChannel = async () => {
-    if (!channelLink || !channelLink.startsWith('http')) {
+    const cleanedLink = channelLink.split(' ')[0].trim();
+    if (!cleanedLink || !cleanedLink.startsWith('http')) {
       toast({
         variant: 'destructive',
         title: t('invalidLinkTitle'),
@@ -142,7 +143,7 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     }
     setIsLoading(true);
     try {
-      const m3uContent = await fetchM3u({ url: channelLink });
+      const m3uContent = await fetchM3u({ url: cleanedLink });
       if (!m3uContent) {
         throw new Error("Could not fetch M3U content.");
       }
