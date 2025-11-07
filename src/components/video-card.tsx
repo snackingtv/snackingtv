@@ -97,7 +97,7 @@ function ImprintSheetContent() {
 
           <h2 className="text-2xl font-semibold mt-6">Register entry</h2>
           <p>Registered in the commercial register.</p>
-          <p>Register court: Delaware</p>p>
+          <p>Register court: Delaware</p>
           <p>Registration number: 12345678</p>
         </div>
       </div>
@@ -132,16 +132,20 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   };
 
   const handleLogout = () => {
-    signOut(auth);
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
+    if(auth) {
+      signOut(auth);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    }
   };
 
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
+
+    videoElement.muted = false;
 
     if (isActive) {
       const playPromise = videoElement.play();
@@ -163,7 +167,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
       setIsPlaying(false);
       setProgress(0);
     }
-  }, [isActive, toast]);
+  }, [isActive]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -270,7 +274,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                             Go
                           </Button>
                         </div>
-                        <Button onClick={() => initiateAnonymousSignIn(auth)} variant="link" className="p-0 h-auto text-sm">
+                        <Button onClick={() => auth && initiateAnonymousSignIn(auth)} variant="link" className="p-0 h-auto text-sm">
                           Or create a new anonymous profile
                         </Button>
                       </div>
