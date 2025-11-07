@@ -116,23 +116,6 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const auth = useAuth();
   const { user } = useUser();
 
-  const handleLogin = () => {
-    if (auth) {
-      if (anonymousIdInput) {
-        // This is a conceptual login. In a real app, you would need a backend
-        // to properly associate the anonymousId with a session.
-        toast({
-          title: "Logged in with ID",
-          description: `You are now using the anonymous ID: ${anonymousIdInput}`,
-        });
-        // In a real scenario, you might have a custom token flow
-        // that takes this ID and gives you a valid Firebase session.
-      } else {
-        initiateAnonymousSignIn(auth);
-      }
-    }
-  };
-
   const handleLogout = () => {
     if(auth) {
       signOut(auth);
@@ -287,11 +270,30 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                             onChange={(e) => setAnonymousIdInput(e.target.value)}
                             className="flex-grow"
                           />
-                          <Button onClick={handleLogin} variant={anonymousIdInput ? "default" : "outline"}>
+                          <Button onClick={() => {
+                            if (auth) {
+                              // This is a conceptual login. In a real app, you would need a backend
+                              // to properly associate the anonymousId with a session.
+                              toast({
+                                title: "Logged in with ID",
+                                description: `You are now using the anonymous ID: ${anonymousIdInput}`,
+                              });
+                              // In a real scenario, you might have a custom token flow
+                              // that takes this ID and gives you a valid Firebase session.
+                            }
+                          }} variant={anonymousIdInput ? "default" : "outline"}>
                             Go
                           </Button>
                         </div>
-                        <Button onClick={() => auth && initiateAnonymousSignIn(auth)} variant="link" className="p-0 h-auto text-sm">
+                        <Button onClick={() => {
+                          if (auth) {
+                            initiateAnonymousSignIn(auth);
+                            toast({
+                              title: "Logged in",
+                              description: "You have a new anonymous profile.",
+                            });
+                          }
+                        }} variant="link" className="p-0 h-auto text-sm">
                           Or create a new anonymous profile
                         </Button>
                       </div>
