@@ -1,3 +1,34 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "avatar1",
+      "description": "Blender Foundation logo",
+      "imageUrl": "https://images.unsplash.com/photo-1669219801545-3c73b2aa23cc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxsb2dvJTIwYmxlbmRlcnxlbnwwfHx8fDE3NjI0OTE0ODJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "logo blender"
+    },
+    {
+      "id": "avatar2",
+      "description": "Blender Foundation logo alternate",
+      "imageUrl": "https://images.unsplash.com/photo-1578159264028-4d03e659e9f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxsb2dvJTIwb3JhbmdlfGVufDB8fHx8MTc2MjQ5MTQ4M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "logo orange"
+    },
+    {
+      "id": "avatar3",
+      "description": "Google logo",
+      "imageUrl": "https://images.unsplash.com/photo-1662947203582-2787ab7f2920?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxsb2dvJTIwZ29vZ2xlfGVufDB8fHx8MTc2MjQ4NjAwMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "logo google"
+    },
+    {
+      "id": "avatar4",
+      "description": "Abstract user avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1697257378436-3bbf6cf9f8ba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBhYnN0cmFjdHxlbnwwfHx8fDE3NjI0MjIxNDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person abstract"
+    },
+    {
+      "id": "avatar5",
+      "description": "Abstract user avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1629904869392-ae2a682d4d01?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXJzb24lMjBjb2RlfGVufDB8fHx8MTc2MjQ4OTY0N3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person code"
+    }
+  ]
 }
