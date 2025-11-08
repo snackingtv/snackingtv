@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2 } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -17,6 +17,7 @@ import { jsPDF } from 'jspdf';
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
+import { Separator } from './ui/separator';
 
 interface VideoCardProps {
   video: Video;
@@ -130,8 +131,29 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const { toast } = useToast();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddChannel = async () => {
+  const processM3uContent = (content: string, source: string) => {
+    try {
+      const parsedChannels = parseM3u(content);
+      onAddChannel(parsedChannels);
+      toast({
+        title: t('channelAddedTitle'),
+        description: t('channelAddedDescription', { count: parsedChannels.length }),
+      });
+      return true;
+    } catch (error) {
+      console.error(`Failed to parse M3U from ${source}:`, error);
+      toast({
+        variant: 'destructive',
+        title: t('channelAddErrorTitle'),
+        description: t('channelAddErrorDescription'),
+      });
+      return false;
+    }
+  }
+
+  const handleAddFromUrl = async () => {
     const cleanedLink = channelLink.split(' ')[0].trim();
     if (!cleanedLink || !cleanedLink.startsWith('http')) {
       toast({
@@ -147,15 +169,11 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       if (!m3uContent) {
         throw new Error("Could not fetch M3U content.");
       }
-      const parsedChannels = parseM3u(m3uContent);
-      onAddChannel(parsedChannels);
-      toast({
-        title: t('channelAddedTitle'),
-        description: t('channelAddedDescription', { count: parsedChannels.length }),
-      });
-      setChannelLink('');
+      if (processM3uContent(m3uContent, 'URL')) {
+        setChannelLink('');
+      }
     } catch (error) {
-      console.error("Failed to add channel:", error);
+      console.error("Failed to add channel from URL:", error);
       toast({
         variant: 'destructive',
         title: t('channelAddErrorTitle'),
@@ -166,6 +184,32 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     }
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (content) {
+        processM3uContent(content, 'file');
+      }
+      setIsLoading(false);
+    };
+    reader.onerror = () => {
+      toast({
+        variant: 'destructive',
+        title: t('fileReadErrorTitle'),
+        description: t('fileReadErrorDescription'),
+      });
+      setIsLoading(false);
+    }
+    reader.readAsText(file);
+    // Reset file input
+    event.target.value = '';
+  }
+
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
       <SheetHeader>
@@ -174,17 +218,45 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       <div className="p-4 space-y-4">
         <div className="space-y-2">
           <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
-          <Input
-            id="channel-link"
-            placeholder="https://.../playlist.m3u"
-            value={channelLink}
-            onChange={(e) => setChannelLink(e.target.value)}
+          <div className="flex gap-2">
+            <Input
+              id="channel-link"
+              placeholder="https://.../playlist.m3u"
+              value={channelLink}
+              onChange={(e) => setChannelLink(e.target.value)}
+              disabled={isLoading}
+              className="flex-grow"
+            />
+            <Button onClick={handleAddFromUrl} disabled={isLoading || !channelLink}>
+              {isLoading ? t('loading') : t('add')}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="relative">
+          <Separator />
+          <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
+        </div>
+
+        <div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".m3u,.m3u8"
+            className="hidden"
             disabled={isLoading}
           />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="w-full"
+            disabled={isLoading}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            {t('uploadFile')}
+          </Button>
         </div>
-        <Button onClick={handleAddChannel} className="w-full" disabled={isLoading}>
-          {isLoading ? t('loading') : t('add')}
-        </Button>
       </div>
     </SheetContent>
   );

@@ -57,5 +57,9 @@
   "channelAddedTitle": "Channels Added",
   "channelAddedDescription": "{count} channels have been added from the list.",
   "channelAddErrorTitle": "Error Adding Channels",
-  "channelAddErrorDescription": "The M3U/M3U8 file could not be processed."
+  "channelAddErrorDescription": "The M3U/M3U8 file could not be processed.",
+  "uploadFile": "Upload File (.m3u, .m3u8)",
+  "or": "or",
+  "fileReadErrorTitle": "Error Reading File",
+  "fileReadErrorDescription": "The selected file could not be read. Please try again."
 }
