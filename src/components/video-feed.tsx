@@ -16,6 +16,24 @@ export function VideoFeed() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedItems, setFeedItems] = useState<Video[]>(initialVideos);
   const [addedChannels, setAddedChannels] = useState<M3uChannel[]>([]);
+  const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storedFavorites = localStorage.getItem('favoriteChannels');
+    if (storedFavorites) {
+      setFavoriteChannels(JSON.parse(storedFavorites));
+    }
+  }, []);
+
+  const handleToggleFavorite = (channelUrl: string) => {
+    setFavoriteChannels(prev => {
+      const newFavorites = prev.includes(channelUrl)
+        ? prev.filter(url => url !== channelUrl)
+        : [...prev, channelUrl];
+      localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
+      return newFavorites;
+    });
+  };
 
   const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
     setActiveIndex(emblaApi.selectedScrollSnap());
@@ -36,7 +54,7 @@ export function VideoFeed() {
   }, [emblaApi, onSelect]);
 
   const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
-    const existingUrls = new Set([...feedItems.map(item => item.url), ...addedChannels.map(c => c.url)]);
+    const existingUrls = new Set(feedItems.map(item => item.url));
     const uniqueNewChannels = newChannels.filter(c => !existingUrls.has(c.url));
     
     if (uniqueNewChannels.length === 0) return;
@@ -51,14 +69,14 @@ export function VideoFeed() {
 
     setAddedChannels(prev => [...prev, ...uniqueNewChannels]);
     setFeedItems(prev => [...prev, ...newFeedItems]);
-  }, [feedItems, addedChannels]);
+  }, [feedItems]);
 
   // When a new item is added, we need to reinitialize Embla
   useEffect(() => {
     if (emblaApi) {
       emblaApi.reInit();
     }
-  }, [feedItems, emblaApi]);
+  }, [feedItems.length, emblaApi]);
 
   const handleChannelSelect = useCallback((channel: M3uChannel) => {
     const channelIndex = feedItems.findIndex(item => item.url === channel.url);
@@ -85,6 +103,8 @@ export function VideoFeed() {
               onAddChannels={handleAddChannels}
               onChannelSelect={handleChannelSelect}
               addedChannels={addedChannels}
+              isFavorite={favoriteChannels.includes(video.url)}
+              onToggleFavorite={handleToggleFavorite}
             />
           </div>
         ))}

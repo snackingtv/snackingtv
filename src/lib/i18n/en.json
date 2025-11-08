@@ -74,5 +74,8 @@
   "online": "Online: {count}",
   "offline": "Offline: {count}",
   "total": "Total: {count}",
-  "complete": "complete"
+  "complete": "complete",
+  "favorites": "Favorites",
+  "allChannels": "All Channels",
+  "noFavorites": "No favorites marked."
 }

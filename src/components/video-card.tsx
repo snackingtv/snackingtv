@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -19,6 +19,7 @@ import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface VideoCardProps {
   video: Video;
@@ -27,6 +28,8 @@ interface VideoCardProps {
   onAddChannels: (newChannels: M3uChannel[]) => void;
   onChannelSelect: (channel: M3uChannel) => void;
   addedChannels: M3uChannel[];
+  isFavorite: boolean;
+  onToggleFavorite: (channelUrl: string) => void;
 }
 
 // Define the Channel type
@@ -96,8 +99,42 @@ function ImprintSheetContent() {
   )
 }
 
-function ChannelListSheetContent({ channels, onChannelSelect }: { channels: M3uChannel[]; onChannelSelect: (channel: M3uChannel) => void; }) {
+function ChannelListSheetContent({ 
+  channels, 
+  onChannelSelect,
+  favoriteChannels
+}: { 
+  channels: M3uChannel[]; 
+  onChannelSelect: (channel: M3uChannel) => void;
+  favoriteChannels: M3uChannel[];
+}) {
   const { t } = useTranslation();
+
+  const renderChannelList = (channelList: M3uChannel[], emptyMessage: string) => (
+    channelList.length > 0 ? (
+      <ul className="space-y-2">
+        {channelList.map((channel) => (
+          <li key={channel.url}>
+            <button
+              onClick={() => onChannelSelect(channel)}
+              className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
+            >
+              <Image
+                src={channel.logo}
+                alt={channel.name}
+                width={40}
+                height={40}
+                className="rounded-md"
+              />
+              <span className="font-medium">{channel.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-muted-foreground text-center py-4">{emptyMessage}</p>
+    )
+  );
 
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
@@ -106,25 +143,20 @@ function ChannelListSheetContent({ channels, onChannelSelect }: { channels: M3uC
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-full">
         {channels.length > 0 ? (
-          <ul className="space-y-2">
-            {channels.map((channel) => (
-              <li key={channel.url}>
-                <button
-                  onClick={() => onChannelSelect(channel)}
-                  className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
-                >
-                  <Image
-                    src={channel.logo}
-                    alt={channel.name}
-                    width={40}
-                    height={40}
-                    className="rounded-md"
-                  />
-                  <span className="font-medium">{channel.name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <Accordion type="multiple" defaultValue={['favorites', 'all-channels']} className="w-full">
+            <AccordionItem value="favorites">
+              <AccordionTrigger>{t('favorites')}</AccordionTrigger>
+              <AccordionContent>
+                {renderChannelList(favoriteChannels, t('noFavorites'))}
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="all-channels">
+              <AccordionTrigger>{t('allChannels')}</AccordionTrigger>
+              <AccordionContent>
+                {renderChannelList(channels, t('noChannels'))}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         ) : (
           <p className="text-muted-foreground text-center">{t('noChannels')}</p>
         )}
@@ -602,12 +634,15 @@ function SettingsSheetContent() {
 }
 
 
-export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannelSelect, addedChannels }: VideoCardProps) {
+export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { t } = useTranslation();
+
+  const favoriteChannels = addedChannels.filter(c => isFavorite);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -706,11 +741,11 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center text-white">
-          <h2 className="font-headline text-xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
+        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-4 text-white">
+          <h2 className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12">
+              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                 <Settings size={28} className="drop-shadow-lg"/>
               </Button>
             </SheetTrigger>
@@ -718,7 +753,10 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
           </Sheet>
         </div>
 
-        <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-6">
+        <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
+             <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.url); }}>
+                <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+            </Button>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
@@ -733,7 +771,7 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
                   <Tv2 size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} />
             </Sheet>
         </div>
 
