@@ -90,7 +90,7 @@
   "channelsDeletedDescription": "{count, plural, =1 {1 channel has been deleted.} other {# channels have been deleted.}}",
   "deleteErrorTitle": "Deletion Error",
   "deleteErrorDescription": "An error occurred while deleting the channels.",
-  "noOtherChannels": "No other channels."
+  "noOtherChannels": "No other channels.",
+  "notLoggedInTitle": "Not logged in",
+  "notLoggedInDescription": "You must be logged in to add channels."
 }
-
-    

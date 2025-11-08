@@ -90,7 +90,7 @@
   "channelsDeletedDescription": "{count, plural, =1 {1 Kanal wurde gelöscht.} other {# Kanäle wurden gelöscht.}}",
   "deleteErrorTitle": "Fehler beim Löschen",
   "deleteErrorDescription": "Ein Fehler ist beim Löschen der Kanäle aufgetreten.",
-  "noOtherChannels": "Keine weiteren Kanäle."
+  "noOtherChannels": "Keine weiteren Kanäle.",
+  "notLoggedInTitle": "Nicht angemeldet",
+  "notLoggedInDescription": "Sie müssen angemeldet sein, um Kanäle hinzuzufügen."
 }
-
-    

@@ -254,11 +254,10 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3uChannel[]) => void }) {
+function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (channels: M3uChannel[]) => void, localUser: User | { uid: string; isAnonymous: boolean; } | null }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
@@ -272,11 +271,11 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
 
 
   const processM3uContent = async (content: string, source: string) => {
-    if (!user) {
+    if (!localUser) {
       toast({
         variant: 'destructive',
-        title: 'Nicht angemeldet',
-        description: 'Sie müssen angemeldet sein, um Kanäle hinzuzufügen.',
+        title: t('notLoggedInTitle'),
+        description: t('notLoggedInDescription'),
       });
       return false;
     }
@@ -337,7 +336,7 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
           // Save to Firestore
           addDocumentNonBlocking(userChannelsRef, {
             ...channel,
-            userId: user.uid,
+            userId: localUser.uid,
             addedAt: serverTimestamp(),
           });
         } else {
@@ -523,57 +522,12 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
 }
 
 
-function SettingsSheetContent() {
+function SettingsSheetContent({ localUser, setLocalUser }: { localUser: User | { uid: string, isAnonymous: boolean } | null, setLocalUser: (user: User | { uid: string, isAnonymous: boolean } | null) => void }) {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
   const { t, language, setLanguage } = useTranslation();
   
-  const [localUser, setLocalUser] = useState<User | { uid: string, isAnonymous: boolean } | null>(null);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    
-    const updateLocalUser = (user: User | { uid: string; isAnonymous: boolean } | null) => {
-      setLocalUser(user);
-      if (user) {
-        localStorage.setItem('manualUser', JSON.stringify(user));
-      } else {
-        localStorage.removeItem('manualUser');
-      }
-    };
-    
-    const manualUserJson = localStorage.getItem('manualUser');
-    if (manualUserJson) {
-      updateLocalUser(JSON.parse(manualUserJson));
-    }
-    
-    // Subscribe to auth state changes from Firebase
-    if (auth) {
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        if (firebaseUser) {
-          // Firebase auth state takes precedence if user is logged in via Firebase
-          updateLocalUser(firebaseUser);
-          if (firebaseUser.isAnonymous) {
-             toast({
-              title: t('loggedIn'),
-              description: t('nowLoggedInAnonymously'),
-            });
-          } else {
-            toast({
-              title: t('loggedIn'),
-              description: t('nowLoggedIn'),
-            });
-          }
-        } else if (!localStorage.getItem('manualUser')) {
-          // Only log out if there's no manual user either
-          updateLocalUser(null);
-        }
-      });
-      return () => unsubscribe();
-    }
-  }, [auth, toast, t]);
 
   const handleLogout = () => {
     const performLogout = () => {
@@ -648,17 +602,6 @@ function SettingsSheetContent() {
     }
   }
   
-  if (!isClient) {
-    return (
-      <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
-        <SheetHeader>
-          <SheetTitle>{t('settings')}</SheetTitle>
-        </SheetHeader>
-        <div className="p-4">{t('loading')}</div>
-      </SheetContent>
-    )
-  }
-
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
       <SheetHeader>
@@ -771,7 +714,55 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState('');
+  
+  const auth = useAuth();
+  const [isClient, setIsClient] = useState(false);
+  const [localUser, setLocalUser] = useState<User | { uid: string, isAnonymous: boolean } | null>(null);
 
+  useEffect(() => {
+    setIsClient(true);
+    
+    const updateLocalUser = (user: User | { uid: string; isAnonymous: boolean } | null) => {
+      setLocalUser(user);
+      if (user) {
+        localStorage.setItem('manualUser', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('manualUser');
+      }
+    };
+    
+    const manualUserJson = localStorage.getItem('manualUser');
+    if (manualUserJson) {
+      updateLocalUser(JSON.parse(manualUserJson));
+    }
+    
+    // Subscribe to auth state changes from Firebase
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          // Firebase auth state takes precedence if user is logged in via Firebase
+          updateLocalUser(firebaseUser);
+          if (firebaseUser.isAnonymous) {
+             toast({
+              title: t('loggedIn'),
+              description: t('nowLoggedInAnonymously'),
+            });
+          } else {
+            toast({
+              title: t('loggedIn'),
+              description: t('nowLoggedIn'),
+            });
+          }
+        } else if (!localStorage.getItem('manualUser')) {
+          // Only log out if there's no manual user either
+          updateLocalUser(null);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [auth, t]);
+
+  const { toast } = useToast();
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
   useEffect(() => {
@@ -872,6 +863,14 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     };
   }, [handleInteraction]);
 
+  if (!isClient) {
+    return (
+        <div className="relative w-full h-full bg-black flex items-center justify-center">
+            {/* You can show a loading spinner here */}
+        </div>
+    );
+  }
+
   return (
     <div
       className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
@@ -914,7 +913,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} localUser={localUser} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -922,7 +921,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent />
+              <SettingsSheetContent localUser={localUser} setLocalUser={setLocalUser} />
             </Sheet>
           </div>
         </div>
