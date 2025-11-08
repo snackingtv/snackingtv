@@ -158,8 +158,8 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       console.error("Failed to add channel:", error);
       toast({
         variant: 'destructive',
-        title: "Fehler beim Hinzufügen der Kanäle",
-        description: "Die M3U-Datei konnte nicht verarbeitet werden.",
+        title: t('channelAddErrorTitle'),
+        description: t('channelAddErrorDescription'),
       });
     } finally {
       setIsLoading(false);
@@ -302,7 +302,7 @@ function SettingsSheetContent() {
     
     toast({
         title: t('loggedInWithId'),
-        description: t('nowUsingAnonymousId').replace('{id}', id),
+        description: t('nowUsingAnonymousId', {id: id}),
     });
   }
 

@@ -11,7 +11,7 @@ type Language = 'en' | 'de';
 interface I18nContextType {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -19,7 +19,7 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('de');
 
-  const t = useCallback((key: string): string => {
+  const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let result: any = translations[language];
     for (const k of keys) {
@@ -30,10 +30,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         for (const fk of keys) {
           fallbackResult = fallbackResult?.[fk];
         }
-        return fallbackResult || key;
+        result = fallbackResult;
+        break; 
       }
     }
-    return result || key;
+    
+    let translation = result || key;
+
+    if (replacements && typeof translation === 'string') {
+      Object.keys(replacements).forEach(placeholder => {
+        translation = translation.replace(`{${placeholder}}`, String(replacements[placeholder]));
+      });
+    }
+
+    return translation;
   }, [language]);
 
   return (

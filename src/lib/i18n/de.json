@@ -55,5 +55,7 @@
   "invalidLinkTitle": "Ungültiger Link",
   "invalidLinkDescription": "Bitte geben Sie einen gültigen Kanal-Link ein, der mit http beginnt.",
   "channelAddedTitle": "Kanäle hinzugefügt",
-  "channelAddedDescription": "{count} Kanäle wurden aus der Liste hinzugefügt."
+  "channelAddedDescription": "{count} Kanäle wurden aus der Liste hinzugefügt.",
+  "channelAddErrorTitle": "Fehler beim Hinzufügen der Kanäle",
+  "channelAddErrorDescription": "Die M3U-Datei konnte nicht verarbeitet werden."
 }

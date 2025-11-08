@@ -55,5 +55,7 @@
   "invalidLinkTitle": "Invalid Link",
   "invalidLinkDescription": "Please enter a valid channel link starting with http.",
   "channelAddedTitle": "Channels Added",
-  "channelAddedDescription": "{count} channels have been added from the list."
+  "channelAddedDescription": "{count} channels have been added from the list.",
+  "channelAddErrorTitle": "Error Adding Channels",
+  "channelAddErrorDescription": "The M3U file could not be processed."
 }
