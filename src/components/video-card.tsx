@@ -260,7 +260,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
+function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -277,15 +277,6 @@ function AddChannelSheetContent({ user, isUserLoading }: { onAddChannel?: (chann
   const [selectedVerifiedChannels, setSelectedVerifiedChannels] = useState<Set<string>>(new Set());
 
   const processM3uContent = async (content: string, source: string) => {
-    if (isUserLoading || !user) {
-        toast({
-            variant: 'destructive',
-            title: t('notLoggedInTitle'),
-            description: t('notLoggedInDescription'),
-        });
-        return false;
-    }
-
     isCancelledRef.current = false;
     setVerifiedChannels([]);
     setSelectedVerifiedChannels(new Set());
@@ -559,7 +550,7 @@ function AddChannelSheetContent({ user, isUserLoading }: { onAddChannel?: (chann
                   className="flex-grow"
                 />
                 <Button onClick={handleAddFromUrl} disabled={isDisabled || !channelLink || !user}>
-                  {isUserLoading ? t('loading') : isLoading ? t('loading') : t('add')}
+                  {isLoading ? t('loading') : t('add')}
                 </Button>
               </div>
             </div>
@@ -585,7 +576,7 @@ function AddChannelSheetContent({ user, isUserLoading }: { onAddChannel?: (chann
                 disabled={isDisabled || !user}
               >
                 <Upload className="mr-2 h-4 w-4" />
-                {isUserLoading ? t('loading') : t('uploadFile')}
+                {t('uploadFile')}
               </Button>
             </div>
           </>
@@ -764,6 +755,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 
 export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const progressContainerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -778,6 +770,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekSpeed, setSeekSpeed] = useState(0);
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
+
+  // Progress bar state
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
   
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
@@ -796,7 +792,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
   useEffect(() => {
     if (isActive && localVideoItem) {
-        const url = URL.createObjectURL(new Blob([localVideoItem.url], {type: 'video/mp4'}));
+        // We assume localVideoItem.url is a File object from the input
+        const url = URL.createObjectURL(localVideoItem.url as any);
         setLocalVideoUrl(url);
 
         return () => {
@@ -812,10 +809,15 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (!videoElement) return;
 
     const sourceUrl = localVideoUrl || (isActive ? video.url : null);
+    
+    // Reset progress when source changes
+    setProgress(0);
+    setDuration(0);
 
     if (sourceUrl) {
         if (videoElement.currentSrc !== sourceUrl) {
             videoElement.src = sourceUrl;
+            videoElement.load();
         }
         const playPromise = videoElement.play();
         if (playPromise !== undefined) {
@@ -842,7 +844,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (isSeeking) return;
 
     const target = e.target as HTMLElement;
-    if (target.closest('[data-radix-collection-item]') || target.closest('button')) {
+    if (target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[data-progress-bar]')) {
       return;
     }
 
@@ -901,7 +903,17 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (!videoEl || videoEl.duration === Infinity || !videoEl.src) return;
 
     setIsSeeking(true);
-    setWasPlayingBeforeSeek(!videoEl.paused);
+    const wasPlaying = !videoEl.paused;
+    setWasPlayingBeforeSeek(wasPlaying);
+    if(wasPlaying) {
+      const playPromise = videoEl.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(e => {
+            // Ignore AbortError which can happen if pause() is called right after.
+            if(e.name !== 'AbortError') console.error(e)
+          });
+        }
+    }
     initialSeekX.current = clientX;
   };
 
@@ -975,6 +987,33 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const handleMouseMove = (e: React.MouseEvent) => {
     handleSeekMove(e.clientX);
   };
+  
+  // Progress bar logic
+  const handleTimeUpdate = () => {
+    if (videoRef.current && !isNaN(videoRef.current.duration)) {
+      setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const progressContainer = progressContainerRef.current;
+    const videoElement = videoRef.current;
+    if (!progressContainer || !videoElement || isNaN(videoElement.duration)) return;
+  
+    const rect = progressContainer.getBoundingClientRect();
+    const clickPositionX = e.clientX - rect.left;
+    const clickRatio = clickPositionX / rect.width;
+    const newTime = clickRatio * videoElement.duration;
+  
+    videoElement.currentTime = newTime;
+    setProgress(clickRatio * 100);
+  };
 
   return (
     <div
@@ -1001,6 +1040,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             if (!isSeeking) setIsPlaying(false);
             handleInteraction();
         }}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
         muted={false} 
       />
       {isSeeking && seekSpeed !== 0 && (
@@ -1030,11 +1071,11 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0" disabled={isUserLoading}>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent user={user} isUserLoading={isUserLoading} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -1089,8 +1130,22 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           )}
         </div>
         
-        <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-2">
-            
+        <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-3">
+          <div
+              data-progress-bar
+              ref={progressContainerRef}
+              className="w-full h-2.5 cursor-pointer group"
+              onClick={handleProgressClick}
+            >
+              <Progress
+                value={progress}
+                className="h-1 group-hover:h-2.5 transition-all duration-200"
+              />
+          </div>
+          <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+            <h3 className="font-bold text-lg">{video.author}</h3>
+            <p className="text-base">{video.title}</p>
+          </div>
         </div>
       </div>
     </div>
