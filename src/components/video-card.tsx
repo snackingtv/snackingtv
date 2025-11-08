@@ -132,10 +132,15 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const { toast } = useToast();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationProgress, setVerificationProgress] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processM3uContent = async (content: string, source: string) => {
     setIsLoading(true);
+    setIsVerifying(true);
+    setVerificationProgress(0);
+
     try {
       const parsedChannels = parseM3u(content);
       if (parsedChannels.length === 0) {
@@ -152,10 +157,19 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         description: t('checkingChannelsDescription', { count: parsedChannels.length }),
       });
 
-      const channelPromises = parsedChannels.map(channel => checkChannelStatus({ url: channel.url }));
-      const results = await Promise.all(channelPromises);
+      const onlineChannels: M3uChannel[] = [];
+      let checkedCount = 0;
 
-      const onlineChannels = parsedChannels.filter((_, index) => results[index].online);
+      const checkPromises = parsedChannels.map(async (channel) => {
+        const result = await checkChannelStatus({ url: channel.url });
+        if (result.online) {
+          onlineChannels.push(channel);
+        }
+        checkedCount++;
+        setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
+      });
+
+      await Promise.all(checkPromises);
 
       if (onlineChannels.length > 0) {
         onAddChannel(onlineChannels);
@@ -182,6 +196,7 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       return false;
     } finally {
       setIsLoading(false);
+      setIsVerifying(false);
     }
   }
 
@@ -245,47 +260,57 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         <SheetTitle>{t('addChannel')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
-          <div className="flex gap-2">
-            <Input
-              id="channel-link"
-              placeholder="https://.../playlist.m3u"
-              value={channelLink}
-              onChange={(e) => setChannelLink(e.target.value)}
-              disabled={isLoading}
-              className="flex-grow"
-            />
-            <Button onClick={handleAddFromUrl} disabled={isLoading || !channelLink}>
-              {isLoading ? t('loading') : t('add')}
-            </Button>
+        {isVerifying ? (
+           <div className="space-y-2 text-center">
+            <p>{t('checkingChannelsTitle')}</p>
+            <Progress value={verificationProgress} />
+            <p className="text-sm text-muted-foreground">{verificationProgress}%</p>
           </div>
-        </div>
-        
-        <div className="relative">
-          <Separator />
-          <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
-        </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
+              <div className="flex gap-2">
+                <Input
+                  id="channel-link"
+                  placeholder="https://.../playlist.m3u"
+                  value={channelLink}
+                  onChange={(e) => setChannelLink(e.target.value)}
+                  disabled={isLoading}
+                  className="flex-grow"
+                />
+                <Button onClick={handleAddFromUrl} disabled={isLoading || !channelLink}>
+                  {isLoading ? t('loading') : t('add')}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <Separator />
+              <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
+            </div>
 
-        <div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".m3u,.m3u8"
-            className="hidden"
-            disabled={isLoading}
-          />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            className="w-full"
-            disabled={isLoading}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {t('uploadFile')}
-          </Button>
-        </div>
+            <div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept=".m3u,.m3u8"
+                className="hidden"
+                disabled={isLoading}
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                className="w-full"
+                disabled={isLoading}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {t('uploadFile')}
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </SheetContent>
   );
@@ -692,3 +717,5 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     </div>
   );
 }
+
+    
