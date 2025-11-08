@@ -17,6 +17,7 @@ export function VideoFeed() {
   const [feedItems, setFeedItems] = useState<Video[]>(initialVideos);
   const [addedChannels, setAddedChannels] = useState<M3uChannel[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -90,6 +91,10 @@ export function VideoFeed() {
   // Add a generic placeholder for IPTV channels
   avatarMap.set('iptv_placeholder', 'https://picsum.photos/seed/iptv/64/64');
 
+  const filteredChannels = addedChannels.filter(channel => 
+    channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
@@ -102,9 +107,11 @@ export function VideoFeed() {
               isActive={index === activeIndex}
               onAddChannels={handleAddChannels}
               onChannelSelect={handleChannelSelect}
-              addedChannels={addedChannels}
+              addedChannels={filteredChannels}
               isFavorite={favoriteChannels.includes(video.url)}
               onToggleFavorite={handleToggleFavorite}
+              onSearch={setSearchTerm}
+              searchTerm={searchTerm}
             />
           </div>
         ))}

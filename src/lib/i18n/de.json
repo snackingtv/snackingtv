@@ -77,5 +77,7 @@
   "complete": "abgeschlossen",
   "favorites": "Favoriten",
   "allChannels": "Alle Kanäle",
-  "noFavorites": "Keine Favoriten markiert."
+  "noFavorites": "Keine Favoriten markiert.",
+  "searchChannels": "Kanäle suchen",
+  "searchPlaceholder": "Suchen..."
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -30,6 +30,8 @@ interface VideoCardProps {
   addedChannels: M3uChannel[];
   isFavorite: boolean;
   onToggleFavorite: (channelUrl: string) => void;
+  onSearch: (term: string) => void;
+  searchTerm: string;
 }
 
 // Define the Channel type
@@ -633,8 +635,27 @@ function SettingsSheetContent() {
   );
 }
 
+function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
+  const { t } = useTranslation();
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
+      <SheetHeader>
+        <SheetTitle>{t('searchChannels')}</SheetTitle>
+      </SheetHeader>
+      <div className="p-4">
+        <Input
+          placeholder={t('searchPlaceholder')}
+          value={searchTerm}
+          onChange={(e) => onSearch(e.target.value)}
+          className="w-full"
+        />
+      </div>
+    </SheetContent>
+  );
+}
 
-export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite }: VideoCardProps) {
+
+export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -743,14 +764,24 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
       >
         <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-4 text-white">
           <h2 className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                <Settings size={28} className="drop-shadow-lg"/>
-              </Button>
-            </SheetTrigger>
-            <SettingsSheetContent />
-          </Sheet>
+          <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                  <Search size={28} className="drop-shadow-lg"/>
+                </Button>
+              </SheetTrigger>
+              <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
+            </Sheet>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                  <Settings size={28} className="drop-shadow-lg"/>
+                </Button>
+              </SheetTrigger>
+              <SettingsSheetContent />
+            </Sheet>
+          </div>
         </div>
 
         <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
