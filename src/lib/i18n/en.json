@@ -79,5 +79,7 @@
   "allChannels": "All Channels",
   "noFavorites": "No favorites marked.",
   "searchChannels": "Search Channels",
-  "searchPlaceholder": "Search..."
+  "searchPlaceholder": "Search...",
+  "defaultVideos": "Default Videos",
+  "noDefaultVideos": "No default videos found."
 }

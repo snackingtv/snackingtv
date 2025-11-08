@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -26,12 +26,13 @@ interface VideoCardProps {
   video: Video;
   isActive: boolean;
   onAddChannels: (newChannels: M3uChannel[]) => void;
-  onChannelSelect: (channel: M3uChannel) => void;
+  onChannelSelect: (channel: M3uChannel | Video) => void;
   addedChannels: M3uChannel[];
   isFavorite: boolean;
   onToggleFavorite: (channelUrl: string) => void;
   onSearch: (term: string) => void;
   searchTerm: string;
+  defaultVideos: Video[];
 }
 
 // Define the Channel type
@@ -161,6 +162,42 @@ function ChannelListSheetContent({
           </Accordion>
         ) : (
           <p className="text-muted-foreground text-center">{t('noChannels')}</p>
+        )}
+      </div>
+    </SheetContent>
+  );
+}
+
+function DefaultVideoListSheetContent({ 
+  videos, 
+  onChannelSelect,
+}: { 
+  videos: Video[]; 
+  onChannelSelect: (channel: Video) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
+      <SheetHeader>
+        <SheetTitle>{t('defaultVideos')}</SheetTitle>
+      </SheetHeader>
+      <div className="p-4 overflow-y-auto h-full">
+        {videos.length > 0 ? (
+          <ul className="space-y-2">
+            {videos.map((video) => (
+              <li key={video.id}>
+                <button
+                  onClick={() => onChannelSelect(video)}
+                  className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
+                >
+                  <span className="font-medium">{video.title}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground text-center">{t('noDefaultVideos')}</p>
         )}
       </div>
     </SheetContent>
@@ -676,7 +713,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, defaultVideos }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -841,6 +878,14 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                 </Button>
               </SheetTrigger>
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} />
+            </Sheet>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                  <Folder size={32} className="drop-shadow-lg" />
+                </Button>
+              </SheetTrigger>
+              <DefaultVideoListSheetContent videos={defaultVideos} onChannelSelect={onChannelSelect} />
             </Sheet>
         </div>
 

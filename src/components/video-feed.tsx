@@ -34,22 +34,26 @@ export function VideoFeed() {
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
   
   useEffect(() => {
-    if (userChannels) {
-      const newFeedItems: Video[] = userChannels.map((channel) => ({
-        id: channel.id,
-        url: channel.url,
-        title: channel.name,
-        author: channel.group || 'IPTV',
-        avatarId: 'iptv_placeholder',
-      }));
+    // We combine initial videos with user channels
+    const combinedFeed: Video[] = [...initialVideos];
+    const combinedUrls = new Set(initialVideos.map(v => v.url));
 
-      // Combine initial videos with user channels, preventing duplicates
-      setFeedItems(prev => {
-        const existingUrls = new Set(prev.map(item => item.url));
-        const uniqueNewItems = newFeedItems.filter(item => !existingUrls.has(item.url));
-        return [...prev, ...uniqueNewItems];
+    if (userChannels) {
+      userChannels.forEach((channel) => {
+        if (!combinedUrls.has(channel.url)) {
+          combinedFeed.push({
+            id: channel.id || channel.url,
+            url: channel.url,
+            title: channel.name,
+            author: channel.group || 'IPTV',
+            avatarId: 'iptv_placeholder',
+          });
+          combinedUrls.add(channel.url);
+        }
       });
     }
+    setFeedItems(combinedFeed);
+
   }, [userChannels]);
 
   useEffect(() => {
@@ -113,7 +117,7 @@ export function VideoFeed() {
     }
   }, [feedItems.length, emblaApi]);
 
-  const handleChannelSelect = useCallback((channel: M3uChannel) => {
+  const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
     const channelIndex = feedItems.findIndex(item => item.url === channel.url);
     if (emblaApi && channelIndex !== -1) {
       emblaApi.scrollTo(channelIndex, false);
@@ -145,6 +149,7 @@ export function VideoFeed() {
               onToggleFavorite={handleToggleFavorite}
               onSearch={setSearchTerm}
               searchTerm={searchTerm}
+              defaultVideos={initialVideos}
             />
           </div>
         ))}
