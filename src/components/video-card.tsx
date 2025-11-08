@@ -254,11 +254,10 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { onAddChannel: (channels: M3uChannel[]) => void, localUser: User | null, isUserLoading: boolean }) {
+function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const auth = useAuth();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
@@ -273,27 +272,14 @@ function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { on
 
   const processM3uContent = async (content: string, source: string) => {
     if (isUserLoading) {
-        // This can happen if user clicks "add" immediately after creating a new anon profile.
-        // We wait for the auth state to settle.
-        toast({
-            title: t('loading'),
-            description: "Please wait a moment while we set up your profile.",
-        });
-
-        // Simple poll to wait for user to be available
-        await new Promise(resolve => {
-            const interval = setInterval(() => {
-                if (auth?.currentUser) {
-                    clearInterval(interval);
-                    resolve(true);
-                }
-            }, 100);
-        });
+      toast({
+        title: t('loading'),
+        description: "Please wait a moment while we set up your profile.",
+      });
+      return false;
     }
 
-    const currentUser = localUser || auth?.currentUser;
-
-    if (!currentUser) {
+    if (!user) {
       toast({
         variant: 'destructive',
         title: t('notLoggedInTitle'),
@@ -358,7 +344,7 @@ function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { on
           // Save to Firestore
           addDocumentNonBlocking(userChannelsRef, {
             ...channel,
-            userId: currentUser.uid,
+            userId: user.uid,
             addedAt: serverTimestamp(),
           });
         } else {
@@ -463,6 +449,8 @@ function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { on
   const handleCancelVerification = () => {
     isCancelledRef.current = true;
   };
+  
+  const isDisabled = isUserLoading || isLoading;
 
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
@@ -500,11 +488,11 @@ function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { on
                   placeholder="https://.../playlist.m3u"
                   value={channelLink}
                   onChange={(e) => setChannelLink(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isDisabled}
                   className="flex-grow"
                 />
-                <Button onClick={handleAddFromUrl} disabled={isLoading || !channelLink}>
-                  {isLoading ? t('loading') : t('add')}
+                <Button onClick={handleAddFromUrl} disabled={isDisabled || !channelLink}>
+                  {isUserLoading ? t('loading') : isLoading ? t('loading') : t('add')}
                 </Button>
               </div>
             </div>
@@ -521,16 +509,16 @@ function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { on
                 onChange={handleFileChange}
                 accept=".m3u,.m3u8"
                 className="hidden"
-                disabled={isLoading}
+                disabled={isDisabled}
               />
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
                 className="w-full"
-                disabled={isLoading}
+                disabled={isDisabled}
               >
                 <Upload className="mr-2 h-4 w-4" />
-                {t('uploadFile')}
+                {isUserLoading ? t('loading') : t('uploadFile')}
               </Button>
             </div>
           </>
@@ -541,7 +529,7 @@ function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { on
 }
 
 
-function SettingsSheetContent({ localUser, onUserChange }: { localUser: User | null, onUserChange: (user: User | null) => void }) {
+function SettingsSheetContent({ user, onUserChange }: { user: User | null, onUserChange: (user: User | null) => void }) {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
@@ -561,8 +549,8 @@ function SettingsSheetContent({ localUser, onUserChange }: { localUser: User | n
   };
 
   const handleCopy = () => {
-    if (localUser) {
-      navigator.clipboard.writeText(localUser.uid);
+    if (user) {
+      navigator.clipboard.writeText(user.uid);
       toast({
         title: t('copied'),
         description: t('anonymousIdCopied'),
@@ -571,12 +559,12 @@ function SettingsSheetContent({ localUser, onUserChange }: { localUser: User | n
   };
 
   const handleSaveAsPdf = () => {
-    if (localUser) {
+    if (user) {
       const doc = new jsPDF();
       doc.text(t('pdfTitle'), 10, 10);
       doc.text(t('pdfNotice'), 10, 20);
       doc.setFont('courier');
-      doc.text(localUser.uid, 10, 30);
+      doc.text(user.uid, 10, 30);
       doc.save("snacking-tv-user-id.pdf");
       toast({
         title: t('pdfSaved'),
@@ -626,11 +614,11 @@ function SettingsSheetContent({ localUser, onUserChange }: { localUser: User | n
       </SheetHeader>
       <div className="p-4">
         <ul className="space-y-4">
-          {localUser ? (
+          {user ? (
             <li className="space-y-2">
               <p className="text-sm font-medium">{t('yourAnonymousId')}</p>
               <div className="flex items-center gap-2">
-                <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{localUser.uid}</p>
+                <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
                 <Button variant="outline" size="icon" onClick={handleCopy}>
                   <Copy className="h-4 w-4" />
                 </Button>
@@ -734,61 +722,17 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   
   const auth = useAuth();
   const [isClient, setIsClient] = useState(false);
-  const { user: firebaseUser, isUserLoading } = useUser();
-  const [localUser, setLocalUser] = useState<User | null>(null);
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
     setIsClient(true);
-    
-    // This effect runs once to initialize the user state from localStorage if available
-    const manualUserJson = localStorage.getItem('manualUser');
-    if (manualUserJson) {
-      try {
-        setLocalUser(JSON.parse(manualUserJson));
-      } catch (e) {
-        localStorage.removeItem('manualUser');
-      }
-    }
   }, []);
-
+  
   useEffect(() => {
-    // This effect synchronizes firebaseUser and manual user from localStorage
-    if (isUserLoading) return;
-
-    const manualUserJson = localStorage.getItem('manualUser');
-
-    if (firebaseUser) {
-      // Firebase auth state is the source of truth.
-      // If a different manual user is in storage, clear it.
-      if (manualUserJson) {
-        const manualUser = JSON.parse(manualUserJson);
-        if (manualUser.uid !== firebaseUser.uid) {
-          localStorage.removeItem('manualUser');
-        }
-      }
-      setLocalUser(firebaseUser);
-    } else {
-      // No Firebase user. If there's a manual user, use it.
-      if (manualUserJson) {
-        setLocalUser(JSON.parse(manualUserJson));
-      } else {
-        // No user at all. Initiate anonymous sign-in.
-        if (auth) {
-          initiateAnonymousSignIn(auth);
-        }
-      }
+    if (!isUserLoading && !user && auth) {
+      initiateAnonymousSignIn(auth);
     }
-  }, [firebaseUser, isUserLoading, auth]);
-
-  const handleUserChange = (user: User | null) => {
-    setLocalUser(user);
-    if (user) {
-      localStorage.setItem('manualUser', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('manualUser');
-    }
-  };
-
+  }, [user, isUserLoading, auth]);
 
   const { toast } = useToast();
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
@@ -809,18 +753,15 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
-  
-    // Check if the URL is valid before creating a URL object
+
     if (video.url && video.url.startsWith('http')) {
       try {
-        // This is a hack to get around the fact that HLS streams can't be re-used.
-        // by adding a dummy query param, we can force the browser to re-load the stream.
         const videoUrl = new URL(video.url);
         videoUrl.searchParams.set('v', `${Date.now()}`);
         videoElement.src = videoUrl.toString();
       } catch (error) {
         console.error("Invalid video URL:", video.url, error);
-        videoElement.src = ''; // Set to empty if URL is invalid
+        videoElement.src = '';
       }
     } else {
       videoElement.src = '';
@@ -941,7 +882,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} localUser={localUser} isUserLoading={isUserLoading} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -949,7 +890,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent localUser={localUser} onUserChange={handleUserChange} />
+              <SettingsSheetContent user={user} onUserChange={()=>{}} />
             </Sheet>
           </div>
         </div>
@@ -999,5 +940,3 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     </div>
   );
 }
-
-    
