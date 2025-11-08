@@ -234,7 +234,7 @@ function ChannelListSheetContent({
       {isManaging && (
         <div className="absolute bottom-0 left-0 right-0 bg-background border-t p-2 flex justify-between items-center">
             <div className="flex items-center gap-2">
-                <Checkbox id="select-all" onCheckedChange={() => handleSelectAll(allOtherChannels)} checked={selectedChannels.size > 0 && selectedChannels.size === allOtherChannels.length} />
+                <Checkbox id="select-all" onCheckedChange={() => handleSelectAll(channels)} checked={selectedChannels.size > 0 && selectedChannels.size === channels.length} />
                 <label htmlFor="select-all">{t('selectAll')}</label>
             </div>
             <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedChannels.size === 0}>
@@ -783,14 +783,19 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
+
+    // Check if the URL is valid before creating a URL object
+    if (video.url) {
+      // This is a hack to get around the fact that HLS streams can't be re-used.
+      // by adding a dummy query param, we can force the browser to re-load the stream.
+      const videoUrl = new URL(video.url);
+      videoUrl.searchParams.set('v', `${Date.now()}`);
+      videoElement.src = videoUrl.toString();
+    } else {
+      videoElement.src = '';
+    }
   
-    // This is a hack to get around the fact that HLS streams can't be re-used.
-    // by adding a dummy query param, we can force the browser to re-load the stream.
-    const videoUrl = new URL(video.url);
-    videoUrl.searchParams.set('v', `${Date.now()}`);
-    videoElement.src = videoUrl.toString();
-  
-    if (isActive) {
+    if (isActive && video.url) {
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
         playPromise
@@ -824,7 +829,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       return;
     }
 
-    if (videoRef.current) {
+    if (videoRef.current && video.url) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
@@ -934,7 +939,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
 
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {!isPlaying && (
+          {!isPlaying && video.url && (
             <div className="pointer-events-auto">
               
             </div>

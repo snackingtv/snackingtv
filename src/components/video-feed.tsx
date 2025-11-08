@@ -124,13 +124,13 @@ export function VideoFeed() {
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const videoToDisplay = filteredFeedItems[activeIndex] || {
+  const videoToDisplay = filteredFeedItems[activeIndex] || (filteredFeedItems.length > 0 ? filteredFeedItems[0] : {
     id: 'placeholder',
     url: '',
     title: 'SnackingTV',
     author: '',
     avatarId: 'iptv_placeholder'
-  };
+  });
 
 
   return (
