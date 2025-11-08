@@ -49,13 +49,13 @@
   "pdfNotice": "Please keep this ID safe to access your account on other devices.",
   "pdfTitle": "SnackingTV - Anonymous User ID",
   "addChannel": "Add Channel",
-  "channelLink": "Channel Link",
+  "channelLink": "Channel Link (M3U/M3U8)",
   "add": "Add",
   "noChannels": "No channels added yet.",
   "invalidLinkTitle": "Invalid Link",
-  "invalidLinkDescription": "Please enter a valid channel link starting with http.",
+  "invalidLinkDescription": "Please enter a valid M3U/M3U8 link starting with http.",
   "channelAddedTitle": "Channels Added",
   "channelAddedDescription": "{count} channels have been added from the list.",
   "channelAddErrorTitle": "Error Adding Channels",
-  "channelAddErrorDescription": "The M3U file could not be processed."
+  "channelAddErrorDescription": "The M3U/M3U8 file could not be processed."
 }

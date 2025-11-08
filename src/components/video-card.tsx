@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Heart, MessageCircle, Share2, Tv2, Plus } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -176,7 +176,7 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
           <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
           <Input
             id="channel-link"
-            placeholder="https://..."
+            placeholder="https://.../playlist.m3u"
             value={channelLink}
             onChange={(e) => setChannelLink(e.target.value)}
             disabled={isLoading}
@@ -217,9 +217,11 @@ function SettingsSheetContent() {
       updateLocalUser(JSON.parse(manualUserJson));
     }
     
+    // Subscribe to auth state changes from Firebase
     if (auth) {
       const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
+          // Firebase auth state takes precedence if user is logged in via Firebase
           updateLocalUser(firebaseUser);
           if (firebaseUser.isAnonymous) {
              toast({
@@ -233,6 +235,7 @@ function SettingsSheetContent() {
             });
           }
         } else if (!localStorage.getItem('manualUser')) {
+          // Only log out if there's no manual user either
           updateLocalUser(null);
         }
       });

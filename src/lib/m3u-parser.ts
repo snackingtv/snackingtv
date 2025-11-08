@@ -10,7 +10,18 @@ export function parseM3u(m3uContent: string): M3uChannel[] {
   const channels: M3uChannel[] = [];
 
   if (!lines[0].startsWith('#EXTM3U')) {
-    throw new Error('Invalid M3U file: Missing #EXTM3U header');
+    // M3U8 files can also just contain a list of URLs.
+    // Let's try to parse it as a simple list of streams.
+    const urlLines = lines.filter(line => line.trim().length > 0 && !line.startsWith('#'));
+    if (urlLines.length > 0) {
+        return urlLines.map((url, index) => ({
+            name: `Stream ${index + 1}`,
+            logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
+            url: url.trim(),
+            group: 'Imported',
+        }));
+    }
+    throw new Error('Invalid M3U/M3U8 file: Missing #EXTM3U header and no stream URLs found.');
   }
 
   let currentChannel: Partial<M3uChannel> = {};
