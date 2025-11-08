@@ -23,7 +23,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 interface VideoCardProps {
   video: Video;
-  avatarUrl: string;
   isActive: boolean;
   onAddChannels: (newChannels: M3uChannel[]) => void;
   onChannelSelect: (channel: M3uChannel) => void;
@@ -655,7 +654,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -814,8 +813,8 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
           <div className="space-y-3 pointer-events-none text-white w-full">
-              <div className="marquee font-headline text-xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                <p className="marquee-content">{video.title}</p>
+              <div className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                <p>{video.title}</p>
               </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>

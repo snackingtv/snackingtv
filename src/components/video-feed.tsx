@@ -103,7 +103,6 @@ export function VideoFeed() {
           <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.url}-${index}`}>
             <VideoCard
               video={video}
-              avatarUrl={avatarMap.get(video.avatarId) || avatarMap.get('iptv_placeholder') || ''}
               isActive={index === activeIndex}
               onAddChannels={handleAddChannels}
               onChannelSelect={handleChannelSelect}
