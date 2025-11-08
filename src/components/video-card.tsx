@@ -254,10 +254,11 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (channels: M3uChannel[]) => void, localUser: User | null }) {
+function AddChannelSheetContent({ onAddChannel, localUser, isUserLoading }: { onAddChannel: (channels: M3uChannel[]) => void, localUser: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
@@ -271,7 +272,28 @@ function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (ch
 
 
   const processM3uContent = async (content: string, source: string) => {
-    if (!localUser) {
+    if (isUserLoading) {
+        // This can happen if user clicks "add" immediately after creating a new anon profile.
+        // We wait for the auth state to settle.
+        toast({
+            title: t('loading'),
+            description: "Please wait a moment while we set up your profile.",
+        });
+
+        // Simple poll to wait for user to be available
+        await new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (auth?.currentUser) {
+                    clearInterval(interval);
+                    resolve(true);
+                }
+            }, 100);
+        });
+    }
+
+    const currentUser = localUser || auth?.currentUser;
+
+    if (!currentUser) {
       toast({
         variant: 'destructive',
         title: t('notLoggedInTitle'),
@@ -336,7 +358,7 @@ function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (ch
           // Save to Firestore
           addDocumentNonBlocking(userChannelsRef, {
             ...channel,
-            userId: localUser.uid,
+            userId: currentUser.uid,
             addedAt: serverTimestamp(),
           });
         } else {
@@ -378,9 +400,6 @@ function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (ch
         description: t('noOnlineChannelsDescription'),
       });
     }
-
-    // onAddChannel is now handled by the realtime listener in VideoFeed
-    // onAddChannel(finalOnlineChannels);
     
     setIsLoading(false);
     setIsVerifying(false);
@@ -753,11 +772,13 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       if (manualUserJson) {
         setLocalUser(JSON.parse(manualUserJson));
       } else {
-        // No user at all
-        setLocalUser(null);
+        // No user at all. Initiate anonymous sign-in.
+        if (auth) {
+          initiateAnonymousSignIn(auth);
+        }
       }
     }
-  }, [firebaseUser, isUserLoading]);
+  }, [firebaseUser, isUserLoading, auth]);
 
   const handleUserChange = (user: User | null) => {
     setLocalUser(user);
@@ -920,7 +941,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} localUser={localUser} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} localUser={localUser} isUserLoading={isUserLoading} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -978,3 +999,5 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     </div>
   );
 }
+
+    
