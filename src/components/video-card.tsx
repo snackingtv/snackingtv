@@ -186,12 +186,12 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
 
     let checkedCount = 0;
 
-    const checkPromises = parsedChannels.map(async (channel) => {
-      if (isCancelledRef.current) return;
+    for (const channel of parsedChannels) {
+      if (isCancelledRef.current) {
+        break; // Exit the loop if cancelled
+      }
       try {
         const result = await checkChannelStatus({ url: channel.url });
-        if (isCancelledRef.current) return;
-        
         if (result.online) {
           onlineChannelsRef.current.push(channel);
           setOnlineCount(c => c + 1);
@@ -201,13 +201,10 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       } catch (error) {
         setOfflineCount(c => c + 1);
       } finally {
-        if (isCancelledRef.current) return;
         checkedCount++;
         setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
       }
-    });
-
-    await Promise.all(checkPromises);
+    }
     
     const finalOnlineChannels = onlineChannelsRef.current;
 
@@ -224,15 +221,13 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
                 description: t('verificationCancelledDescription'),
             });
         }
-    }
-
-    if (finalOnlineChannels.length > 0) {
+    } else if (finalOnlineChannels.length > 0) {
       onAddChannel(finalOnlineChannels);
       toast({
         title: t('channelAddedTitle'),
         description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
       });
-    } else if (!isCancelledRef.current) {
+    } else {
        toast({
         variant: 'destructive',
         title: t('noOnlineChannelsTitle'),
