@@ -706,11 +706,9 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="absolute top-4 left-4 md:top-6 md:left-6 text-white">
-            <h2 className="font-headline text-xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
-        </div>
-        <div className="absolute top-4 right-4 md:top-6 md:right-6">
-           <Sheet>
+        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center text-white">
+          <h2 className="font-headline text-xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
+          <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12">
                 <Settings size={28} className="drop-shadow-lg"/>
@@ -757,5 +755,3 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
     </div>
   );
 }
-
-    
