@@ -9,7 +9,6 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { WithId } from '@/firebase/firestore/use-collection';
 
 export function VideoFeed() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -17,7 +16,7 @@ export function VideoFeed() {
     loop: true,
   });
   const [activeIndex, setActiveIndex] = useState(0);
-  const [feedItems, setFeedItems] = useState<Video[]>(initialVideos);
+  const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -36,8 +35,8 @@ export function VideoFeed() {
   
   useEffect(() => {
     // We combine initial videos with user channels
-    const combinedFeed: Video[] = [...initialVideos];
-    const combinedUrls = new Set(initialVideos.map(v => v.url));
+    const combinedFeed: Video[] = [];
+    const combinedUrls = new Set<string>();
 
     if (userChannels) {
       userChannels.forEach((channel) => {
@@ -138,25 +137,33 @@ export function VideoFeed() {
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
-        {filteredFeedItems.map((video, index) => (
-          <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.id}-${video.url}`}>
-            <VideoCard
-              video={video}
-              isActive={index === activeIndex}
-              onAddChannels={handleAddChannels}
-              onChannelSelect={handleChannelSelect}
-              addedChannels={userChannels || []}
-              isFavorite={favoriteChannels.includes(video.url)}
-              onToggleFavorite={handleToggleFavorite}
-              onSearch={setSearchTerm}
-              searchTerm={searchTerm}
-              defaultVideos={initialVideos}
-            />
+        {filteredFeedItems.length > 0 ? (
+          filteredFeedItems.map((video, index) => (
+            <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.id}-${video.url}`}>
+              <VideoCard
+                video={video}
+                isActive={index === activeIndex}
+                onAddChannels={handleAddChannels}
+                onChannelSelect={handleChannelSelect}
+                addedChannels={userChannels || []}
+                isFavorite={favoriteChannels.includes(video.url)}
+                onToggleFavorite={handleToggleFavorite}
+                onSearch={setSearchTerm}
+                searchTerm={searchTerm}
+              />
+            </div>
+          ))
+        ) : (
+          <div className="flex-[0_0_100%] min-h-0 relative flex items-center justify-center text-center text-white bg-black p-8">
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Willkommen bei SnackingTV</h2>
+              <p className="text-lg">Füge Kanäle hinzu, um loszulegen.</p>
+              <p className="text-muted-foreground mt-2">Klicke auf das Plus-Symbol (+) oben rechts, um deine erste M3U-Playlist hinzuzufügen.</p>
+            </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
 }
-
     

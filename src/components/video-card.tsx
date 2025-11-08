@@ -35,7 +35,6 @@ interface VideoCardProps {
   onToggleFavorite: (channelUrl: string) => void;
   onSearch: (term: string) => void;
   searchTerm: string;
-  defaultVideos: Video[];
 }
 
 // Define the Channel type
@@ -108,11 +107,13 @@ function ImprintSheetContent() {
 function ChannelListSheetContent({ 
   channels, 
   onChannelSelect,
-  favoriteChannels
+  favoriteChannels,
+  title
 }: { 
   channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
   favoriteChannels: WithId<M3uChannel>[];
+  title: string;
 }) {
   const { t } = useTranslation();
   const firestore = useFirestore();
@@ -202,7 +203,7 @@ function ChannelListSheetContent({
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
       <SheetHeader>
         <div className="flex justify-between items-center">
-            <SheetTitle>{t('channels')}</SheetTitle>
+            <SheetTitle>{title}</SheetTitle>
             {channels.length > 0 && (
                 <Button variant="ghost" onClick={() => { setIsManaging(!isManaging); setSelectedChannels(new Set()); }}>
                     {isManaging ? t('done') : t('manage')}
@@ -242,42 +243,6 @@ function ChannelListSheetContent({
             </Button>
         </div>
       )}
-    </SheetContent>
-  );
-}
-
-function DefaultVideoListSheetContent({ 
-  videos, 
-  onChannelSelect,
-}: { 
-  videos: Video[]; 
-  onChannelSelect: (channel: Video) => void;
-}) {
-  const { t } = useTranslation();
-
-  return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
-      <SheetHeader>
-        <SheetTitle>{t('library')}</SheetTitle>
-      </SheetHeader>
-      <div className="p-4 overflow-y-auto h-full">
-        {videos.length > 0 ? (
-          <ul className="space-y-2">
-            {videos.map((video) => (
-              <li key={video.id}>
-                <button
-                  onClick={() => onChannelSelect(video)}
-                  className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
-                >
-                  <span className="font-medium">{video.title}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted-foreground text-center">{t('noDefaultVideos')}</p>
-        )}
-      </div>
     </SheetContent>
   );
 }
@@ -791,7 +756,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, defaultVideos }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -955,7 +920,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Tv2 size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -963,7 +928,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Folder size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <DefaultVideoListSheetContent videos={defaultVideos} onChannelSelect={onChannelSelect} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('library')} />
             </Sheet>
         </div>
 
