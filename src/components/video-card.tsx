@@ -714,13 +714,11 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState('');
   
-  const auth = useAuth();
   const [isClient, setIsClient] = useState(false);
   const { user, isUserLoading } = useUser();
 
@@ -728,12 +726,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     setIsClient(true);
   }, []);
   
-  useEffect(() => {
-    if (!isUserLoading && !user && auth) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [user, isUserLoading, auth]);
-
   const { toast } = useToast();
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
@@ -781,7 +773,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       videoElement.pause();
       videoElement.currentTime = 0;
       setIsPlaying(false);
-      setProgress(0);
     }
   }, [isActive, video.url]);
   
@@ -790,7 +781,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (videoRef.current) {
       const { currentTime, duration } = videoRef.current;
       if (duration > 0) {
-        setProgress((currentTime / duration) * 100);
+        // setProgress((currentTime / duration) * 100);
       }
     }
   };
