@@ -254,7 +254,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (channels: M3uChannel[]) => void, localUser: User | { uid: string; isAnonymous: boolean; } | null }) {
+function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (channels: M3uChannel[]) => void, localUser: User | null }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -522,30 +522,24 @@ function AddChannelSheetContent({ onAddChannel, localUser }: { onAddChannel: (ch
 }
 
 
-function SettingsSheetContent({ localUser, setLocalUser }: { localUser: User | { uid: string, isAnonymous: boolean } | null, setLocalUser: (user: User | { uid: string, isAnonymous: boolean } | null) => void }) {
+function SettingsSheetContent({ localUser, onUserChange }: { localUser: User | null, onUserChange: (user: User | null) => void }) {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
   const { t, language, setLanguage } = useTranslation();
   
-
   const handleLogout = () => {
-    const performLogout = () => {
-      localStorage.removeItem('manualUser');
-      setLocalUser(null);
-      toast({
-        title: t('loggedOut'),
-        description: t('loggedOutSuccessfully'),
-      });
-    };
-
-    if (auth && auth.currentUser) {
-      signOut(auth).then(performLogout).catch(performLogout);
-    } else {
-      performLogout();
+    if (auth) {
+      signOut(auth);
     }
+    // For manual/non-firebase user, just clear it
+    onUserChange(null);
+    localStorage.removeItem('manualUser');
+    toast({
+      title: t('loggedOut'),
+      description: t('loggedOutSuccessfully'),
+    });
   };
-
 
   const handleCopy = () => {
     if (localUser) {
@@ -581,23 +575,27 @@ function SettingsSheetContent({ localUser, setLocalUser }: { localUser: User | {
       });
       return;
     }
-    const fakeUser = { uid: id, isAnonymous: true };
-    localStorage.setItem('manualUser', JSON.stringify(fakeUser));
-    setLocalUser(fakeUser);
+    // This is a "fake" user object for manual sign in
+    const manualUser = { uid: id.trim(), isAnonymous: true } as unknown as User;
+    onUserChange(manualUser);
+    localStorage.setItem('manualUser', JSON.stringify(manualUser));
     
+    // If a firebase user is logged in, log them out
     if(auth && auth.currentUser) {
       signOut(auth);
     }
     
     toast({
         title: t('loggedInWithId'),
-        description: t('nowUsingAnonymousId', {id: id}),
+        description: t('nowUsingAnonymousId', {id: id.trim()}),
     });
   }
 
   const handleNewAnonymousProfile = () => {
     if (auth) {
-      localStorage.removeItem('manualUser'); 
+      // Clear manual user before initiating new Firebase anonymous sign-in
+      localStorage.removeItem('manualUser');
+      onUserChange(null);
       initiateAnonymousSignIn(auth);
     }
   }
@@ -717,50 +715,59 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   
   const auth = useAuth();
   const [isClient, setIsClient] = useState(false);
-  const [localUser, setLocalUser] = useState<User | { uid: string, isAnonymous: boolean } | null>(null);
+  const { user: firebaseUser, isUserLoading } = useUser();
+  const [localUser, setLocalUser] = useState<User | null>(null);
 
   useEffect(() => {
     setIsClient(true);
     
-    const updateLocalUser = (user: User | { uid: string; isAnonymous: boolean } | null) => {
-      setLocalUser(user);
-      if (user) {
-        localStorage.setItem('manualUser', JSON.stringify(user));
-      } else {
-        localStorage.removeItem('manualUser');
-      }
-    };
-    
+    // This effect runs once to initialize the user state from localStorage if available
     const manualUserJson = localStorage.getItem('manualUser');
     if (manualUserJson) {
-      updateLocalUser(JSON.parse(manualUserJson));
+      try {
+        setLocalUser(JSON.parse(manualUserJson));
+      } catch (e) {
+        localStorage.removeItem('manualUser');
+      }
     }
-    
-    // Subscribe to auth state changes from Firebase
-    if (auth) {
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        if (firebaseUser) {
-          // Firebase auth state takes precedence if user is logged in via Firebase
-          updateLocalUser(firebaseUser);
-          if (firebaseUser.isAnonymous) {
-             toast({
-              title: t('loggedIn'),
-              description: t('nowLoggedInAnonymously'),
-            });
-          } else {
-            toast({
-              title: t('loggedIn'),
-              description: t('nowLoggedIn'),
-            });
-          }
-        } else if (!localStorage.getItem('manualUser')) {
-          // Only log out if there's no manual user either
-          updateLocalUser(null);
+  }, []);
+
+  useEffect(() => {
+    // This effect synchronizes firebaseUser and manual user from localStorage
+    if (isUserLoading) return;
+
+    const manualUserJson = localStorage.getItem('manualUser');
+
+    if (firebaseUser) {
+      // Firebase auth state is the source of truth.
+      // If a different manual user is in storage, clear it.
+      if (manualUserJson) {
+        const manualUser = JSON.parse(manualUserJson);
+        if (manualUser.uid !== firebaseUser.uid) {
+          localStorage.removeItem('manualUser');
         }
-      });
-      return () => unsubscribe();
+      }
+      setLocalUser(firebaseUser);
+    } else {
+      // No Firebase user. If there's a manual user, use it.
+      if (manualUserJson) {
+        setLocalUser(JSON.parse(manualUserJson));
+      } else {
+        // No user at all
+        setLocalUser(null);
+      }
     }
-  }, [auth, t]);
+  }, [firebaseUser, isUserLoading]);
+
+  const handleUserChange = (user: User | null) => {
+    setLocalUser(user);
+    if (user) {
+      localStorage.setItem('manualUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('manualUser');
+    }
+  };
+
 
   const { toast } = useToast();
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
@@ -783,7 +790,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (!videoElement) return;
   
     // Check if the URL is valid before creating a URL object
-    if (video.url) {
+    if (video.url && video.url.startsWith('http')) {
       try {
         // This is a hack to get around the fact that HLS streams can't be re-used.
         // by adding a dummy query param, we can force the browser to re-load the stream.
@@ -921,7 +928,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent localUser={localUser} setLocalUser={setLocalUser} />
+              <SettingsSheetContent localUser={localUser} onUserChange={handleUserChange} />
             </Sheet>
           </div>
         </div>
@@ -971,5 +978,3 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     </div>
   );
 }
-
-    
