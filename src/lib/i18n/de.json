@@ -80,6 +80,17 @@
   "noFavorites": "Keine Favoriten markiert.",
   "searchChannels": "Kanäle suchen",
   "searchPlaceholder": "Suchen...",
-  "defaultVideos": "Bibliothek",
-  "noDefaultVideos": "Keine Videos in der Bibliothek gefunden."
+  "library": "Bibliothek",
+  "noDefaultVideos": "Keine Videos in der Bibliothek gefunden.",
+  "manage": "Verwalten",
+  "done": "Fertig",
+  "selectAll": "Alle auswählen",
+  "deleteSelected": "Löschen ({count})",
+  "channelsDeletedTitle": "Kanäle gelöscht",
+  "channelsDeletedDescription": "{count, plural, =1 {1 Kanal wurde gelöscht.} other {# Kanäle wurden gelöscht.}}",
+  "deleteErrorTitle": "Fehler beim Löschen",
+  "deleteErrorDescription": "Ein Fehler ist beim Löschen der Kanäle aufgetreten.",
+  "noOtherChannels": "Keine weiteren Kanäle."
 }
+
+    

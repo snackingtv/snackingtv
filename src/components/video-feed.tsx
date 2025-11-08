@@ -9,6 +9,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { WithId } from '@/firebase/firestore/use-collection';
 
 export function VideoFeed() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -157,3 +158,5 @@ export function VideoFeed() {
     </div>
   );
 }
+
+    

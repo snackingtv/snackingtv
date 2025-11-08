@@ -80,6 +80,17 @@
   "noFavorites": "No favorites marked.",
   "searchChannels": "Search Channels",
   "searchPlaceholder": "Search...",
-  "defaultVideos": "Library",
-  "noDefaultVideos": "No videos found in the library."
+  "library": "Library",
+  "noDefaultVideos": "No videos found in the library.",
+  "manage": "Manage",
+  "done": "Done",
+  "selectAll": "Select All",
+  "deleteSelected": "Delete ({count})",
+  "channelsDeletedTitle": "Channels Deleted",
+  "channelsDeletedDescription": "{count, plural, =1 {1 channel has been deleted.} other {# channels have been deleted.}}",
+  "deleteErrorTitle": "Deletion Error",
+  "deleteErrorDescription": "An error occurred while deleting the channels.",
+  "noOtherChannels": "No other channels."
 }
+
+    

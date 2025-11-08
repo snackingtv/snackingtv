@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -21,13 +21,16 @@ import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, serverTimestamp } from 'firebase/firestore';
+import { WithId } from '@/firebase/firestore/use-collection';
+import { Checkbox } from '@/components/ui/checkbox';
+import { deleteChannels } from '@/firebase/firestore/deletions';
 
 interface VideoCardProps {
   video: Video;
   isActive: boolean;
   onAddChannels: (newChannels: M3uChannel[]) => void;
   onChannelSelect: (channel: M3uChannel | Video) => void;
-  addedChannels: M3uChannel[];
+  addedChannels: WithId<M3uChannel>[];
   isFavorite: boolean;
   onToggleFavorite: (channelUrl: string) => void;
   onSearch: (term: string) => void;
@@ -107,20 +110,76 @@ function ChannelListSheetContent({
   onChannelSelect,
   favoriteChannels
 }: { 
-  channels: M3uChannel[]; 
+  channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
-  favoriteChannels: M3uChannel[];
+  favoriteChannels: WithId<M3uChannel>[];
 }) {
   const { t } = useTranslation();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isManaging, setIsManaging] = useState(false);
+  const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
 
-  const renderChannelList = (channelList: M3uChannel[], emptyMessage: string) => (
-    channelList.length > 0 ? (
-      <ul className="space-y-2">
+  const handleToggleSelect = (channelId: string) => {
+    setSelectedChannels(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(channelId)) {
+        newSelection.delete(channelId);
+      } else {
+        newSelection.add(channelId);
+      }
+      return newSelection;
+    });
+  };
+  
+  const handleSelectAll = (channelList: WithId<M3uChannel>[]) => {
+      const allIds = channelList.map(c => c.id);
+      if(selectedChannels.size === allIds.length) {
+          setSelectedChannels(new Set());
+      } else {
+          setSelectedChannels(new Set(allIds));
+      }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!firestore) return;
+    try {
+        await deleteChannels(firestore, Array.from(selectedChannels));
+        toast({
+            title: t('channelsDeletedTitle'),
+            description: t('channelsDeletedDescription', { count: selectedChannels.size }),
+        });
+        setSelectedChannels(new Set());
+        setIsManaging(false);
+    } catch (error) {
+        console.error("Error deleting channels: ", error);
+        toast({
+            variant: "destructive",
+            title: t('deleteErrorTitle'),
+            description: t('deleteErrorDescription'),
+        });
+    }
+  };
+
+  const allOtherChannels = channels.filter(c => !favoriteChannels.find(f => f.url === c.url));
+
+  const renderChannelList = (channelList: WithId<M3uChannel>[], emptyMessage: string) => {
+    return channelList.length > 0 ? (
+      <ul className="space-y-1">
         {channelList.map((channel) => (
-          <li key={channel.url}>
+          <li key={channel.id} className="flex items-center gap-2 rounded-lg hover:bg-accent/50 pr-2">
+            {isManaging && (
+              <Checkbox
+                checked={selectedChannels.has(channel.id)}
+                onCheckedChange={() => handleToggleSelect(channel.id)}
+                className="ml-2"
+                aria-label={`Select ${channel.name}`}
+              />
+            )}
             <button
-              onClick={() => onChannelSelect(channel)}
-              className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
+              onClick={() => !isManaging && onChannelSelect(channel)}
+              className="w-full flex items-center gap-4 p-2 text-left disabled:opacity-50"
+              disabled={isManaging}
             >
               <Image
                 src={channel.logo}
@@ -129,22 +188,29 @@ function ChannelListSheetContent({
                 height={40}
                 className="rounded-md"
               />
-              <span className="font-medium">{channel.name}</span>
+              <span className="font-medium flex-grow truncate">{channel.name}</span>
             </button>
           </li>
         ))}
       </ul>
     ) : (
       <p className="text-muted-foreground text-center py-4">{emptyMessage}</p>
-    )
-  );
+    );
+  };
 
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
       <SheetHeader>
-        <SheetTitle>{t('channels')}</SheetTitle>
+        <div className="flex justify-between items-center">
+            <SheetTitle>{t('channels')}</SheetTitle>
+            {channels.length > 0 && (
+                <Button variant="ghost" onClick={() => { setIsManaging(!isManaging); setSelectedChannels(new Set()); }}>
+                    {isManaging ? t('done') : t('manage')}
+                </Button>
+            )}
+        </div>
       </SheetHeader>
-      <div className="p-4 overflow-y-auto h-full">
+      <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
         {channels.length > 0 ? (
           <Accordion type="multiple" defaultValue={['favorites', 'all-channels']} className="w-full">
             <AccordionItem value="favorites">
@@ -156,7 +222,7 @@ function ChannelListSheetContent({
             <AccordionItem value="all-channels">
               <AccordionTrigger>{t('allChannels')}</AccordionTrigger>
               <AccordionContent>
-                {renderChannelList(channels.filter(c => !favoriteChannels.find(f => f.url === c.url)), t('noChannels'))}
+                {renderChannelList(allOtherChannels, t('noOtherChannels'))}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -164,6 +230,18 @@ function ChannelListSheetContent({
           <p className="text-muted-foreground text-center">{t('noChannels')}</p>
         )}
       </div>
+      {isManaging && (
+        <div className="absolute bottom-0 left-0 right-0 bg-background border-t p-2 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+                <Checkbox id="select-all" onCheckedChange={() => handleSelectAll(allOtherChannels)} checked={selectedChannels.size > 0 && selectedChannels.size === allOtherChannels.length} />
+                <label htmlFor="select-all">{t('selectAll')}</label>
+            </div>
+            <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedChannels.size === 0}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('deleteSelected', { count: selectedChannels.size })}
+            </Button>
+        </div>
+      )}
     </SheetContent>
   );
 }
@@ -180,7 +258,7 @@ function DefaultVideoListSheetContent({
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
       <SheetHeader>
-        <SheetTitle>{t('defaultVideos')}</SheetTitle>
+        <SheetTitle>{t('library')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-full">
         {videos.length > 0 ? (
@@ -912,3 +990,5 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     </div>
   );
 }
+
+    
