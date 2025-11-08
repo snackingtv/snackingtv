@@ -67,7 +67,8 @@
   "checkingChannelsTitle": "Kanäle werden geprüft...",
   "checkingChannelsDescription": "{count} Kanäle werden auf Verfügbarkeit geprüft.",
   "noOnlineChannelsTitle": "Keine Online-Kanäle",
-  "noOnlineChannelsDescription": "Keiner der gefundenen Kanäle scheint online zu sein. Bitte prüfen Sie die Quelle."
+  "noOnlineChannelsDescription": "Keiner der gefundenen Kanäle scheint online zu sein. Bitte prüfen Sie die Quelle.",
+  "cancelVerification": "Überprüfung abbrechen",
+  "verificationCancelledTitle": "Überprüfung abgebrochen",
+  "verificationCancelledDescription": "Die Überprüfung der Kanäle wurde abgebrochen."
 }
-
-    

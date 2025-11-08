@@ -67,7 +67,8 @@
   "checkingChannelsTitle": "Checking Channels...",
   "checkingChannelsDescription": "Checking {count} channels for availability.",
   "noOnlineChannelsTitle": "No Online Channels",
-  "noOnlineChannelsDescription": "None of the found channels seem to be online. Please check the source."
+  "noOnlineChannelsDescription": "None of the found channels seem to be online. Please check the source.",
+  "cancelVerification": "Cancel Verification",
+  "verificationCancelledTitle": "Verification Cancelled",
+  "verificationCancelledDescription": "The channel verification process was cancelled."
 }
-
-    

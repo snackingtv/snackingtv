@@ -135,8 +135,10 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isCancelledRef = useRef(false);
 
   const processM3uContent = async (content: string, source: string) => {
+    isCancelledRef.current = false;
     setIsLoading(true);
     setIsVerifying(true);
     setVerificationProgress(0);
@@ -161,7 +163,9 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       let checkedCount = 0;
 
       const checkPromises = parsedChannels.map(async (channel) => {
+        if (isCancelledRef.current) return;
         const result = await checkChannelStatus({ url: channel.url });
+        if (isCancelledRef.current) return;
         if (result.online) {
           onlineChannels.push(channel);
         }
@@ -170,6 +174,14 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       });
 
       await Promise.all(checkPromises);
+
+      if (isCancelledRef.current) {
+        toast({
+            title: t('verificationCancelledTitle'),
+            description: t('verificationCancelledDescription'),
+        });
+        return false;
+      }
 
       if (onlineChannels.length > 0) {
         onAddChannel(onlineChannels);
@@ -187,6 +199,7 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       return true;
 
     } catch (error) {
+      if (isCancelledRef.current) return false;
       console.error(`Failed to parse M3U from ${source}:`, error);
       toast({
         variant: 'destructive',
@@ -254,6 +267,12 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     event.target.value = '';
   }
 
+  const handleCancelVerification = () => {
+    isCancelledRef.current = true;
+    setIsLoading(false);
+    setIsVerifying(false);
+  };
+
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
       <SheetHeader>
@@ -261,10 +280,13 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       </SheetHeader>
       <div className="p-4 space-y-4">
         {isVerifying ? (
-           <div className="space-y-2 text-center">
+           <div className="space-y-4 text-center">
             <p>{t('checkingChannelsTitle')}</p>
             <Progress value={verificationProgress} />
             <p className="text-sm text-muted-foreground">{verificationProgress}%</p>
+            <Button onClick={handleCancelVerification} variant="outline" className="w-full">
+              {t('cancelVerification')}
+            </Button>
           </div>
         ) : (
           <>
@@ -717,5 +739,3 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     </div>
   );
 }
-
-    
