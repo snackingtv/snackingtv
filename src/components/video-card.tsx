@@ -878,7 +878,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0" disabled={isUserLoading}>
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
@@ -926,16 +926,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           )}
         </div>
 
-        <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
-          <div className="space-y-3 pointer-events-none text-white w-full max-w-full">
-            <div className="overflow-hidden relative w-full">
-                <p className="font-headline text-xl font-bold truncate whitespace-nowrap" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                  {video.title}
-                </p>
-            </div>
-            <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
-          </div>
-        </div>
       </div>
     </div>
   );
