@@ -738,6 +738,9 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [isClient, setIsClient] = useState(false);
   const { user: firebaseUser, isUserLoading } = useUser();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const localVideoInputRef = useRef<HTMLInputElement>(null);
+  const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
+  const auth = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -786,20 +789,28 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
-
-    if (isActive && video.url && video.url.startsWith('http')) {
+  
+    // Determine which URL to play: local file > active video URL
+    const sourceUrl = localVideoUrl || (isActive && video.url);
+  
+    if (isActive && sourceUrl) {
       try {
-        const videoUrl = new URL(video.url);
-        videoUrl.searchParams.set('v', `${Date.now()}`);
-        videoElement.src = videoUrl.toString();
-
+        let finalUrl = sourceUrl;
+        // The reload hack is only needed for network streams
+        if (!sourceUrl.startsWith('blob:')) {
+          const videoUrl = new URL(sourceUrl);
+          videoUrl.searchParams.set('v', `${Date.now()}`);
+          finalUrl = videoUrl.toString();
+        }
+  
+        videoElement.src = finalUrl;
+  
         const playPromise = videoElement.play();
         if (playPromise !== undefined) {
           playPromise
             .then(() => setIsPlaying(true))
             .catch((error) => {
               console.error("Video play failed:", error);
-              // Muted autoplay is usually allowed. Try playing muted.
               videoElement.muted = true;
               videoElement.play().then(() => setIsPlaying(true)).catch(err => {
                 console.error("Muted video play also failed:", err);
@@ -808,7 +819,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             });
         }
       } catch (error) {
-        console.error("Invalid video URL:", video.url, error);
+        console.error("Invalid video URL:", sourceUrl, error);
         videoElement.src = '';
         setIsPlaying(false);
       }
@@ -818,17 +829,15 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       videoElement.src = '';
       setIsPlaying(false);
     }
-  }, [isActive, video.url]);
   
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const { currentTime, duration } = videoRef.current;
-      if (duration > 0) {
-        // setProgress((currentTime / duration) * 100);
+    // Cleanup object URL when component is inactive or unmounts
+    return () => {
+      if (localVideoUrl && !isActive) {
+        URL.revokeObjectURL(localVideoUrl);
+        setLocalVideoUrl(null);
       }
-    }
-  };
+    };
+  }, [isActive, video.url, localVideoUrl]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     // Prevent toggling play/pause when clicking on interactive elements
@@ -836,7 +845,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       return;
     }
 
-    if (videoRef.current && video.url) {
+    if (videoRef.current && (localVideoUrl || video.url)) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
@@ -867,6 +876,21 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     };
   }, [handleInteraction]);
 
+  const handleLocalFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // If there's an existing local video URL, revoke it first
+      if (localVideoUrl) {
+        URL.revokeObjectURL(localVideoUrl);
+      }
+      const objectURL = URL.createObjectURL(file);
+      setLocalVideoUrl(objectURL);
+    }
+    // Reset file input to allow selecting the same file again
+    event.target.value = '';
+  };
+  
+
   if (!isClient) {
     return (
         <div className="relative w-full h-full bg-black flex items-center justify-center">
@@ -886,7 +910,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         loop
         playsInline
         className="w-full h-full object-contain"
-        onTimeUpdate={handleTimeUpdate}
         onPlay={() => handleInteraction()}
         onPause={() => handleInteraction()}
         muted={false} 
@@ -942,19 +965,32 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               </SheetTrigger>
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
             </Sheet>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                  <Folder size={32} className="drop-shadow-lg" />
-                </Button>
-              </SheetTrigger>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('library')} />
-            </Sheet>
+
+            {/* Hidden file input for local video */}
+            <input
+              type="file"
+              ref={localVideoInputRef}
+              onChange={handleLocalFileChange}
+              accept="video/*"
+              className="hidden"
+            />
+            {/* Library button to trigger file input */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                localVideoInputRef.current?.click();
+              }}
+            >
+              <Folder size={32} className="drop-shadow-lg" />
+            </Button>
         </div>
 
 
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {!isPlaying && video.url && (
+          {!isPlaying && (video.url || localVideoUrl) && (
             <div className="pointer-events-auto">
               
             </div>
