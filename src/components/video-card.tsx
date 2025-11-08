@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 import { Input } from '@/components/ui/input';
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
@@ -19,6 +19,8 @@ import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, serverTimestamp } from 'firebase/firestore';
 
 interface VideoCardProps {
   video: Video;
@@ -168,6 +170,8 @@ function ChannelListSheetContent({
 function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3uChannel[]) => void }) {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useUser();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
@@ -181,6 +185,15 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
 
 
   const processM3uContent = async (content: string, source: string) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: 'Nicht angemeldet',
+        description: 'Sie müssen angemeldet sein, um Kanäle hinzuzufügen.',
+      });
+      return false;
+    }
+
     isCancelledRef.current = false;
     onlineChannelsRef.current = [];
     setIsLoading(true);
@@ -222,6 +235,8 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       description: t('checkingChannelsDescription', { count: parsedChannels.length }),
     });
 
+    const userChannelsRef = collection(firestore, 'user_channels');
+
     let checkedCount = 0;
 
     for (const channel of parsedChannels) {
@@ -231,6 +246,13 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         if (result.online) {
           onlineChannelsRef.current.push(channel);
           setOnlineCount(c => c + 1);
+
+          // Save to Firestore
+          addDocumentNonBlocking(userChannelsRef, {
+            ...channel,
+            userId: user.uid,
+            addedAt: serverTimestamp(),
+          });
         } else {
           setOfflineCount(c => c + 1);
         }
@@ -248,7 +270,6 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
 
     if (isCancelledRef.current) {
         if (finalOnlineChannels.length > 0) {
-            onAddChannel(finalOnlineChannels);
              toast({
                 title: t('channelAddedTitle'),
                 description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
@@ -260,7 +281,6 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
             });
         }
     } else if (finalOnlineChannels.length > 0) {
-      onAddChannel(finalOnlineChannels);
       toast({
         title: t('channelAddedTitle'),
         description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
@@ -273,6 +293,9 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       });
     }
 
+    // onAddChannel is now handled by the realtime listener in VideoFeed
+    // onAddChannel(finalOnlineChannels);
+    
     setIsLoading(false);
     setIsVerifying(false);
     return finalOnlineChannels.length > 0;

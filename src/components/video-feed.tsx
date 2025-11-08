@@ -7,6 +7,8 @@ import { videos as initialVideos, type Video } from '@/lib/videos';
 import { VideoCard } from '@/components/video-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 export function VideoFeed() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -15,9 +17,40 @@ export function VideoFeed() {
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedItems, setFeedItems] = useState<Video[]>(initialVideos);
-  const [addedChannels, setAddedChannels] = useState<M3uChannel[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const userChannelsQuery = useMemoFirebase(
+    () =>
+      user
+        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
+        : null,
+    [user, firestore]
+  );
+  
+  const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
+  
+  useEffect(() => {
+    if (userChannels) {
+      const newFeedItems: Video[] = userChannels.map((channel) => ({
+        id: channel.id,
+        url: channel.url,
+        title: channel.name,
+        author: channel.group || 'IPTV',
+        avatarId: 'iptv_placeholder',
+      }));
+
+      // Combine initial videos with user channels, preventing duplicates
+      setFeedItems(prev => {
+        const existingUrls = new Set(prev.map(item => item.url));
+        const uniqueNewItems = newFeedItems.filter(item => !existingUrls.has(item.url));
+        return [...prev, ...uniqueNewItems];
+      });
+    }
+  }, [userChannels]);
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -55,20 +88,21 @@ export function VideoFeed() {
   }, [emblaApi, onSelect]);
 
   const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
+    // This function is now mainly for local state updates if needed,
+    // as persistence is handled by Firestore writes and the useCollection hook.
     const existingUrls = new Set(feedItems.map(item => item.url));
     const uniqueNewChannels = newChannels.filter(c => !existingUrls.has(c.url));
     
     if (uniqueNewChannels.length === 0) return;
 
     const newFeedItems: Video[] = uniqueNewChannels.map((channel, index) => ({
-      id: Date.now() + index, // Simple unique ID generation
+      id: Date.now() + index, // Simple unique ID generation for local state
       url: channel.url,
       title: channel.name,
       author: channel.group || 'IPTV',
-      avatarId: 'iptv_placeholder', // A generic or random avatar
+      avatarId: 'iptv_placeholder',
     }));
 
-    setAddedChannels(prev => [...prev, ...uniqueNewChannels]);
     setFeedItems(prev => [...prev, ...newFeedItems]);
   }, [feedItems]);
 
@@ -100,13 +134,13 @@ export function VideoFeed() {
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
         {filteredFeedItems.map((video, index) => (
-          <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.url}-${index}`}>
+          <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.id}-${video.url}`}>
             <VideoCard
               video={video}
               isActive={index === activeIndex}
               onAddChannels={handleAddChannels}
               onChannelSelect={handleChannelSelect}
-              addedChannels={addedChannels}
+              addedChannels={userChannels || []}
               isFavorite={favoriteChannels.includes(video.url)}
               onToggleFavorite={handleToggleFavorite}
               onSearch={setSearchTerm}

@@ -37,6 +37,41 @@
         "uploadDate"
       ]
     },
+    "Channel": {
+      "title": "Channel",
+      "type": "object",
+      "description": "Represents a user-added channel.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this channel."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the channel."
+        },
+        "logo": {
+          "type": "string",
+          "description": "URL of the channel logo.",
+          "format": "uri"
+        },
+        "url": {
+          "type": "string",
+          "description": "The stream URL of the channel.",
+          "format": "uri"
+        },
+        "group": {
+          "type": "string",
+          "description": "The group/category of the channel."
+        },
+        "addedAt": {
+          "type": "string",
+          "description": "The timestamp when the channel was added.",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "name", "url", "addedAt"]
+    },
     "UserSetting": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserSetting",
@@ -158,8 +193,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/user_channels/{channelId}",
+        "definition": {
+          "entityName": "Channel",
+          "schema": {
+            "$ref": "#/backend/entities/Channel"
+          },
+          "description": "Stores user-added channels. Access is controlled by the userId field in the document.",
+          "params": [
+            {
+              "name": "channelId",
+              "description": "Unique identifier for the channel document."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "This Firestore structure is designed to support anonymous user settings and authenticated user data, prioritizing authorization independence and secure list operations (QAPs). The key is to enable users to use the application anonymously (via `anonymousId`) and then transition to authenticated usage (via `userId`) without losing their settings.\n\n1.  **User Settings:** Settings are stored at `/user_settings/{userSettingId}`. The document includes both `userId` and `anonymousId`.  This allows settings to be associated with either an authenticated user (via `userId`) or an anonymous user (via `anonymousId`).  The `userSettingId` is generated client side (e.g. a UUID). This ensures uniqueness across users.\n2.  **Authorization Independence:** The structure avoids `get()` calls in security rules by denormalizing authorization.  Security rules will check `request.auth.uid == resource.data.userId` for authenticated users, and allow read/write if `resource.data.anonymousId == <value passed in the request>`. \n3.  **QAPs:** Secure list operations are supported because the structure segregates data with different access needs into separate collections. The security rules can be written to only allow listing settings belonging to the authenticated user or the anonymous user.\n4.  **DBAC:** Roles are not required in this design since access control relies solely on `request.auth.uid` and `anonymousId` (for temporary settings persistence)."
+    "reasoning": "This Firestore structure is designed to support anonymous user settings and authenticated user data, prioritizing authorization independence and secure list operations (QAPs). The key is to enable users to use the application anonymously (via `anonymousId`) and then transition to authenticated usage (via `userId`) without losing their settings.\n\n1.  **User Settings:** Settings are stored at `/user_settings/{userSettingId}`. The document includes both `userId` and `anonymousId`.  This allows settings to be associated with either an authenticated user (via `userId`) or an anonymous user (via `anonymousId`).  The `userSettingId` is generated client side (e.g. a UUID). This ensures uniqueness across users.\n2.  **User Channels:** User-specific channels are stored in a top-level `user_channels` collection. Each document contains a `userId` field, allowing security rules to enforce ownership for read, write, and list operations without requiring `get()` calls, thus ensuring authorization independence.\n3.  **Authorization Independence:** The structure avoids `get()` calls in security rules by denormalizing authorization. Security rules will check `request.auth.uid == resource.data.userId` for authenticated users.\n4.  **QAPs:** Secure list operations are supported because the structure segregates data with different access needs into separate collections. The security rules can be written to only allow listing settings or channels belonging to the authenticated user.\n5.  **DBAC:** Roles are not required in this design since access control relies solely on `request.auth.uid`."
   }
 }
