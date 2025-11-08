@@ -191,26 +191,33 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     });
 
     let checkedCount = 0;
+    const checkPromises = [];
 
     for (const channel of parsedChannels) {
-      if (isCancelledRef.current) {
-        break; // Exit the loop if cancelled
-      }
-      try {
-        const result = await checkChannelStatus({ url: channel.url });
-        if (result.online) {
-          onlineChannelsRef.current.push(channel);
-          setOnlineCount(c => c + 1);
-        } else {
+      const promise = (async () => {
+        if (isCancelledRef.current) return;
+        try {
+          const result = await checkChannelStatus({ url: channel.url });
+          if (result.online) {
+            onlineChannelsRef.current.push(channel);
+            setOnlineCount(c => c + 1);
+          } else {
+            setOfflineCount(c => c + 1);
+          }
+        } catch (error) {
           setOfflineCount(c => c + 1);
+        } finally {
+          if (!isCancelledRef.current) {
+            checkedCount++;
+            setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
+          }
         }
-      } catch (error) {
-        setOfflineCount(c => c + 1);
-      } finally {
-        checkedCount++;
-        setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
-      }
+      })();
+      checkPromises.push(promise);
     }
+    
+    // This allows the loop to run but we can still "break" out with the cancel button.
+    await Promise.all(checkPromises);
     
     const finalOnlineChannels = onlineChannelsRef.current;
 
@@ -613,7 +620,11 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
     const videoElement = videoRef.current;
     if (!videoElement) return;
   
-    videoElement.src = video.url;
+    // This is a hack to get around the fact that HLS streams can't be re-used.
+    // by adding a dummy query param, we can force the browser to re-load the stream.
+    const videoUrl = new URL(video.url);
+    videoUrl.searchParams.set('v', `${Date.now()}`);
+    videoElement.src = videoUrl.toString();
   
     if (isActive) {
       const playPromise = videoElement.play();
@@ -688,7 +699,6 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
     >
       <video
         ref={videoRef}
-        src={video.url}
         loop
         playsInline
         className="w-full h-full object-contain"
@@ -703,6 +713,9 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
+        <div className="absolute top-4 left-4 md:top-6 md:left-6 text-white">
+            <h2 className="font-headline text-xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
+        </div>
         <div className="absolute top-4 right-4 md:top-6 md:right-6">
            <Sheet>
             <SheetTrigger asChild>
@@ -750,7 +763,6 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
                 <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-headline text-lg font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h3>
                 <p className="text-sm" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.author}</p>
               </div>
             </div>
@@ -761,3 +773,5 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
     </div>
   );
 }
+
+    
