@@ -86,11 +86,6 @@
           "type": "string",
           "description": "Reference to User. (Relationship: User 1:1 UserSetting)"
         },
-        "anonymousId": {
-          "type": "string",
-          "description": "Identifier for anonymous users, for settings persistence before sign-up.",
-          "format": "uuid"
-        },
         "preferredTheme": {
           "type": "string",
           "description": "User's preferred theme (e.g., light, dark).",
@@ -102,7 +97,7 @@
       },
       "required": [
         "id",
-        "anonymousId"
+        "userId"
       ]
     },
     "User": {
@@ -140,8 +135,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -153,7 +147,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserSetting"
           },
-          "description": "Stores user-specific settings.  Includes `userId` for authenticated users and `anonymousId` for anonymous users.  Supports settings persistence during account creation.  Denormalizes `userId` and `anonymousId` for Authorization Independence.",
+          "description": "Stores user-specific settings. Access is gated by the userId field.",
           "params": [
             {
               "name": "userSettingId",
@@ -211,6 +205,6 @@
         }
       }
     ],
-    "reasoning": "This Firestore structure is designed to support anonymous user settings and authenticated user data, prioritizing authorization independence and secure list operations (QAPs). The key is to enable users to use the application anonymously (via `anonymousId`) and then transition to authenticated usage (via `userId`) without losing their settings.\n\n1.  **User Settings:** Settings are stored at `/user_settings/{userSettingId}`. The document includes both `userId` and `anonymousId`.  This allows settings to be associated with either an authenticated user (via `userId`) or an anonymous user (via `anonymousId`).  The `userSettingId` is generated client side (e.g. a UUID). This ensures uniqueness across users.\n2.  **User Channels:** User-specific channels are stored in a top-level `user_channels` collection. Each document contains a `userId` field, allowing security rules to enforce ownership for read, write, and list operations without requiring `get()` calls, thus ensuring authorization independence.\n3.  **Authorization Independence:** The structure avoids `get()` calls in security rules by denormalizing authorization. Security rules will check `request.auth.uid == resource.data.userId` for authenticated users.\n4.  **QAPs:** Secure list operations are supported because the structure segregates data with different access needs into separate collections. The security rules can be written to only allow listing settings or channels belonging to the authenticated user.\n5.  **DBAC:** Roles are not required in this design since access control relies solely on `request.auth.uid`."
+    "reasoning": "This Firestore structure supports authenticated user data, prioritizing authorization independence and secure list operations (QAPs). The key is to enable users to use the application via email/password authentication (via `userId`).\n\n1.  **User Settings:** Settings are stored at `/user_settings/{userSettingId}`. The document includes a `userId` for authenticated users.\n2.  **User Channels:** User-specific channels are stored in a top-level `user_channels` collection. Each document contains a `userId` field, allowing security rules to enforce ownership for read, write, and list operations without requiring `get()` calls, thus ensuring authorization independence.\n3.  **Authorization Independence:** The structure avoids `get()` calls in security rules by denormalizing authorization. Security rules will check `request.auth.uid == resource.data.userId` for authenticated users.\n4.  **QAPs:** Secure list operations are supported because the structure segregates data with different access needs into separate collections. The security rules can be written to only allow listing settings or channels belonging to the authenticated user.\n5.  **DBAC:** Roles are not required in this design since access control relies solely on `request.auth.uid`."
   }
 }

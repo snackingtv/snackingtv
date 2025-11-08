@@ -13,12 +13,13 @@ import { collection, query, where } from 'firebase/firestore';
 export function VideoFeed() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: true,
+    loop: false, // Loop can cause issues with dynamic content
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -111,34 +112,60 @@ export function VideoFeed() {
     if (emblaApi) {
       emblaApi.reInit();
     }
-  }, [feedItems.length, emblaApi]);
+  }, [feedItems, emblaApi]);
 
   const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
     const channelIndex = feedItems.findIndex(item => item.url === channel.url);
     if (emblaApi && channelIndex !== -1) {
       emblaApi.scrollTo(channelIndex, false);
+      setLocalVideoItem(null); // Deselect local video if a channel is selected
     }
   }, [emblaApi, feedItems]);
 
-  const filteredFeedItems = feedItems.filter(item => 
+  const handleLocalVideoSelect = (file: File) => {
+    const newVideoItem: Video = {
+      id: `local-${file.name}-${Date.now()}`,
+      url: file as any, // This is not a real URL, just placeholder for the blob
+      title: file.name,
+      author: 'Local File',
+      avatarId: 'local_file_placeholder'
+    };
+    setLocalVideoItem(newVideoItem);
+    // If there are other items, we can decide where to show it.
+    // For now, let's just make it the only active item.
+    if (emblaApi) {
+      // This is a bit of a hack. We replace the feed to just show the local video.
+      // A better approach might be to insert it and scroll.
+    }
+  };
+
+
+  const currentFeed = localVideoItem ? [localVideoItem] : feedItems.filter(item => 
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
-  const videoToDisplay = filteredFeedItems[activeIndex] || (filteredFeedItems.length > 0 ? filteredFeedItems[0] : {
+
+  useEffect(() => {
+    // When switching from local video back to feed, reset active index if needed
+    if (!localVideoItem && emblaApi && activeIndex >= currentFeed.length) {
+      setActiveIndex(Math.max(0, currentFeed.length - 1));
+    }
+  }, [localVideoItem, activeIndex, currentFeed.length, emblaApi]);
+
+  const placeholderVideo: Video = {
     id: 'placeholder',
     url: '',
     title: 'SnackingTV',
-    author: '',
+    author: 'Add a channel or select a local file',
     avatarId: 'iptv_placeholder'
-  });
+  };
 
+  const displayFeed = currentFeed.length > 0 ? currentFeed : [placeholderVideo];
 
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
-        {filteredFeedItems.length > 0 ? (
-          filteredFeedItems.map((video, index) => (
-            <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.id}-${video.url}`}>
+        {displayFeed.map((video, index) => (
+            <div className="flex-[0_0_100%] min-h-0 relative" key={video.id}>
               <VideoCard
                 video={video}
                 isActive={index === activeIndex}
@@ -149,24 +176,11 @@ export function VideoFeed() {
                 onToggleFavorite={handleToggleFavorite}
                 onSearch={setSearchTerm}
                 searchTerm={searchTerm}
+                localVideoItem={localVideoItem}
+                onLocalVideoSelect={handleLocalVideoSelect}
               />
             </div>
-          ))
-        ) : (
-          <div className="flex-[0_0_100%] min-h-0 relative">
-             <VideoCard
-                video={videoToDisplay}
-                isActive={true}
-                onAddChannels={handleAddChannels}
-                onChannelSelect={handleChannelSelect}
-                addedChannels={userChannels || []}
-                isFavorite={false}
-                onToggleFavorite={handleToggleFavorite}
-                onSearch={setSearchTerm}
-                searchTerm={searchTerm}
-              />
-          </div>
-        )}
+          ))}
       </div>
     </div>
   );

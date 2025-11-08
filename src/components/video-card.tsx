@@ -8,10 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateAnonymousSignIn } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
 import { Input } from '@/components/ui/input';
-import { signOut, User, onAuthStateChanged } from 'firebase/auth';
-import { jsPDF } from 'jspdf';
+import { signOut, User } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
@@ -23,6 +22,12 @@ import { collection, serverTimestamp } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { deleteChannels } from '@/firebase/firestore/deletions';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 interface VideoCardProps {
   video: Video;
@@ -34,6 +39,8 @@ interface VideoCardProps {
   onToggleFavorite: (channelUrl: string) => void;
   onSearch: (term: string) => void;
   searchTerm: string;
+  localVideoItem: Video | null;
+  onLocalVideoSelect: (file: File) => void;
 }
 
 // Define the Channel type
@@ -253,7 +260,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
+function AddChannelSheetContent({ user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -266,11 +273,10 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const [totalCount, setTotalCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef(false);
-  const onlineChannelsRef = useRef<M3uChannel[]>([]);
-
+  const [verifiedChannels, setVerifiedChannels] = useState<M3uChannel[]>([]);
+  const [selectedVerifiedChannels, setSelectedVerifiedChannels] = useState<Set<string>>(new Set());
 
   const processM3uContent = async (content: string, source: string) => {
-    // This is the critical check. We need to wait for the user to be loaded.
     if (isUserLoading || !user) {
         toast({
             variant: 'destructive',
@@ -281,7 +287,8 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
     }
 
     isCancelledRef.current = false;
-    onlineChannelsRef.current = [];
+    setVerifiedChannels([]);
+    setSelectedVerifiedChannels(new Set());
     setIsLoading(true);
     setIsVerifying(true);
     setVerificationProgress(0);
@@ -320,25 +327,17 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
       title: t('checkingChannelsTitle'),
       description: t('checkingChannelsDescription', { count: parsedChannels.length }),
     });
-
-    const userChannelsRef = collection(firestore, 'user_channels');
-
+    
     let checkedCount = 0;
+    const onlineChannels: M3uChannel[] = [];
 
     for (const channel of parsedChannels) {
-      if (isCancelledRef.current) break; // Check for cancellation
+      if (isCancelledRef.current) break; 
       try {
         const result = await checkChannelStatus({ url: channel.url });
         if (result.online) {
-          onlineChannelsRef.current.push(channel);
+          onlineChannels.push(channel);
           setOnlineCount(c => c + 1);
-
-          // Save to Firestore
-          addDocumentNonBlocking(userChannelsRef, {
-            ...channel,
-            userId: user.uid,
-            addedAt: serverTimestamp(),
-          });
         } else {
           setOfflineCount(c => c + 1);
         }
@@ -351,25 +350,17 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
         }
       }
     }
-    
-    const finalOnlineChannels = onlineChannelsRef.current;
 
     if (isCancelledRef.current) {
-        if (finalOnlineChannels.length > 0) {
-             toast({
-                title: t('channelAddedTitle'),
-                description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
-            });
-        } else {
-             toast({
-                title: t('verificationCancelledTitle'),
-                description: t('verificationCancelledDescription'),
-            });
-        }
-    } else if (finalOnlineChannels.length > 0) {
       toast({
-        title: t('channelAddedTitle'),
-        description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
+          title: t('verificationCancelledTitle'),
+          description: t('verificationCancelledDescription'),
+      });
+    } else if (onlineChannels.length > 0) {
+      setVerifiedChannels(onlineChannels);
+       toast({
+        title: t('verificationCompleteTitle'),
+        description: t('verificationCompleteDescription', { count: onlineChannels.length }),
       });
     } else {
        toast({
@@ -380,8 +371,8 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
     }
     
     setIsLoading(false);
-    setIsVerifying(false);
-    return finalOnlineChannels.length > 0;
+    setIsVerifying(false); 
+    return onlineChannels.length > 0;
   }
 
   const handleAddFromUrl = async () => {
@@ -414,6 +405,40 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
       setIsLoading(false);
     }
   };
+  
+  const handleSaveSelectedChannels = async () => {
+    if (!firestore || !user) return;
+    if (selectedVerifiedChannels.size === 0) {
+      toast({ variant: 'destructive', title: t('noChannelsSelectedTitle'), description: t('noChannelsSelectedDescription') });
+      return;
+    }
+  
+    setIsLoading(true);
+    const userChannelsRef = collection(firestore, 'user_channels');
+    let addedCount = 0;
+  
+    for (const channelUrl of selectedVerifiedChannels) {
+      const channel = verifiedChannels.find(c => c.url === channelUrl);
+      if (channel) {
+        // Using non-blocking update
+        addDocumentNonBlocking(userChannelsRef, {
+          ...channel,
+          userId: user.uid,
+          addedAt: serverTimestamp(),
+        });
+        addedCount++;
+      }
+    }
+  
+    toast({
+      title: t('channelAddedTitle'),
+      description: t('channelAddedDescription', { count: addedCount }),
+    });
+  
+    setIsLoading(false);
+    setVerifiedChannels([]);
+    setSelectedVerifiedChannels(new Set());
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -434,13 +459,63 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
       });
     }
     reader.readAsText(file);
-    // Reset file input
     event.target.value = '';
   }
 
   const handleCancelVerification = () => {
     isCancelledRef.current = true;
   };
+  
+  const handleToggleSelectVerified = (channelUrl: string) => {
+    setSelectedVerifiedChannels(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(channelUrl)) {
+        newSelection.delete(channelUrl);
+      } else {
+        newSelection.add(channelUrl);
+      }
+      return newSelection;
+    });
+  };
+
+  const handleSelectAllVerified = () => {
+    if (selectedVerifiedChannels.size === verifiedChannels.length) {
+      setSelectedVerifiedChannels(new Set());
+    } else {
+      setSelectedVerifiedChannels(new Set(verifiedChannels.map(c => c.url)));
+    }
+  };
+
+  if (verifiedChannels.length > 0) {
+    return (
+      <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[75vh] flex flex-col">
+        <SheetHeader>
+          <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
+        </SheetHeader>
+        <div className="flex-grow overflow-y-auto p-4 space-y-2">
+           <div className="flex items-center gap-2 sticky top-0 bg-background py-2 z-10">
+              <Checkbox id="select-all-verified" onCheckedChange={handleSelectAllVerified} checked={selectedVerifiedChannels.size > 0 && selectedVerifiedChannels.size === verifiedChannels.length} />
+              <label htmlFor="select-all-verified" className='text-sm font-medium'>{t('selectAll')}</label>
+            </div>
+            <ul className="space-y-1">
+            {verifiedChannels.map((channel) => (
+              <li key={channel.url} onClick={() => handleToggleSelectVerified(channel.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
+                 <Checkbox checked={selectedVerifiedChannels.has(channel.url)} />
+                <Image src={channel.logo} alt={channel.name} width={40} height={40} className="rounded-md" />
+                <span className="font-medium flex-grow truncate">{channel.name}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="border-t p-4 flex justify-between items-center">
+            <Button variant="ghost" onClick={() => setVerifiedChannels([])}>{t('cancel')}</Button>
+            <Button onClick={handleSaveSelectedChannels} disabled={isLoading || selectedVerifiedChannels.size === 0}>
+                {isLoading ? t('loading') : t('addSelected', { count: selectedVerifiedChannels.size })}
+            </Button>
+        </div>
+      </SheetContent>
+    );
+  }
   
   const isDisabled = isUserLoading || isLoading;
 
@@ -520,82 +595,49 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   );
 }
 
+const authFormSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
 
-function SettingsSheetContent({ user, onUserChange, isUserLoading }: { user: User | null, onUserChange: (user: User | null) => void, isUserLoading: boolean }) {
-  const [anonymousIdInput, setAnonymousIdInput] = useState('');
+function SettingsSheetContent() {
+  const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
   const { t, language, setLanguage } = useTranslation();
   
+  const form = useForm<z.infer<typeof authFormSchema>>({
+    resolver: zodResolver(authFormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   const handleLogout = () => {
-    if (auth && auth.currentUser) {
-      signOut(auth);
+    if (auth) {
+      signOut(auth).then(() => {
+        toast({
+          title: t('loggedOut'),
+          description: t('loggedOutSuccessfully'),
+        });
+      });
     }
-    // For manual/non-firebase user, just clear it
-    localStorage.removeItem('manualUser');
-    onUserChange(null);
+  };
+
+  const handleAuthAction = (action: 'login' | 'register') => {
+    if (!auth) return;
+    const { email, password } = form.getValues();
+    if (action === 'login') {
+      initiateEmailSignIn(auth, email, password);
+    } else {
+      initiateEmailSignUp(auth, email, password);
+    }
     toast({
-      title: t('loggedOut'),
-      description: t('loggedOutSuccessfully'),
+      title: t('loading'),
+      description: action === 'login' ? t('attemptingLogin') : t('attemptingRegister'),
     });
   };
-
-  const handleCopy = () => {
-    if (user) {
-      navigator.clipboard.writeText(user.uid);
-      toast({
-        title: t('copied'),
-        description: t('anonymousIdCopied'),
-      });
-    }
-  };
-
-  const handleSaveAsPdf = () => {
-    if (user) {
-      const doc = new jsPDF();
-      doc.text(t('pdfTitle'), 10, 10);
-      doc.text(t('pdfNotice'), 10, 20);
-      doc.setFont('courier');
-      doc.text(user.uid, 10, 30);
-      doc.save("snacking-tv-user-id.pdf");
-      toast({
-        title: t('pdfSaved'),
-        description: t('userIdSavedAsPdf'),
-      });
-    }
-  };
-  
-  const handleManualSignIn = (id: string) => {
-    if (!id.trim()) {
-      toast({
-        variant: "destructive",
-        title: t('invalidId'),
-        description: t('pleaseEnterValidId'),
-      });
-      return;
-    }
-    // This is a "fake" user object for manual sign in
-    const manualUser = { uid: id.trim(), isAnonymous: true } as unknown as User;
-    onUserChange(manualUser);
-    localStorage.setItem('manualUser', JSON.stringify(manualUser));
-    
-    // If a firebase user is logged in, log them out
-    if(auth && auth.currentUser) {
-      signOut(auth);
-    }
-    
-    toast({
-        title: t('loggedInWithId'),
-        description: t('nowUsingAnonymousId', {id: id.trim()}),
-    });
-  }
-
-  const handleNewAnonymousProfile = () => {
-     if (!auth) return;
-     localStorage.removeItem('manualUser');
-     onUserChange(null);
-     initiateAnonymousSignIn(auth);
-  }
   
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
@@ -608,16 +650,8 @@ function SettingsSheetContent({ user, onUserChange, isUserLoading }: { user: Use
             <p>{t('loading')}</p>
           ) : user ? (
             <li className="space-y-2">
-              <p className="text-sm font-medium">{t('yourAnonymousId')}</p>
-              <div className="flex items-center gap-2">
-                <p className="flex-grow text-xs text-muted-foreground p-2 bg-muted rounded-md font-mono break-all">{user.uid}</p>
-                <Button variant="outline" size="icon" onClick={handleCopy}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="icon" onClick={handleSaveAsPdf}>
-                  <Download className="h-4 w-4" />
-                </Button>
-              </div>
+              <p className="text-sm font-medium">{t('welcome')}, <span className='font-mono text-muted-foreground'>{user.email}</span></p>
+              
               <Button onClick={handleLogout} variant="outline" className="w-full">
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('logout')}
@@ -625,23 +659,48 @@ function SettingsSheetContent({ user, onUserChange, isUserLoading }: { user: Use
             </li>
           ) : (
             <li>
-              <div className="space-y-2">
-                <p className="text-sm font-medium">{t('login')}</p>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder={t('enterExistingAnonymousId')}
-                    value={anonymousIdInput}
-                    onChange={(e) => setAnonymousIdInput(e.target.value)}
-                    className="flex-grow"
-                  />
-                  <Button onClick={() => handleManualSignIn(anonymousIdInput)} disabled={!anonymousIdInput} variant={anonymousIdInput ? "default" : "outline"}>
-                    {t('go')}
-                  </Button>
-                </div>
-                <Button onClick={handleNewAnonymousProfile} variant="link" className="p-0 h-auto text-sm">
-                  {t('orCreateNewAnonymousProfile')}
-                </Button>
-              </div>
+                <Tabs defaultValue="login">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">{t('login')}</TabsTrigger>
+                    <TabsTrigger value="register">{t('register')}</TabsTrigger>
+                  </TabsList>
+                  <Form {...form}>
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('email')}</FormLabel>
+                            <FormControl>
+                              <Input placeholder="you@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('password')}</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <TabsContent value="login">
+                          <Button onClick={() => handleAuthAction('login')} className="w-full" disabled={!form.formState.isValid}>{t('login')}</Button>
+                       </TabsContent>
+                       <TabsContent value="register">
+                          <Button onClick={() => handleAuthAction('register')} className="w-full" disabled={!form.formState.isValid}>{t('register')}</Button>
+                       </TabsContent>
+                    </form>
+                  </Form>
+                </Tabs>
             </li>
           )}
            <li className="space-y-2">
@@ -703,7 +762,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
@@ -711,33 +770,14 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState('');
   
-  const [isClient, setIsClient] = useState(false);
-  const { user: firebaseUser, isUserLoading } = useUser();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user, isUserLoading } = useUser();
   const localVideoInputRef = useRef<HTMLInputElement>(null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
-  const auth = useAuth();
   
   // Swipe to seek state
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekSpeed, setSeekSpeed] = useState(0);
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    const manualUserStr = localStorage.getItem('manualUser');
-    if (manualUserStr) {
-      try {
-        const manualUser = JSON.parse(manualUserStr);
-        setCurrentUser(manualUser);
-      } catch (e) {
-        console.error("Failed to parse manual user from localStorage", e);
-        setCurrentUser(firebaseUser);
-      }
-    } else {
-       setCurrentUser(firebaseUser);
-    }
-  }, [firebaseUser]);
   
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
@@ -754,81 +794,70 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     return () => clearInterval(timerId);
   }, []);
 
+  useEffect(() => {
+    if (isActive && localVideoItem) {
+        const url = URL.createObjectURL(new Blob([localVideoItem.url], {type: 'video/mp4'}));
+        setLocalVideoUrl(url);
+
+        return () => {
+            URL.revokeObjectURL(url);
+            setLocalVideoUrl(null);
+        };
+    }
+  }, [isActive, localVideoItem]);
+
 
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    if (!video.url && !localVideoUrl) {
-      videoElement.src = '';
-      return;
-    }
-  
-    const sourceUrl = localVideoUrl || (isActive && video.url);
-  
-    if (isActive && sourceUrl) {
-      try {
-        // Prevent changing src if it's already set to the same local blob URL
-        if (videoElement.currentSrc === sourceUrl) {
-            if (isPlaying && videoElement.paused) {
-                videoElement.play().catch(e => console.error("Re-play failed", e));
-            }
-            return;
-        }
+    const sourceUrl = localVideoUrl || (isActive ? video.url : null);
 
-        let finalUrl = sourceUrl;
-        if (!sourceUrl.startsWith('blob:') && video.url) {
-          const videoUrl = new URL(video.url);
-          videoUrl.searchParams.set('v', `${Date.now()}`);
-          finalUrl = videoUrl.toString();
+    if (sourceUrl) {
+        if (videoElement.currentSrc !== sourceUrl) {
+            videoElement.src = sourceUrl;
         }
-  
-        videoElement.src = finalUrl;
-  
         const playPromise = videoElement.play();
         if (playPromise !== undefined) {
-          playPromise
-            .then(() => setIsPlaying(true))
-            .catch((error) => {
-              console.error("Video play failed:", error);
-              videoElement.muted = true;
-              videoElement.play().then(() => setIsPlaying(true)).catch(err => {
-                console.error("Muted video play also failed:", err);
-                setIsPlaying(false);
-              });
+            playPromise.then(() => setIsPlaying(true)).catch((error) => {
+                if (error.name !== 'AbortError') {
+                    console.error("Video play failed:", error);
+                    videoElement.muted = true;
+                    videoElement.play().then(() => setIsPlaying(true)).catch(err => {
+                        console.error("Muted video play also failed:", err);
+                        setIsPlaying(false);
+                    });
+                }
             });
         }
-      } catch (error) {
-        console.error("Invalid video URL:", sourceUrl, error);
-        videoElement.src = '';
-        setIsPlaying(false);
-      }
     } else {
-      videoElement.pause();
-      // Do not reset src here to avoid flicker, just pause
-      setIsPlaying(false);
+        videoElement.pause();
+        videoElement.removeAttribute('src');
+        videoElement.load();
+        setIsPlaying(false);
     }
-  
-    return () => {
-      if (localVideoUrl && !isActive) {
-        URL.revokeObjectURL(localVideoUrl);
-        setLocalVideoUrl(null);
-      }
-    };
-  }, [isActive, video.url, localVideoUrl, isPlaying]);
+}, [isActive, video.url, localVideoUrl]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (isSeeking) return; // Don't toggle play/pause during a seek operation
+    if (isSeeking) return;
 
-    if ((e.target as HTMLElement).closest('[data-radix-collection-item]') || (e.target as HTMLElement).closest('button')) {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-radix-collection-item]') || target.closest('button')) {
       return;
     }
 
-    if (videoRef.current && (localVideoUrl || video.url)) {
+    if (videoRef.current && (video.url || localVideoUrl)) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            if (error.name !== 'AbortError') {
+              console.error("Manual play failed:", error);
+            }
+          });
+        }
       }
       setIsPlaying(!isPlaying);
     }
@@ -858,16 +887,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const handleLocalFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (localVideoUrl) {
-        URL.revokeObjectURL(localVideoUrl);
-      }
-      const objectURL = URL.createObjectURL(file);
-      setLocalVideoUrl(objectURL);
-       // Ensure the video plays if it was already active
-      if (isActive && videoRef.current) {
-        videoRef.current.src = objectURL;
-        videoRef.current.play().then(() => setIsPlaying(true));
-      }
+      onLocalVideoSelect(file);
     }
     event.target.value = '';
   };
@@ -878,7 +898,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
   const handleSeekStart = (clientX: number) => {
     const videoEl = videoRef.current;
-    if (!videoEl || videoEl.duration === Infinity) return; // Not seekable (live stream)
+    if (!videoEl || videoEl.duration === Infinity || !videoEl.src) return;
 
     setIsSeeking(true);
     setWasPlayingBeforeSeek(!videoEl.paused);
@@ -890,8 +910,15 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   
     const videoEl = videoRef.current;
     const swipeDelta = clientX - initialSeekX.current;
-    const speed = Math.min(Math.floor(Math.abs(swipeDelta) / 40) + 1, 16);
-  
+    
+    // Softer acceleration
+    const speedRatio = Math.min(Math.abs(swipeDelta) / (videoEl.clientWidth / 2), 1); // Ratio of swipe distance to half of video width
+    let speed;
+    if (speedRatio < 0.25) speed = 2;
+    else if (speedRatio < 0.5) speed = 4;
+    else if (speedRatio < 0.75) speed = 8;
+    else speed = 16;
+    
     if (rewindInterval.current) clearInterval(rewindInterval.current);
   
     if (swipeDelta > 10) { // Fast-forward
@@ -900,7 +927,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     } else if (swipeDelta < -10) { // Rewind
       setSeekSpeed(-speed);
       if(!videoEl.paused) videoEl.pause();
-      const rewindAmount = 0.1 * speed; // seconds to jump back
+      const rewindAmount = 0.1 * (speed / 2); // Rewind speed is a bit slower
       rewindInterval.current = setInterval(() => {
         videoEl.currentTime = Math.max(0, videoEl.currentTime - rewindAmount);
       }, 100);
@@ -916,18 +943,21 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (rewindInterval.current) clearInterval(rewindInterval.current);
     rewindInterval.current = null;
     
-    setIsSeeking(false);
-    setSeekSpeed(0);
-
     const videoEl = videoRef.current;
     if (videoEl) {
         videoEl.playbackRate = 1;
+        // Restore previous play state
         if(wasPlayingBeforeSeek && videoEl.paused) {
-            videoEl.play();
+            const playPromise = videoEl.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => { if (e.name !== 'AbortError') console.error(e) });
+            }
         } else if (!wasPlayingBeforeSeek && !videoEl.paused) {
            videoEl.pause();
         }
     }
+    setIsSeeking(false);
+    setSeekSpeed(0);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -945,15 +975,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const handleMouseMove = (e: React.MouseEvent) => {
     handleSeekMove(e.clientX);
   };
-
-
-  if (!isClient) {
-    return (
-        <div className="relative w-full h-full bg-black flex items-center justify-center">
-            {/* You can show a loading spinner here */}
-        </div>
-    );
-  }
 
   return (
     <div
@@ -1013,7 +1034,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} user={currentUser} isUserLoading={isUserLoading} />
+              <AddChannelSheetContent user={user} isUserLoading={isUserLoading} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -1021,7 +1042,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent user={currentUser} onUserChange={setCurrentUser} isUserLoading={isUserLoading} />
+              <SettingsSheetContent/>
             </Sheet>
           </div>
         </div>
