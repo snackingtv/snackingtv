@@ -663,7 +663,7 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
 
-  const favoriteChannels = addedChannels.filter(c => isFavorite);
+  const favoriteChannels = addedChannels.filter(c => favoriteChannels.includes(c.url));
 
   useEffect(() => {
     const videoElement = videoRef.current;

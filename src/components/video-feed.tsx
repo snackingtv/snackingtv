@@ -11,7 +11,7 @@ import type { M3uChannel } from '@/lib/m3u-parser';
 export function VideoFeed() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: false, // Loop is disabled to allow dynamic adding of slides
+    loop: true,
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedItems, setFeedItems] = useState<Video[]>(initialVideos);
@@ -100,7 +100,7 @@ export function VideoFeed() {
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
         {feedItems.map((video, index) => (
-          <div className="flex-[0_0_100%] min-h-0 relative" key={video.url}>
+          <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.url}-${index}`}>
             <VideoCard
               video={video}
               avatarUrl={avatarMap.get(video.avatarId) || avatarMap.get('iptv_placeholder') || ''}
