@@ -55,7 +55,7 @@
   "invalidLinkTitle": "Ungültiger Link",
   "invalidLinkDescription": "Bitte geben Sie einen gültigen M3U/M3U8-Link ein, der mit http beginnt.",
   "channelAddedTitle": "Kanäle hinzugefügt",
-  "channelAddedDescription": "{count} Kanäle wurden aus der Liste hinzugefügt.",
+  "channelAddedDescription": "{count, plural, =1 {# Kanal wurde aus der Liste hinzugefügt.} other {# Kanäle wurden aus der Liste hinzugefügt.}}",
   "channelAddErrorTitle": "Fehler beim Hinzufügen der Kanäle",
   "channelAddErrorDescription": "Die M3U/M3U8-Datei konnte nicht verarbeitet werden.",
   "uploadFile": "Datei hochladen (.m3u, .m3u8)",
@@ -65,10 +65,14 @@
   "noChannelsFoundTitle": "Keine Kanäle gefunden",
   "noChannelsFoundDescription": "In der angegebenen Quelle konnten keine Kanäle gefunden werden.",
   "checkingChannelsTitle": "Kanäle werden geprüft...",
-  "checkingChannelsDescription": "{count} Kanäle werden auf Verfügbarkeit geprüft.",
+  "checkingChannelsDescription": "{count, plural, =1 {1 Kanal wird auf Verfügbarkeit geprüft.} other {# Kanäle werden auf Verfügbarkeit geprüft.}}",
   "noOnlineChannelsTitle": "Keine Online-Kanäle",
   "noOnlineChannelsDescription": "Keiner der gefundenen Kanäle scheint online zu sein. Bitte prüfen Sie die Quelle.",
   "cancelVerification": "Überprüfung abbrechen",
   "verificationCancelledTitle": "Überprüfung abgebrochen",
-  "verificationCancelledDescription": "Die Überprüfung der Kanäle wurde abgebrochen."
+  "verificationCancelledDescription": "Die Überprüfung der Kanäle wurde abgebrochen.",
+  "online": "Online: {count}",
+  "offline": "Offline: {count}",
+  "total": "Gesamt: {count}",
+  "complete": "abgeschlossen"
 }

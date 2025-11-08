@@ -55,7 +55,7 @@
   "invalidLinkTitle": "Invalid Link",
   "invalidLinkDescription": "Please enter a valid M3U/M3U8 link starting with http.",
   "channelAddedTitle": "Channels Added",
-  "channelAddedDescription": "{count} channels have been added from the list.",
+  "channelAddedDescription": "{count, plural, =1 {# channel has been added from the list.} other {# channels have been added from the list.}}",
   "channelAddErrorTitle": "Error Adding Channels",
   "channelAddErrorDescription": "The M3U/M3U8 file could not be processed.",
   "uploadFile": "Upload File (.m3u, .m3u8)",
@@ -65,10 +65,14 @@
   "noChannelsFoundTitle": "No Channels Found",
   "noChannelsFoundDescription": "Could not find any channels in the provided source.",
   "checkingChannelsTitle": "Checking Channels...",
-  "checkingChannelsDescription": "Checking {count} channels for availability.",
+  "checkingChannelsDescription": "Checking {count, plural, =1 {1 channel} other {# channels}} for availability.",
   "noOnlineChannelsTitle": "No Online Channels",
   "noOnlineChannelsDescription": "None of the found channels seem to be online. Please check the source.",
   "cancelVerification": "Cancel Verification",
   "verificationCancelledTitle": "Verification Cancelled",
-  "verificationCancelledDescription": "The channel verification process was cancelled."
+  "verificationCancelledDescription": "The channel verification process was cancelled.",
+  "online": "Online: {count}",
+  "offline": "Offline: {count}",
+  "total": "Total: {count}",
+  "complete": "complete"
 }

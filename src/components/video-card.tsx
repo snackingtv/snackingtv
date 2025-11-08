@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -134,6 +134,9 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [offlineCount, setOfflineCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef(false);
 
@@ -142,6 +145,9 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     setIsLoading(true);
     setIsVerifying(true);
     setVerificationProgress(0);
+    setOnlineCount(0);
+    setOfflineCount(0);
+    setTotalCount(0);
 
     try {
       const parsedChannels = parseM3u(content);
@@ -153,6 +159,8 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         });
         return false;
       }
+      
+      setTotalCount(parsedChannels.length);
       
       toast({
         title: t('checkingChannelsTitle'),
@@ -166,9 +174,14 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         if (isCancelledRef.current) return;
         const result = await checkChannelStatus({ url: channel.url });
         if (isCancelledRef.current) return;
+        
         if (result.online) {
           onlineChannels.push(channel);
+          setOnlineCount(c => c + 1);
+        } else {
+          setOfflineCount(c => c + 1);
         }
+        
         checkedCount++;
         setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
       });
@@ -281,9 +294,20 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       <div className="p-4 space-y-4">
         {isVerifying ? (
            <div className="space-y-4 text-center">
-            <p>{t('checkingChannelsTitle')}</p>
+            <p className="font-medium">{t('checkingChannelsTitle')}</p>
             <Progress value={verificationProgress} />
-            <p className="text-sm text-muted-foreground">{verificationProgress}%</p>
+            <div className="flex justify-around text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Wifi className="h-4 w-4 text-green-500" />
+                <span>{t('online', { count: onlineCount })}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <WifiOff className="h-4 w-4 text-red-500" />
+                <span>{t('offline', { count: offlineCount })}</span>
+              </div>
+              <span>{t('total', { count: totalCount })}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
             <Button onClick={handleCancelVerification} variant="outline" className="w-full">
               {t('cancelVerification')}
             </Button>

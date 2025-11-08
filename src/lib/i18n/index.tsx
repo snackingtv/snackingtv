@@ -16,6 +16,26 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
+// A simple ICU message formatter
+function formatICUMessage(message: string, replacements: Record<string, string | number>) {
+  if (message.includes('{count, plural')) {
+    const count = replacements['count'] as number;
+    const pluralMatch = message.match(/plural, *=(1) {([^}]*)} *other {([^}]*)}/);
+    if (pluralMatch) {
+      const singular = pluralMatch[2].replace('#', '1');
+      const plural = pluralMatch[3].replace('#', String(count));
+      return count === 1 ? singular : plural;
+    }
+  }
+  
+  let result = message;
+  for (const placeholder in replacements) {
+    result = result.replace(`{${placeholder}}`, String(replacements[placeholder]));
+  }
+  return result;
+}
+
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('de');
 
@@ -38,9 +58,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     let translation = result || key;
 
     if (replacements && typeof translation === 'string') {
-      Object.keys(replacements).forEach(placeholder => {
-        translation = translation.replace(`{${placeholder}}`, String(replacements[placeholder]));
-      });
+      return formatICUMessage(translation, replacements);
     }
 
     return translation;
