@@ -8,8 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser } from '@/firebase';
-import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { useAuth, useFirestore, useUser, initiateAnonymousSignIn } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, onAuthStateChanged } from 'firebase/auth';
 import { jsPDF } from 'jspdf';
@@ -258,7 +257,6 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
-  const auth = useAuth();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
@@ -273,7 +271,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
 
   const processM3uContent = async (content: string, source: string) => {
     // This is the critical check. We need to wait for the user to be loaded.
-    if (!user) {
+    if (isUserLoading || !user) {
         toast({
             variant: 'destructive',
             title: t('notLoggedInTitle'),
@@ -485,7 +483,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                   disabled={isDisabled}
                   className="flex-grow"
                 />
-                <Button onClick={handleAddFromUrl} disabled={isDisabled || !channelLink}>
+                <Button onClick={handleAddFromUrl} disabled={isDisabled || !channelLink || !user}>
                   {isUserLoading ? t('loading') : isLoading ? t('loading') : t('add')}
                 </Button>
               </div>
@@ -509,7 +507,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
                 className="w-full"
-                disabled={isDisabled}
+                disabled={isDisabled || !user}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 {isUserLoading ? t('loading') : t('uploadFile')}
@@ -720,13 +718,11 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const localVideoInputRef = useRef<HTMLInputElement>(null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const auth = useAuth();
-  const { toast } = useToast();
   
   // Swipe to seek state
   const [isSeeking, setIsSeeking] = useState(false);
-  const [initialSeekTime, setInitialSeekTime] = useState(0);
-  const [initialSeekX, setInitialSeekX] = useState(0);
-  const wasPlayingBeforeSeekRef = useRef(false);
+  const [seekSpeed, setSeekSpeed] = useState(0);
+  const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -822,7 +818,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       }
     } else {
       videoElement.pause();
-      videoElement.currentTime = 0;
       // Do not reset src here to avoid flicker, just pause
       setIsPlaying(false);
     }
@@ -833,7 +828,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         setLocalVideoUrl(null);
       }
     };
-  }, [isActive, video.url, localVideoUrl]);
+  }, [isActive, video.url, localVideoUrl, isPlaying]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (isSeeking) return; // Don't toggle play/pause during a seek operation
@@ -891,41 +886,61 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   };
   
   // --- Swipe to Seek Handlers ---
+  const initialSeekX = useRef(0);
+  const rewindInterval = useRef<NodeJS.Timeout | null>(null);
+
   const handleSeekStart = (clientX: number) => {
     const videoEl = videoRef.current;
     if (!videoEl || videoEl.duration === Infinity) return; // Not seekable (live stream)
 
     setIsSeeking(true);
-    setInitialSeekX(clientX);
-    setInitialSeekTime(videoEl.currentTime);
-    wasPlayingBeforeSeekRef.current = !videoEl.paused;
-    videoEl.pause();
+    initialSeekX.current = clientX;
+    setWasPlayingBeforeSeek(!videoEl.paused);
   };
 
   const handleSeekMove = (clientX: number) => {
     if (!isSeeking || !videoRef.current) return;
-
+  
     const videoEl = videoRef.current;
-    const swipeDelta = clientX - initialSeekX;
-    
+    const swipeDelta = clientX - initialSeekX.current;
     // More sensitive seeking: 1px = 0.5s of video
-    const timeDelta = swipeDelta * 0.5; 
-    let newTime = initialSeekTime + timeDelta;
-
-    // Clamp the time within video duration
-    if (newTime < 0) newTime = 0;
-    if (newTime > videoEl.duration) newTime = videoEl.duration;
-
-    videoEl.currentTime = newTime;
+    const speed = Math.min(Math.floor(Math.abs(swipeDelta) / 40) * 2 + 2, 16);
+  
+    if (rewindInterval.current) clearInterval(rewindInterval.current);
+  
+    if (swipeDelta > 10) { // Fast-forward
+        if(videoEl.paused) videoEl.play();
+        setSeekSpeed(speed);
+        videoEl.playbackRate = speed;
+    } else if (swipeDelta < -10) { // Rewind
+      setSeekSpeed(-speed);
+      if(!videoEl.paused) videoEl.pause();
+      
+      const rewindAmount = 0.1 * speed; // seconds to jump back
+      rewindInterval.current = setInterval(() => {
+        videoEl.currentTime = Math.max(0, videoEl.currentTime - rewindAmount);
+      }, 100);
+    } else {
+      setSeekSpeed(0);
+      videoEl.playbackRate = 1;
+    }
   };
 
   const handleSeekEnd = () => {
     if (!isSeeking) return;
 
+    if (rewindInterval.current) clearInterval(rewindInterval.current);
+    rewindInterval.current = null;
+    
     setIsSeeking(false);
+    setSeekSpeed(0);
+
     const videoEl = videoRef.current;
-    if (videoEl && wasPlayingBeforeSeekRef.current) {
-      videoEl.play();
+    if (videoEl) {
+        videoEl.playbackRate = 1;
+        if(wasPlayingBeforeSeek && videoEl.paused) {
+            videoEl.play();
+        }
     }
   };
 
@@ -944,10 +959,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const handleMouseMove = (e: React.MouseEvent) => {
     handleSeekMove(e.clientX);
   };
-  
-  const handleMouseUpOrLeave = () => {
-    handleSeekEnd();
-  };
 
 
   if (!isClient) {
@@ -962,24 +973,35 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     <div
       className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
       onClick={handleVideoClick}
-      onMouseLeave={handleMouseUpOrLeave} // End seek if mouse leaves
+      onMouseLeave={handleSeekEnd} 
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleSeekEnd}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUpOrLeave}
+      onMouseUp={handleSeekEnd}
     >
       <video
         ref={videoRef}
         loop
         playsInline
         className="w-full h-full object-contain"
-        onPlay={() => handleInteraction()}
-        onPause={() => handleInteraction()}
+        onPlay={() => {
+            setIsPlaying(true);
+            handleInteraction();
+        }}
+        onPause={() => {
+            setIsPlaying(false);
+            handleInteraction();
+        }}
         onTimeUpdate={handleTimeUpdate}
         muted={false} 
       />
+      {isSeeking && seekSpeed !== 0 && (
+          <div className="absolute bottom-16 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
+              {seekSpeed > 0 ? `FWD ${seekSpeed}x` : `REW ${Math.abs(seekSpeed)}x`}
+          </div>
+      )}
 
       <div
         className={`absolute inset-0 transition-opacity duration-300 ${
