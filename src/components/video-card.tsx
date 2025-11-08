@@ -258,6 +258,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [verificationProgress, setVerificationProgress] = useState(0);
@@ -278,14 +279,15 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
       });
       return false;
     }
-
+    
+    // This is the critical check. We need to wait for the user to be loaded.
     if (!user) {
-      toast({
-        variant: 'destructive',
-        title: t('notLoggedInTitle'),
-        description: t('notLoggedInDescription'),
-      });
-      return false;
+        toast({
+            variant: 'destructive',
+            title: t('notLoggedInTitle'),
+            description: t('notLoggedInDescription'),
+        });
+        return false;
     }
 
     isCancelledRef.current = false;
@@ -602,8 +604,22 @@ function SettingsSheetContent({ user, onUserChange }: { user: User | null, onUse
     if (auth) {
       // Clear manual user before initiating new Firebase anonymous sign-in
       localStorage.removeItem('manualUser');
-      onUserChange(null);
-      initiateAnonymousSignIn(auth);
+      onUserChange(null); // Clear local state first
+      initiateAnonymousSignIn(auth)
+          .then(userCredential => {
+              // The onAuthStateChanged listener will handle the global state,
+              // but we can update the local state here for immediate UI feedback if needed.
+              if (userCredential?.user) {
+                  onUserChange(userCredential.user);
+                  toast({
+                      title: t('loggedIn'),
+                      description: t('nowLoggedInAnonymously'),
+                  });
+              }
+          })
+          .catch((error) => {
+              console.error("Anonymous sign-in error:", error);
+          });
     }
   }
   
@@ -720,11 +736,28 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [currentTime, setCurrentTime] = useState('');
   
   const [isClient, setIsClient] = useState(false);
-  const { user, isUserLoading } = useUser();
+  const { user: firebaseUser, isUserLoading } = useUser();
+  const [currentUser, setCurrentUser] = useState<User | null>(firebaseUser);
+
 
   useEffect(() => {
     setIsClient(true);
+    // Check for a manually logged-in user from localStorage on initial load
+    const manualUserStr = localStorage.getItem('manualUser');
+    if (manualUserStr) {
+        try {
+            setCurrentUser(JSON.parse(manualUserStr));
+        } catch (e) {
+            console.error("Failed to parse manual user from localStorage", e);
+        }
+    }
   }, []);
+
+  useEffect(() => {
+    // This effect synchronizes the currentUser with the user from the Firebase hook.
+    // If a manual user is logged out, firebaseUser will become the source of truth.
+    setCurrentUser(firebaseUser);
+  }, [firebaseUser]);
   
   const { toast } = useToast();
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
@@ -746,32 +779,35 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     const videoElement = videoRef.current;
     if (!videoElement) return;
 
-    if (video.url && video.url.startsWith('http')) {
+    if (isActive && video.url && video.url.startsWith('http')) {
       try {
         const videoUrl = new URL(video.url);
         videoUrl.searchParams.set('v', `${Date.now()}`);
         videoElement.src = videoUrl.toString();
+
+        const playPromise = videoElement.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => setIsPlaying(true))
+            .catch((error) => {
+              console.error("Video play failed:", error);
+              // Muted autoplay is usually allowed. Try playing muted.
+              videoElement.muted = true;
+              videoElement.play().then(() => setIsPlaying(true)).catch(err => {
+                console.error("Muted video play also failed:", err);
+                setIsPlaying(false);
+              });
+            });
+        }
       } catch (error) {
         console.error("Invalid video URL:", video.url, error);
         videoElement.src = '';
-      }
-    } else {
-      videoElement.src = '';
-    }
-  
-    if (isActive && videoElement.src) {
-      const playPromise = videoElement.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsPlaying(true))
-          .catch((error) => {
-            console.error("Video play failed:", error);
-            setIsPlaying(false);
-          });
+        setIsPlaying(false);
       }
     } else {
       videoElement.pause();
       videoElement.currentTime = 0;
+      videoElement.src = '';
       setIsPlaying(false);
     }
   }, [isActive, video.url]);
@@ -873,7 +909,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} user={currentUser} isUserLoading={isUserLoading} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -881,7 +917,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent user={user} onUserChange={()=>{}} />
+              <SettingsSheetContent user={currentUser} onUserChange={setCurrentUser} />
             </Sheet>
           </div>
         </div>
