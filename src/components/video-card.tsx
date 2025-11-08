@@ -201,14 +201,21 @@ function ChannelListSheetContent({
 
   return (
     <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
-      <SheetHeader>
-        <div className="flex justify-between items-center">
-            <SheetTitle>{title}</SheetTitle>
-            {channels.length > 0 && (
-                <Button variant="ghost" onClick={() => { setIsManaging(!isManaging); setSelectedChannels(new Set()); }}>
-                    {isManaging ? t('done') : t('manage')}
-                </Button>
-            )}
+      <SheetHeader className="text-center">
+        <div className="relative flex justify-center items-center">
+          <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
+          {channels.length > 0 && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsManaging(!isManaging);
+                setSelectedChannels(new Set());
+              }}
+              className="absolute right-0"
+            >
+              {isManaging ? t('done') : t('manage')}
+            </Button>
+          )}
         </div>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
@@ -783,19 +790,24 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
-
+  
     // Check if the URL is valid before creating a URL object
     if (video.url) {
-      // This is a hack to get around the fact that HLS streams can't be re-used.
-      // by adding a dummy query param, we can force the browser to re-load the stream.
-      const videoUrl = new URL(video.url);
-      videoUrl.searchParams.set('v', `${Date.now()}`);
-      videoElement.src = videoUrl.toString();
+      try {
+        // This is a hack to get around the fact that HLS streams can't be re-used.
+        // by adding a dummy query param, we can force the browser to re-load the stream.
+        const videoUrl = new URL(video.url);
+        videoUrl.searchParams.set('v', `${Date.now()}`);
+        videoElement.src = videoUrl.toString();
+      } catch (error) {
+        console.error("Invalid video URL:", video.url, error);
+        videoElement.src = ''; // Set to empty if URL is invalid
+      }
     } else {
       videoElement.src = '';
     }
   
-    if (isActive && video.url) {
+    if (isActive && videoElement.src) {
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
         playPromise
@@ -949,9 +961,9 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
           <div className="space-y-3 pointer-events-none text-white w-full max-w-full">
             <div className="overflow-hidden relative w-full">
-              <div className="font-headline text-xl font-bold truncate whitespace-nowrap" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                <p>{video.title}</p>
-              </div>
+                <p className="font-headline text-xl font-bold truncate whitespace-nowrap" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                  {video.title}
+                </p>
             </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>
