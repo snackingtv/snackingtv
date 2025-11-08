@@ -80,6 +80,6 @@
   "noFavorites": "No favorites marked.",
   "searchChannels": "Search Channels",
   "searchPlaceholder": "Search...",
-  "defaultVideos": "Default Videos",
-  "noDefaultVideos": "No default videos found."
+  "defaultVideos": "Library",
+  "noDefaultVideos": "No videos found in the library."
 }
