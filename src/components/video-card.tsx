@@ -191,33 +191,26 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     });
 
     let checkedCount = 0;
-    const checkPromises = [];
 
     for (const channel of parsedChannels) {
-      const promise = (async () => {
-        if (isCancelledRef.current) return;
-        try {
-          const result = await checkChannelStatus({ url: channel.url });
-          if (result.online) {
-            onlineChannelsRef.current.push(channel);
-            setOnlineCount(c => c + 1);
-          } else {
-            setOfflineCount(c => c + 1);
-          }
-        } catch (error) {
+      if (isCancelledRef.current) break; // Check for cancellation
+      try {
+        const result = await checkChannelStatus({ url: channel.url });
+        if (result.online) {
+          onlineChannelsRef.current.push(channel);
+          setOnlineCount(c => c + 1);
+        } else {
           setOfflineCount(c => c + 1);
-        } finally {
-          if (!isCancelledRef.current) {
-            checkedCount++;
-            setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
-          }
         }
-      })();
-      checkPromises.push(promise);
+      } catch (error) {
+        setOfflineCount(c => c + 1);
+      } finally {
+        if (!isCancelledRef.current) {
+          checkedCount++;
+          setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
+        }
+      }
     }
-    
-    // This allows the loop to run but we can still "break" out with the cancel button.
-    await Promise.all(checkPromises);
     
     const finalOnlineChannels = onlineChannelsRef.current;
 
@@ -756,16 +749,7 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
         </div>
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
-          <div className="space-y-3 pointer-events-none text-white w-full max-w-[calc(100%-80px)]">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 border-2 border-white/50 drop-shadow-lg">
-                <AvatarImage src={avatarUrl} alt={video.author} />
-                <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.author}</p>
-              </div>
-            </div>
+          <div className="space-y-3 pointer-events-none text-white w-full">
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>
         </div>
