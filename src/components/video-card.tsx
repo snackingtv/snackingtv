@@ -24,6 +24,9 @@ interface VideoCardProps {
   video: Video;
   avatarUrl: string;
   isActive: boolean;
+  onAddChannels: (newChannels: M3uChannel[]) => void;
+  onChannelSelect: (channel: M3uChannel) => void;
+  addedChannels: M3uChannel[];
 }
 
 // Define the Channel type
@@ -93,7 +96,7 @@ function ImprintSheetContent() {
   )
 }
 
-function ChannelListSheetContent({ channels, onChannelSelect }: { channels: Channel[]; onChannelSelect: (url: string) => void; }) {
+function ChannelListSheetContent({ channels, onChannelSelect }: { channels: M3uChannel[]; onChannelSelect: (channel: M3uChannel) => void; }) {
   const { t } = useTranslation();
 
   return (
@@ -105,9 +108,9 @@ function ChannelListSheetContent({ channels, onChannelSelect }: { channels: Chan
         {channels.length > 0 ? (
           <ul className="space-y-2">
             {channels.map((channel) => (
-              <li key={channel.id}>
+              <li key={channel.url}>
                 <button
-                  onClick={() => onChannelSelect(channel.url)}
+                  onClick={() => onChannelSelect(channel)}
                   className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
                 >
                   <Image
@@ -599,60 +602,24 @@ function SettingsSheetContent() {
 }
 
 
-export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
+export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannelSelect, addedChannels }: VideoCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { t } = useTranslation();
-  const [currentVideoUrl, setCurrentVideoUrl] = useState(video.url);
-
-  const [channels, setChannels] = useState<Channel[]>([]);
-
-  const handleChannelSelect = (url: string) => {
-    setCurrentVideoUrl(url);
-    if (videoRef.current) {
-      videoRef.current.src = url;
-      videoRef.current.load();
-      const playPromise = videoRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-      }
-    }
-  };
-
-
-  const handleAddChannel = (newChannels: M3uChannel[]) => {
-    const transformedChannels: Channel[] = newChannels.map(c => ({
-      id: c.url, // Use URL as a unique ID
-      name: c.name,
-      logo: c.logo,
-      url: c.url,
-    }));
-
-    setChannels(prevChannels => {
-      const existingUrls = new Set(prevChannels.map(c => c.url));
-      const filteredNewChannels = transformedChannels.filter(c => !existingUrls.has(c.url));
-      return [...prevChannels, ...filteredNewChannels];
-    });
-  };
-
 
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
-
-    videoElement.muted = false;
-
+  
+    videoElement.src = video.url;
+  
     if (isActive) {
-      videoElement.src = currentVideoUrl; // Ensure correct source is set
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
         playPromise
-          .then(() => {
-            setIsPlaying(true);
-          })
+          .then(() => setIsPlaying(true))
           .catch((error) => {
             console.error("Video play failed:", error);
             setIsPlaying(false);
@@ -660,13 +627,12 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
       }
     } else {
       videoElement.pause();
-      if (videoElement.currentTime > 0) {
-        videoElement.currentTime = 0;
-      }
+      videoElement.currentTime = 0;
       setIsPlaying(false);
       setProgress(0);
     }
-  }, [isActive, currentVideoUrl]);
+  }, [isActive, video.url]);
+  
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -678,6 +644,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   };
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Prevent toggling play/pause when clicking on interactive elements
     if ((e.target as HTMLElement).closest('[data-radix-collection-item]') || (e.target as HTMLElement).closest('button')) {
       return;
     }
@@ -721,13 +688,14 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     >
       <video
         ref={videoRef}
-        src={currentVideoUrl}
+        src={video.url}
         loop
         playsInline
         className="w-full h-full object-contain"
         onTimeUpdate={handleTimeUpdate}
         onPlay={() => handleInteraction()}
         onPause={() => handleInteraction()}
+        muted={false} 
       />
 
       <div
@@ -753,7 +721,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                   <Plus size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={handleAddChannel} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} />
             </Sheet>
            <Sheet>
               <SheetTrigger asChild>
@@ -761,7 +729,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                   <Tv2 size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <ChannelListSheetContent channels={channels} onChannelSelect={handleChannelSelect} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} />
             </Sheet>
         </div>
 

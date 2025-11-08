@@ -1,5 +1,5 @@
 export type Video = {
-  id: number;
+  id: number | string;
   url: string;
   title: string;
   author: string;

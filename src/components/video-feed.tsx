@@ -3,16 +3,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import type { EmblaCarouselType } from 'embla-carousel';
-import { videos } from '@/lib/videos';
+import { videos as initialVideos, type Video } from '@/lib/videos';
 import { VideoCard } from '@/components/video-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import type { M3uChannel } from '@/lib/m3u-parser';
 
 export function VideoFeed() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: true,
+    loop: false, // Loop is disabled to allow dynamic adding of slides
   });
   const [activeIndex, setActiveIndex] = useState(0);
+  const [feedItems, setFeedItems] = useState<Video[]>(initialVideos);
+  const [addedChannels, setAddedChannels] = useState<M3uChannel[]>([]);
 
   const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
     setActiveIndex(emblaApi.selectedScrollSnap());
@@ -32,17 +35,56 @@ export function VideoFeed() {
     };
   }, [emblaApi, onSelect]);
 
+  const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
+    const existingUrls = new Set([...feedItems.map(item => item.url), ...addedChannels.map(c => c.url)]);
+    const uniqueNewChannels = newChannels.filter(c => !existingUrls.has(c.url));
+    
+    if (uniqueNewChannels.length === 0) return;
+
+    const newFeedItems: Video[] = uniqueNewChannels.map((channel, index) => ({
+      id: Date.now() + index, // Simple unique ID generation
+      url: channel.url,
+      title: channel.name,
+      author: channel.group || 'IPTV',
+      avatarId: 'iptv_placeholder', // A generic or random avatar
+    }));
+
+    setAddedChannels(prev => [...prev, ...uniqueNewChannels]);
+    setFeedItems(prev => [...prev, ...newFeedItems]);
+  }, [feedItems, addedChannels]);
+
+  // When a new item is added, we need to reinitialize Embla
+  useEffect(() => {
+    if (emblaApi) {
+      emblaApi.reInit();
+    }
+  }, [feedItems, emblaApi]);
+
+  const handleChannelSelect = useCallback((channel: M3uChannel) => {
+    const channelIndex = feedItems.findIndex(item => item.url === channel.url);
+    if (emblaApi && channelIndex !== -1) {
+      emblaApi.scrollTo(channelIndex, false);
+    }
+  }, [emblaApi, feedItems]);
+
+
   const avatarMap = new Map(PlaceHolderImages.map(img => [img.id, img.imageUrl]));
+  // Add a generic placeholder for IPTV channels
+  avatarMap.set('iptv_placeholder', 'https://picsum.photos/seed/iptv/64/64');
+
 
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
-        {videos.map((video, index) => (
-          <div className="flex-[0_0_100%] min-h-0 relative" key={video.id}>
+        {feedItems.map((video, index) => (
+          <div className="flex-[0_0_100%] min-h-0 relative" key={video.url}>
             <VideoCard
               video={video}
-              avatarUrl={avatarMap.get(video.avatarId) || ''}
+              avatarUrl={avatarMap.get(video.avatarId) || avatarMap.get('iptv_placeholder') || ''}
               isActive={index === activeIndex}
+              onAddChannels={handleAddChannels}
+              onChannelSelect={handleChannelSelect}
+              addedChannels={addedChannels}
             />
           </div>
         ))}
