@@ -16,6 +16,7 @@ import { signOut, User, onAuthStateChanged } from 'firebase/auth';
 import { jsPDF } from 'jspdf';
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
+import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 
@@ -133,15 +134,44 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const processM3uContent = (content: string, source: string) => {
+  const processM3uContent = async (content: string, source: string) => {
+    setIsLoading(true);
     try {
       const parsedChannels = parseM3u(content);
-      onAddChannel(parsedChannels);
+      if (parsedChannels.length === 0) {
+        toast({
+          variant: 'destructive',
+          title: t('noChannelsFoundTitle'),
+          description: t('noChannelsFoundDescription'),
+        });
+        return false;
+      }
+      
       toast({
-        title: t('channelAddedTitle'),
-        description: t('channelAddedDescription', { count: parsedChannels.length }),
+        title: t('checkingChannelsTitle'),
+        description: t('checkingChannelsDescription', { count: parsedChannels.length }),
       });
+
+      const channelPromises = parsedChannels.map(channel => checkChannelStatus({ url: channel.url }));
+      const results = await Promise.all(channelPromises);
+
+      const onlineChannels = parsedChannels.filter((_, index) => results[index].online);
+
+      if (onlineChannels.length > 0) {
+        onAddChannel(onlineChannels);
+        toast({
+          title: t('channelAddedTitle'),
+          description: t('channelAddedDescription', { count: onlineChannels.length }),
+        });
+      } else {
+         toast({
+          variant: 'destructive',
+          title: t('noOnlineChannelsTitle'),
+          description: t('noOnlineChannelsDescription'),
+        });
+      }
       return true;
+
     } catch (error) {
       console.error(`Failed to parse M3U from ${source}:`, error);
       toast({
@@ -150,6 +180,8 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         description: t('channelAddErrorDescription'),
       });
       return false;
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -169,7 +201,7 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
       if (!m3uContent) {
         throw new Error("Could not fetch M3U content.");
       }
-      if (processM3uContent(m3uContent, 'URL')) {
+      if (await processM3uContent(m3uContent, 'URL')) {
         setChannelLink('');
       }
     } catch (error) {
@@ -188,14 +220,12 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsLoading(true);
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const content = e.target?.result as string;
       if (content) {
-        processM3uContent(content, 'file');
+        await processM3uContent(content, 'file');
       }
-      setIsLoading(false);
     };
     reader.onerror = () => {
       toast({
@@ -203,7 +233,6 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
         title: t('fileReadErrorTitle'),
         description: t('fileReadErrorDescription'),
       });
-      setIsLoading(false);
     }
     reader.readAsText(file);
     // Reset file input

@@ -61,5 +61,11 @@
   "uploadFile": "Datei hochladen (.m3u, .m3u8)",
   "or": "oder",
   "fileReadErrorTitle": "Fehler beim Lesen der Datei",
-  "fileReadErrorDescription": "Die ausgewählte Datei konnte nicht gelesen werden. Bitte versuchen Sie es erneut."
+  "fileReadErrorDescription": "Die ausgewählte Datei konnte nicht gelesen werden. Bitte versuchen Sie es erneut.",
+  "noChannelsFoundTitle": "Keine Kanäle gefunden",
+  "noChannelsFoundDescription": "In der angegebenen Quelle konnten keine Kanäle gefunden werden.",
+  "checkingChannelsTitle": "Kanäle werden geprüft...",
+  "checkingChannelsDescription": "{count} Kanäle werden auf Verfügbarkeit geprüft.",
+  "noOnlineChannelsTitle": "Keine Online-Kanäle",
+  "noOnlineChannelsDescription": "Keiner der gefundenen Kanäle scheint online zu sein. Bitte prüfen Sie die Quelle."
 }

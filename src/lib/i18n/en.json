@@ -61,5 +61,11 @@
   "uploadFile": "Upload File (.m3u, .m3u8)",
   "or": "or",
   "fileReadErrorTitle": "Error Reading File",
-  "fileReadErrorDescription": "The selected file could not be read. Please try again."
+  "fileReadErrorDescription": "The selected file could not be read. Please try again.",
+  "noChannelsFoundTitle": "No Channels Found",
+  "noChannelsFoundDescription": "Could not find any channels in the provided source.",
+  "checkingChannelsTitle": "Checking Channels...",
+  "checkingChannelsDescription": "Checking {count} channels for availability.",
+  "noOnlineChannelsTitle": "No Online Channels",
+  "noOnlineChannelsDescription": "None of the found channels seem to be online. Please check the source."
 }
