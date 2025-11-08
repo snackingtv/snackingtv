@@ -154,7 +154,7 @@ function ChannelListSheetContent({
             <AccordionItem value="all-channels">
               <AccordionTrigger>{t('allChannels')}</AccordionTrigger>
               <AccordionContent>
-                {renderChannelList(channels, t('noChannels'))}
+                {renderChannelList(channels.filter(c => !favoriteChannels.find(f => f.url === c.url)), t('noChannels'))}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -662,7 +662,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
 
-  const favoriteChannels = addedChannels.filter(c => favoriteChannels.includes(c.url));
+  const favoriteChannels = addedChannels.filter(channel => isFavorite);
+
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -773,6 +774,14 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                <Plus size={28} className="drop-shadow-lg" />
+              </Button>
+            </SheetTrigger>
+            <AddChannelSheetContent onAddChannel={onAddChannels} />
+          </Sheet>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                 <Settings size={28} className="drop-shadow-lg"/>
               </Button>
             </SheetTrigger>
@@ -784,14 +793,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
              <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.url); }}>
                 <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
             </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                  <Plus size={32} className="drop-shadow-lg" />
-                </Button>
-              </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} />
-            </Sheet>
            <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
@@ -812,10 +813,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         </div>
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
-          <div className="space-y-3 pointer-events-none text-white w-full">
-              <div className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                <p>{video.title}</p>
-              </div>
+          <div className="space-y-3 pointer-events-none text-white w-full max-w-full">
+            <div className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              <p>{video.title}</p>
+            </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>
         </div>

@@ -91,22 +91,22 @@ export function VideoFeed() {
   // Add a generic placeholder for IPTV channels
   avatarMap.set('iptv_placeholder', 'https://picsum.photos/seed/iptv/64/64');
 
-  const filteredChannels = addedChannels.filter(channel => 
-    channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFeedItems = feedItems.filter(item => 
+    item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
 
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
       <div className="flex flex-col h-full">
-        {feedItems.map((video, index) => (
+        {filteredFeedItems.map((video, index) => (
           <div className="flex-[0_0_100%] min-h-0 relative" key={`${video.url}-${index}`}>
             <VideoCard
               video={video}
               isActive={index === activeIndex}
               onAddChannels={handleAddChannels}
               onChannelSelect={handleChannelSelect}
-              addedChannels={filteredChannels}
+              addedChannels={addedChannels}
               isFavorite={favoriteChannels.includes(video.url)}
               onToggleFavorite={handleToggleFavorite}
               onSearch={setSearchTerm}
