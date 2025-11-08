@@ -272,14 +272,6 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
 
 
   const processM3uContent = async (content: string, source: string) => {
-    if (isUserLoading) {
-      toast({
-        title: t('loading'),
-        description: "Please wait a moment while we set up your profile.",
-      });
-      return false;
-    }
-    
     // This is the critical check. We need to wait for the user to be loaded.
     if (!user) {
         toast({
@@ -531,19 +523,19 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
 }
 
 
-function SettingsSheetContent({ user, onUserChange }: { user: User | null, onUserChange: (user: User | null) => void }) {
+function SettingsSheetContent({ user, onUserChange, isUserLoading }: { user: User | null, onUserChange: (user: User | null) => void, isUserLoading: boolean }) {
   const [anonymousIdInput, setAnonymousIdInput] = useState('');
   const { toast } = useToast();
   const auth = useAuth();
   const { t, language, setLanguage } = useTranslation();
   
   const handleLogout = () => {
-    if (auth) {
+    if (auth && auth.currentUser) {
       signOut(auth);
     }
     // For manual/non-firebase user, just clear it
-    onUserChange(null);
     localStorage.removeItem('manualUser');
+    onUserChange(null);
     toast({
       title: t('loggedOut'),
       description: t('loggedOutSuccessfully'),
@@ -601,26 +593,11 @@ function SettingsSheetContent({ user, onUserChange }: { user: User | null, onUse
   }
 
   const handleNewAnonymousProfile = () => {
-    if (auth) {
-      // Clear manual user before initiating new Firebase anonymous sign-in
-      localStorage.removeItem('manualUser');
-      onUserChange(null); // Clear local state first
-      initiateAnonymousSignIn(auth)
-          .then(userCredential => {
-              // The onAuthStateChanged listener will handle the global state,
-              // but we can update the local state here for immediate UI feedback if needed.
-              if (userCredential?.user) {
-                  onUserChange(userCredential.user);
-                  toast({
-                      title: t('loggedIn'),
-                      description: t('nowLoggedInAnonymously'),
-                  });
-              }
-          })
-          .catch((error) => {
-              console.error("Anonymous sign-in error:", error);
-          });
-    }
+    if (!auth) return;
+     // Clear manual user before initiating new Firebase anonymous sign-in
+     localStorage.removeItem('manualUser');
+     onUserChange(null); // Clear local state first
+     initiateAnonymousSignIn(auth);
   }
   
   return (
@@ -630,7 +607,9 @@ function SettingsSheetContent({ user, onUserChange }: { user: User | null, onUse
       </SheetHeader>
       <div className="p-4">
         <ul className="space-y-4">
-          {user ? (
+          {isUserLoading ? (
+            <p>{t('loading')}</p>
+          ) : user ? (
             <li className="space-y-2">
               <p className="text-sm font-medium">{t('yourAnonymousId')}</p>
               <div className="flex items-center gap-2">
@@ -741,10 +720,16 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const localVideoInputRef = useRef<HTMLInputElement>(null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   const auth = useAuth();
+  const { toast } = useToast();
+  
+  // Swipe to seek state
+  const [isSeeking, setIsSeeking] = useState(false);
+  const [initialSeekTime, setInitialSeekTime] = useState(0);
+  const [initialSeekX, setInitialSeekX] = useState(0);
+  const wasPlayingBeforeSeekRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
-    // Check for a manually logged-in user from localStorage on initial load
     const manualUserStr = localStorage.getItem('manualUser');
     if (manualUserStr) {
       try {
@@ -752,25 +737,13 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         setCurrentUser(manualUser);
       } catch (e) {
         console.error("Failed to parse manual user from localStorage", e);
-        // If parsing fails, rely on firebaseUser
         setCurrentUser(firebaseUser);
       }
     } else {
-       // If no manual user, sync with firebase user state
        setCurrentUser(firebaseUser);
-    }
-  }, []); // Run only once on mount
-
-  useEffect(() => {
-    // This effect synchronizes the currentUser with the user from the Firebase hook.
-    // If a manual user is logged out (by clearing localStorage), firebaseUser will become the source of truth.
-    const manualUserStr = localStorage.getItem('manualUser');
-    if (!manualUserStr) {
-      setCurrentUser(firebaseUser);
     }
   }, [firebaseUser]);
   
-  const { toast } = useToast();
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
   useEffect(() => {
@@ -789,14 +762,25 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
+
+    if (!video.url && !localVideoUrl) {
+      videoElement.src = '';
+      return;
+    }
   
-    // Determine which URL to play: local file > active video URL
     const sourceUrl = localVideoUrl || (isActive && video.url);
   
     if (isActive && sourceUrl) {
       try {
+        // Prevent changing src if it's already set to the same local blob URL
+        if (videoElement.currentSrc === sourceUrl) {
+            if (isPlaying && videoElement.paused) {
+                videoElement.play().catch(e => console.error("Re-play failed", e));
+            }
+            return;
+        }
+
         let finalUrl = sourceUrl;
-        // The reload hack is only needed for network streams
         if (!sourceUrl.startsWith('blob:')) {
           const videoUrl = new URL(sourceUrl);
           videoUrl.searchParams.set('v', `${Date.now()}`);
@@ -826,11 +810,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     } else {
       videoElement.pause();
       videoElement.currentTime = 0;
-      videoElement.src = '';
+      // Do not reset src here to avoid flicker, just pause
       setIsPlaying(false);
     }
   
-    // Cleanup object URL when component is inactive or unmounts
     return () => {
       if (localVideoUrl && !isActive) {
         URL.revokeObjectURL(localVideoUrl);
@@ -840,7 +823,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   }, [isActive, video.url, localVideoUrl]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    // Prevent toggling play/pause when clicking on interactive elements
+    if (isSeeking) return; // Don't toggle play/pause during a seek operation
+
     if ((e.target as HTMLElement).closest('[data-radix-collection-item]') || (e.target as HTMLElement).closest('button')) {
       return;
     }
@@ -879,17 +863,79 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const handleLocalFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // If there's an existing local video URL, revoke it first
       if (localVideoUrl) {
         URL.revokeObjectURL(localVideoUrl);
       }
       const objectURL = URL.createObjectURL(file);
       setLocalVideoUrl(objectURL);
+       // Ensure the video plays if it was already active
+      if (isActive && videoRef.current) {
+        videoRef.current.src = objectURL;
+        videoRef.current.play().then(() => setIsPlaying(true));
+      }
     }
-    // Reset file input to allow selecting the same file again
     event.target.value = '';
   };
   
+  // --- Swipe to Seek Handlers ---
+  const handleSeekStart = (clientX: number) => {
+    const videoEl = videoRef.current;
+    if (!videoEl || videoEl.duration === Infinity) return; // Not seekable (live stream)
+
+    setIsSeeking(true);
+    setInitialSeekX(clientX);
+    setInitialSeekTime(videoEl.currentTime);
+    wasPlayingBeforeSeekRef.current = !videoEl.paused;
+    videoEl.pause();
+  };
+
+  const handleSeekMove = (clientX: number) => {
+    if (!isSeeking || !videoRef.current) return;
+
+    const videoEl = videoRef.current;
+    const swipeDelta = clientX - initialSeekX;
+    
+    // More sensitive seeking: 1px = 0.5s of video
+    const timeDelta = swipeDelta * 0.5; 
+    let newTime = initialSeekTime + timeDelta;
+
+    // Clamp the time within video duration
+    if (newTime < 0) newTime = 0;
+    if (newTime > videoEl.duration) newTime = videoEl.duration;
+
+    videoEl.currentTime = newTime;
+  };
+
+  const handleSeekEnd = () => {
+    if (!isSeeking) return;
+
+    setIsSeeking(false);
+    const videoEl = videoRef.current;
+    if (videoEl && wasPlayingBeforeSeekRef.current) {
+      videoEl.play();
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleSeekStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    handleSeekMove(e.touches[0].clientX);
+  };
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleSeekStart(e.clientX);
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleSeekMove(e.clientX);
+  };
+  
+  const handleMouseUpOrLeave = () => {
+    handleSeekEnd();
+  };
+
 
   if (!isClient) {
     return (
@@ -903,7 +949,13 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     <div
       className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
       onClick={handleVideoClick}
-      onMouseLeave={() => setShowControls(false)}
+      onMouseLeave={handleMouseUpOrLeave} // End seek if mouse leaves
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleSeekEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUpOrLeave}
     >
       <video
         ref={videoRef}
@@ -917,7 +969,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
       <div
         className={`absolute inset-0 transition-opacity duration-300 ${
-          showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
+          showControls || !isPlaying || isSeeking ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
@@ -948,7 +1000,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent user={currentUser} onUserChange={setCurrentUser} />
+              <SettingsSheetContent user={currentUser} onUserChange={setCurrentUser} isUserLoading={isUserLoading} />
             </Sheet>
           </div>
         </div>
@@ -966,7 +1018,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
             </Sheet>
 
-            {/* Hidden file input for local video */}
             <input
               type="file"
               ref={localVideoInputRef}
@@ -974,7 +1025,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               accept="video/*"
               className="hidden"
             />
-            {/* Library button to trigger file input */}
             <Button
               variant="ghost"
               size="icon"
@@ -996,8 +1046,9 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
 }
+
+    
