@@ -139,9 +139,12 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
   const [totalCount, setTotalCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef(false);
+  const onlineChannelsRef = useRef<M3uChannel[]>([]);
+
 
   const processM3uContent = async (content: string, source: string) => {
     isCancelledRef.current = false;
+    onlineChannelsRef.current = [];
     setIsLoading(true);
     setIsVerifying(true);
     setVerificationProgress(0);
@@ -149,81 +152,97 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
     setOfflineCount(0);
     setTotalCount(0);
 
+    let parsedChannels: M3uChannel[] = [];
     try {
-      const parsedChannels = parseM3u(content);
+      parsedChannels = parseM3u(content);
       if (parsedChannels.length === 0) {
         toast({
           variant: 'destructive',
           title: t('noChannelsFoundTitle'),
           description: t('noChannelsFoundDescription'),
         });
+        setIsLoading(false);
+        setIsVerifying(false);
         return false;
       }
-      
-      setTotalCount(parsedChannels.length);
-      
-      toast({
-        title: t('checkingChannelsTitle'),
-        description: t('checkingChannelsDescription', { count: parsedChannels.length }),
-      });
-
-      const onlineChannels: M3uChannel[] = [];
-      let checkedCount = 0;
-
-      const checkPromises = parsedChannels.map(async (channel) => {
-        if (isCancelledRef.current) return;
-        const result = await checkChannelStatus({ url: channel.url });
-        if (isCancelledRef.current) return;
-        
-        if (result.online) {
-          onlineChannels.push(channel);
-          setOnlineCount(c => c + 1);
-        } else {
-          setOfflineCount(c => c + 1);
-        }
-        
-        checkedCount++;
-        setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
-      });
-
-      await Promise.all(checkPromises);
-
-      if (isCancelledRef.current) {
-        toast({
-            title: t('verificationCancelledTitle'),
-            description: t('verificationCancelledDescription'),
-        });
-        return false;
-      }
-
-      if (onlineChannels.length > 0) {
-        onAddChannel(onlineChannels);
-        toast({
-          title: t('channelAddedTitle'),
-          description: t('channelAddedDescription', { count: onlineChannels.length }),
-        });
-      } else {
-         toast({
-          variant: 'destructive',
-          title: t('noOnlineChannelsTitle'),
-          description: t('noOnlineChannelsDescription'),
-        });
-      }
-      return true;
-
     } catch (error) {
-      if (isCancelledRef.current) return false;
-      console.error(`Failed to parse M3U from ${source}:`, error);
+       console.error(`Failed to parse M3U from ${source}:`, error);
       toast({
         variant: 'destructive',
         title: t('channelAddErrorTitle'),
         description: t('channelAddErrorDescription'),
       });
-      return false;
-    } finally {
       setIsLoading(false);
       setIsVerifying(false);
+      return false;
     }
+      
+    setTotalCount(parsedChannels.length);
+    
+    toast({
+      title: t('checkingChannelsTitle'),
+      description: t('checkingChannelsDescription', { count: parsedChannels.length }),
+    });
+
+    let checkedCount = 0;
+
+    const checkPromises = parsedChannels.map(async (channel) => {
+      if (isCancelledRef.current) return;
+      try {
+        const result = await checkChannelStatus({ url: channel.url });
+        if (isCancelledRef.current) return;
+        
+        if (result.online) {
+          onlineChannelsRef.current.push(channel);
+          setOnlineCount(c => c + 1);
+        } else {
+          setOfflineCount(c => c + 1);
+        }
+      } catch (error) {
+        setOfflineCount(c => c + 1);
+      } finally {
+        if (isCancelledRef.current) return;
+        checkedCount++;
+        setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
+      }
+    });
+
+    await Promise.all(checkPromises);
+    
+    const finalOnlineChannels = onlineChannelsRef.current;
+
+    if (isCancelledRef.current) {
+        if (finalOnlineChannels.length > 0) {
+            onAddChannel(finalOnlineChannels);
+             toast({
+                title: t('channelAddedTitle'),
+                description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
+            });
+        } else {
+             toast({
+                title: t('verificationCancelledTitle'),
+                description: t('verificationCancelledDescription'),
+            });
+        }
+    }
+
+    if (finalOnlineChannels.length > 0) {
+      onAddChannel(finalOnlineChannels);
+      toast({
+        title: t('channelAddedTitle'),
+        description: t('channelAddedDescription', { count: finalOnlineChannels.length }),
+      });
+    } else if (!isCancelledRef.current) {
+       toast({
+        variant: 'destructive',
+        title: t('noOnlineChannelsTitle'),
+        description: t('noOnlineChannelsDescription'),
+      });
+    }
+
+    setIsLoading(false);
+    setIsVerifying(false);
+    return finalOnlineChannels.length > 0;
   }
 
   const handleAddFromUrl = async () => {
@@ -282,8 +301,6 @@ function AddChannelSheetContent({ onAddChannel }: { onAddChannel: (channels: M3u
 
   const handleCancelVerification = () => {
     isCancelledRef.current = true;
-    setIsLoading(false);
-    setIsVerifying(false);
   };
 
   return (
@@ -708,8 +725,8 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         <div className="absolute top-4 right-4 md:top-6 md:right-6">
            <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-black/20 hover:bg-black/40 rounded-full h-12 w-12">
-                <Settings size={28} className="drop-shadow-md"/>
+              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12">
+                <Settings size={28} className="drop-shadow-lg"/>
               </Button>
             </SheetTrigger>
             <SettingsSheetContent />
@@ -719,16 +736,16 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-6">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
-                  <Plus size={32} className="drop-shadow-md" />
+                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                  <Plus size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
               <AddChannelSheetContent onAddChannel={handleAddChannel} />
             </Sheet>
            <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 hover:bg-black/40 rounded-full">
-                  <Tv2 size={32} className="drop-shadow-md" />
+                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                  <Tv2 size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
               <ChannelListSheetContent channels={channels} />
@@ -745,15 +762,15 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
         </div>
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
-          <div className="space-y-3 pointer-events-none text-white w-full max-w-[calc(100%-80px)] drop-shadow-md">
+          <div className="space-y-3 pointer-events-none text-white w-full max-w-[calc(100%-80px)]">
             <div className="flex items-center gap-3">
-              <Avatar className="h-12 w-12 border-2 border-white/50">
+              <Avatar className="h-12 w-12 border-2 border-white/50 drop-shadow-lg">
                 <AvatarImage src={avatarUrl} alt={video.author} />
                 <AvatarFallback className="bg-primary text-primary-foreground">{video.author.substring(1, 3).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-headline text-lg font-bold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>{video.title}</h3>
-                <p className="text-sm" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>{video.author}</p>
+                <h3 className="font-headline text-lg font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h3>
+                <p className="text-sm" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.author}</p>
               </div>
             </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
@@ -763,3 +780,5 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     </div>
   );
 }
+
+    
