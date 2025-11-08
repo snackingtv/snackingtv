@@ -593,10 +593,9 @@ function SettingsSheetContent({ user, onUserChange, isUserLoading }: { user: Use
   }
 
   const handleNewAnonymousProfile = () => {
-    if (!auth) return;
-     // Clear manual user before initiating new Firebase anonymous sign-in
+     if (!auth) return;
      localStorage.removeItem('manualUser');
-     onUserChange(null); // Clear local state first
+     onUserChange(null);
      initiateAnonymousSignIn(auth);
   }
   
@@ -710,6 +709,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [progress, setProgress] = useState(0);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState('');
@@ -759,6 +759,19 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     return () => clearInterval(timerId);
   }, []);
 
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const { currentTime, duration } = videoRef.current;
+      // Make sure duration is a finite number
+      if (duration > 0 && isFinite(duration)) {
+        setProgress((currentTime / duration) * 100);
+      } else {
+        // For live streams or indeterminate durations, don't show a progress bar
+        setProgress(0);
+      }
+    }
+  };
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -781,8 +794,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         }
 
         let finalUrl = sourceUrl;
-        if (!sourceUrl.startsWith('blob:')) {
-          const videoUrl = new URL(sourceUrl);
+        if (!sourceUrl.startsWith('blob:') && video.url) {
+          const videoUrl = new URL(video.url);
           videoUrl.searchParams.set('v', `${Date.now()}`);
           finalUrl = videoUrl.toString();
         }
@@ -964,6 +977,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         className="w-full h-full object-contain"
         onPlay={() => handleInteraction()}
         onPause={() => handleInteraction()}
+        onTimeUpdate={handleTimeUpdate}
         muted={false} 
       />
 
@@ -1046,9 +1060,11 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             </div>
           )}
         </div>
+        
+        <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-2">
+            <Progress value={progress} className="w-full h-1 bg-white/30 [&>div]:bg-white" />
+        </div>
       </div>
     </div>
   );
 }
-
-    
