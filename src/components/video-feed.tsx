@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import type { EmblaCarouselType } from 'embla-carousel';
-import { videos as initialVideos, type Video } from '@/lib/videos';
+import type { Video } from '@/lib/videos';
 import { VideoCard } from '@/components/video-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
@@ -34,7 +34,6 @@ export function VideoFeed() {
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
   
   useEffect(() => {
-    // We combine initial videos with user channels
     const combinedFeed: Video[] = [];
     const combinedUrls = new Set<string>();
 
@@ -92,15 +91,13 @@ export function VideoFeed() {
   }, [emblaApi, onSelect]);
 
   const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
-    // This function is now mainly for local state updates if needed,
-    // as persistence is handled by Firestore writes and the useCollection hook.
     const existingUrls = new Set(feedItems.map(item => item.url));
     const uniqueNewChannels = newChannels.filter(c => !existingUrls.has(c.url));
     
     if (uniqueNewChannels.length === 0) return;
 
     const newFeedItems: Video[] = uniqueNewChannels.map((channel, index) => ({
-      id: Date.now() + index, // Simple unique ID generation for local state
+      id: Date.now() + index,
       url: channel.url,
       title: channel.name,
       author: channel.group || 'IPTV',
@@ -110,7 +107,6 @@ export function VideoFeed() {
     setFeedItems(prev => [...prev, ...newFeedItems]);
   }, [feedItems]);
 
-  // When a new item is added, we need to reinitialize Embla
   useEffect(() => {
     if (emblaApi) {
       emblaApi.reInit();
@@ -124,14 +120,17 @@ export function VideoFeed() {
     }
   }, [emblaApi, feedItems]);
 
-
-  const avatarMap = new Map(PlaceHolderImages.map(img => [img.id, img.imageUrl]));
-  // Add a generic placeholder for IPTV channels
-  avatarMap.set('iptv_placeholder', 'https://picsum.photos/seed/iptv/64/64');
-
   const filteredFeedItems = feedItems.filter(item => 
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  const videoToDisplay = filteredFeedItems[activeIndex] || {
+    id: 'placeholder',
+    url: '',
+    title: 'SnackingTV',
+    author: '',
+    avatarId: 'iptv_placeholder'
+  };
 
 
   return (
@@ -154,12 +153,18 @@ export function VideoFeed() {
             </div>
           ))
         ) : (
-          <div className="flex-[0_0_100%] min-h-0 relative flex items-center justify-center text-center text-white bg-black p-8">
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Willkommen bei SnackingTV</h2>
-              <p className="text-lg">Füge Kanäle hinzu, um loszulegen.</p>
-              <p className="text-muted-foreground mt-2">Klicke auf das Plus-Symbol (+) oben rechts, um deine erste M3U-Playlist hinzuzufügen.</p>
-            </div>
+          <div className="flex-[0_0_100%] min-h-0 relative">
+             <VideoCard
+                video={videoToDisplay}
+                isActive={true}
+                onAddChannels={handleAddChannels}
+                onChannelSelect={handleChannelSelect}
+                addedChannels={userChannels || []}
+                isFavorite={false}
+                onToggleFavorite={handleToggleFavorite}
+                onSearch={setSearchTerm}
+                searchTerm={searchTerm}
+              />
           </div>
         )}
       </div>
