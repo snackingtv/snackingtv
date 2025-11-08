@@ -93,7 +93,7 @@ function ImprintSheetContent() {
   )
 }
 
-function ChannelListSheetContent({ channels }: { channels: Channel[] }) {
+function ChannelListSheetContent({ channels, onChannelSelect }: { channels: Channel[]; onChannelSelect: (url: string) => void; }) {
   const { t } = useTranslation();
 
   return (
@@ -106,7 +106,10 @@ function ChannelListSheetContent({ channels }: { channels: Channel[] }) {
           <ul className="space-y-2">
             {channels.map((channel) => (
               <li key={channel.id}>
-                <button className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left">
+                <button
+                  onClick={() => onChannelSelect(channel.url)}
+                  className="w-full flex items-center gap-4 p-2 rounded-lg hover:bg-accent text-left"
+                >
                   <Image
                     src={channel.logo}
                     alt={channel.name}
@@ -603,8 +606,22 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
+  const [currentVideoUrl, setCurrentVideoUrl] = useState(video.url);
 
   const [channels, setChannels] = useState<Channel[]>([]);
+
+  const handleChannelSelect = (url: string) => {
+    setCurrentVideoUrl(url);
+    if (videoRef.current) {
+      videoRef.current.src = url;
+      videoRef.current.load();
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
+    }
+  };
+
 
   const handleAddChannel = (newChannels: M3uChannel[]) => {
     const transformedChannels: Channel[] = newChannels.map(c => ({
@@ -629,6 +646,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     videoElement.muted = false;
 
     if (isActive) {
+      videoElement.src = currentVideoUrl; // Ensure correct source is set
       const playPromise = videoElement.play();
       if (playPromise !== undefined) {
         playPromise
@@ -648,7 +666,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
       setIsPlaying(false);
       setProgress(0);
     }
-  }, [isActive]);
+  }, [isActive, currentVideoUrl]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -703,7 +721,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     >
       <video
         ref={videoRef}
-        src={video.url}
+        src={currentVideoUrl}
         loop
         playsInline
         className="w-full h-full object-contain"
@@ -743,7 +761,7 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
                   <Tv2 size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <ChannelListSheetContent channels={channels} />
+              <ChannelListSheetContent channels={channels} onChannelSelect={handleChannelSelect} />
             </Sheet>
         </div>
 
@@ -775,5 +793,3 @@ export function VideoCard({ video, avatarUrl, isActive }: VideoCardProps) {
     </div>
   );
 }
-
-    
