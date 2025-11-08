@@ -5,7 +5,6 @@ import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -661,9 +660,22 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
+  const [currentTime, setCurrentTime] = useState('');
 
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setCurrentTime(timeString);
+    };
+    
+    updateClock();
+    const timerId = setInterval(updateClock, 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -762,31 +774,37 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-end items-center gap-2 text-white">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                <Search size={28} className="drop-shadow-lg"/>
-              </Button>
-            </SheetTrigger>
-            <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
-          </Sheet>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                <Plus size={28} className="drop-shadow-lg" />
-              </Button>
-            </SheetTrigger>
-            <AddChannelSheetContent onAddChannel={onAddChannels} />
-          </Sheet>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                <Settings size={28} className="drop-shadow-lg"/>
-              </Button>
-            </SheetTrigger>
-            <SettingsSheetContent />
-          </Sheet>
+        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
+          <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+            {currentTime}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                  <Search size={28} className="drop-shadow-lg"/>
+                </Button>
+              </SheetTrigger>
+              <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
+            </Sheet>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                  <Plus size={28} className="drop-shadow-lg" />
+                </Button>
+              </SheetTrigger>
+              <AddChannelSheetContent onAddChannel={onAddChannels} />
+            </Sheet>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                  <Settings size={28} className="drop-shadow-lg"/>
+                </Button>
+              </SheetTrigger>
+              <SettingsSheetContent />
+            </Sheet>
+          </div>
         </div>
 
         <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
@@ -814,8 +832,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
           <div className="space-y-3 pointer-events-none text-white w-full max-w-full">
-            <div className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              <p>{video.title}</p>
+            <div className="overflow-hidden relative w-full">
+              <div className="font-headline text-xl font-bold truncate whitespace-nowrap" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                <p>{video.title}</p>
+              </div>
             </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>
