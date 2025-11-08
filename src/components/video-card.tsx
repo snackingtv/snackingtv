@@ -762,26 +762,23 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
           showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-4 text-white">
-          <h2 className="font-headline text-xl font-bold truncate" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>{video.title}</h2>
-          <div className="flex items-center gap-2">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                  <Search size={28} className="drop-shadow-lg"/>
-                </Button>
-              </SheetTrigger>
-              <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
-            </Sheet>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                  <Settings size={28} className="drop-shadow-lg"/>
-                </Button>
-              </SheetTrigger>
-              <SettingsSheetContent />
-            </Sheet>
-          </div>
+        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-end items-center gap-2 text-white">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                <Search size={28} className="drop-shadow-lg"/>
+              </Button>
+            </SheetTrigger>
+            <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
+          </Sheet>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                <Settings size={28} className="drop-shadow-lg"/>
+              </Button>
+            </SheetTrigger>
+            <SettingsSheetContent />
+          </Sheet>
         </div>
 
         <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
@@ -817,6 +814,9 @@ export function VideoCard({ video, avatarUrl, isActive, onAddChannels, onChannel
 
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6">
           <div className="space-y-3 pointer-events-none text-white w-full">
+              <div className="marquee font-headline text-xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                <p className="marquee-content">{video.title}</p>
+              </div>
             <Progress value={progress} className="w-full h-1 bg-white/30 [&>*]:bg-accent" />
           </div>
         </div>
