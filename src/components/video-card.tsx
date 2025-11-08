@@ -707,7 +707,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
-  const [progress, setProgress] = useState(0);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState('');
@@ -755,18 +754,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     return () => clearInterval(timerId);
   }, []);
 
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const { currentTime, duration } = videoRef.current;
-      // Make sure duration is a finite number
-      if (duration > 0 && isFinite(duration)) {
-        setProgress((currentTime / duration) * 100);
-      } else {
-        // For live streams or indeterminate durations, don't show a progress bar
-        setProgress(0);
-      }
-    }
-  };
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -894,8 +881,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (!videoEl || videoEl.duration === Infinity) return; // Not seekable (live stream)
 
     setIsSeeking(true);
-    initialSeekX.current = clientX;
     setWasPlayingBeforeSeek(!videoEl.paused);
+    initialSeekX.current = clientX;
   };
 
   const handleSeekMove = (clientX: number) => {
@@ -903,19 +890,16 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   
     const videoEl = videoRef.current;
     const swipeDelta = clientX - initialSeekX.current;
-    // More sensitive seeking: 1px = 0.5s of video
-    const speed = Math.min(Math.floor(Math.abs(swipeDelta) / 40) * 2 + 2, 16);
+    const speed = Math.min(Math.floor(Math.abs(swipeDelta) / 40) + 1, 16);
   
     if (rewindInterval.current) clearInterval(rewindInterval.current);
   
     if (swipeDelta > 10) { // Fast-forward
-        if(videoEl.paused) videoEl.play();
-        setSeekSpeed(speed);
-        videoEl.playbackRate = speed;
+      setSeekSpeed(speed);
+      videoEl.playbackRate = speed;
     } else if (swipeDelta < -10) { // Rewind
       setSeekSpeed(-speed);
       if(!videoEl.paused) videoEl.pause();
-      
       const rewindAmount = 0.1 * speed; // seconds to jump back
       rewindInterval.current = setInterval(() => {
         videoEl.currentTime = Math.max(0, videoEl.currentTime - rewindAmount);
@@ -940,6 +924,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         videoEl.playbackRate = 1;
         if(wasPlayingBeforeSeek && videoEl.paused) {
             videoEl.play();
+        } else if (!wasPlayingBeforeSeek && !videoEl.paused) {
+           videoEl.pause();
         }
     }
   };
@@ -987,14 +973,13 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         playsInline
         className="w-full h-full object-contain"
         onPlay={() => {
-            setIsPlaying(true);
+            if (!isSeeking) setIsPlaying(true);
             handleInteraction();
         }}
         onPause={() => {
-            setIsPlaying(false);
+            if (!isSeeking) setIsPlaying(false);
             handleInteraction();
         }}
-        onTimeUpdate={handleTimeUpdate}
         muted={false} 
       />
       {isSeeking && seekSpeed !== 0 && (
@@ -1084,7 +1069,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         </div>
         
         <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-2">
-            <Progress value={progress} className="w-full h-1 bg-white/30 [&>div]:bg-white" />
+            
         </div>
       </div>
     </div>
