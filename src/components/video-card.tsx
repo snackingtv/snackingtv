@@ -737,26 +737,34 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   
   const [isClient, setIsClient] = useState(false);
   const { user: firebaseUser, isUserLoading } = useUser();
-  const [currentUser, setCurrentUser] = useState<User | null>(firebaseUser);
-
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     setIsClient(true);
     // Check for a manually logged-in user from localStorage on initial load
     const manualUserStr = localStorage.getItem('manualUser');
     if (manualUserStr) {
-        try {
-            setCurrentUser(JSON.parse(manualUserStr));
-        } catch (e) {
-            console.error("Failed to parse manual user from localStorage", e);
-        }
+      try {
+        const manualUser = JSON.parse(manualUserStr);
+        setCurrentUser(manualUser);
+      } catch (e) {
+        console.error("Failed to parse manual user from localStorage", e);
+        // If parsing fails, rely on firebaseUser
+        setCurrentUser(firebaseUser);
+      }
+    } else {
+       // If no manual user, sync with firebase user state
+       setCurrentUser(firebaseUser);
     }
-  }, []);
+  }, []); // Run only once on mount
 
   useEffect(() => {
     // This effect synchronizes the currentUser with the user from the Firebase hook.
-    // If a manual user is logged out, firebaseUser will become the source of truth.
-    setCurrentUser(firebaseUser);
+    // If a manual user is logged out (by clearing localStorage), firebaseUser will become the source of truth.
+    const manualUserStr = localStorage.getItem('manualUser');
+    if (!manualUserStr) {
+      setCurrentUser(firebaseUser);
+    }
   }, [firebaseUser]);
   
   const { toast } = useToast();
