@@ -28,6 +28,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WeatherAndDate } from './weather-and-date';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
 interface VideoCardProps {
@@ -1253,104 +1254,149 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
-      onClick={handleVideoClick}
-      onMouseLeave={handleSeekEnd} 
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleSeekEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleSeekEnd}
-    >
-      <video
-        ref={videoRef}
-        loop
-        playsInline
-        className="w-full h-full object-contain"
-        onPlay={() => {
-            if (!isSeeking) setIsPlaying(true);
-            handleInteraction();
-        }}
-        onPause={() => {
-            if (!isSeeking) setIsPlaying(false);
-            handleInteraction();
-        }}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        muted={false} 
-      />
-      {isSeeking && seekSpeed !== 0 && (
-          <div className="absolute bottom-16 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
-              {seekSpeed > 0 ? `FWD ${seekSpeed}x` : `REW ${Math.abs(seekSpeed)}x`}
-          </div>
-      )}
-
+    <TooltipProvider>
       <div
-        className={`absolute inset-0 transition-opacity duration-300 ${
-          showControls || !isPlaying || isSeeking ? 'opacity-100' : 'opacity-0'
-        }`}
+        ref={containerRef}
+        className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
+        onClick={handleVideoClick}
+        onMouseLeave={handleSeekEnd} 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleSeekEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleSeekEnd}
       >
-        <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
-          <div className='flex flex-col'>
-            <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              {currentTime}
+        <video
+          ref={videoRef}
+          loop
+          playsInline
+          className="w-full h-full object-contain"
+          onPlay={() => {
+              if (!isSeeking) setIsPlaying(true);
+              handleInteraction();
+          }}
+          onPause={() => {
+              if (!isSeeking) setIsPlaying(false);
+              handleInteraction();
+          }}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          muted={false} 
+        />
+        {isSeeking && seekSpeed !== 0 && (
+            <div className="absolute bottom-16 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
+                {seekSpeed > 0 ? `FWD ${seekSpeed}x` : `REW ${Math.abs(seekSpeed)}x`}
             </div>
-            <WeatherAndDate />
+        )}
+
+        <div
+          className={`absolute inset-0 transition-opacity duration-300 ${
+            showControls || !isPlaying || isSeeking ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
+            <div className='flex flex-col'>
+              <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                {currentTime}
+              </div>
+              <WeatherAndDate />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <Search size={28} className="drop-shadow-lg"/>
+                      </Button>
+                    </SheetTrigger>
+                    <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
+                  </Sheet>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('searchChannels')}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <Plus size={28} className="drop-shadow-lg" />
+                      </Button>              
+                    </SheetTrigger>
+                    <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
+                  </Sheet>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('addChannel')}</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <UserIcon size={28} className="drop-shadow-lg"/>
+                      </Button>
+                    </SheetTrigger>
+                    <AuthSheetContent container={containerRef.current} />
+                  </Sheet>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{user ? t('welcome') : t('login')}</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <Settings size={28} className="drop-shadow-lg"/>
+                      </Button>
+                    </SheetTrigger>
+                    <SettingsSheetContent container={containerRef.current} />
+                  </Sheet>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('settings')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                  <Search size={28} className="drop-shadow-lg"/>
-                </Button>
-              </SheetTrigger>
-              <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
-            </Sheet>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                  <Plus size={28} className="drop-shadow-lg" />
-                </Button>              
-              </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
-            </Sheet>
-            
-            <Sheet>
-              <SheetTrigger asChild>
-                 <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                   <UserIcon size={28} className="drop-shadow-lg"/>
-                 </Button>
-              </SheetTrigger>
-              <AuthSheetContent container={containerRef.current} />
-            </Sheet>
-            
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                  <Settings size={28} className="drop-shadow-lg"/>
-                </Button>
-              </SheetTrigger>
-              <SettingsSheetContent container={containerRef.current} />
-            </Sheet>
-          </div>
-        </div>
+          <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.url); }}>
+                      <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>{t('favorites')}</p>
+                </TooltipContent>
+              </Tooltip>
 
-        <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
-             <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.url); }}>
-                <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
-            </Button>
-           <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                  <Tv2 size={32} className="drop-shadow-lg" />
-                </Button>
-              </SheetTrigger>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
-            </Sheet>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                        <Tv2 size={32} className="drop-shadow-lg" />
+                      </Button>
+                    </SheetTrigger>
+                    <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
+                  </Sheet>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>{t('channels')}</p>
+              </TooltipContent>
+            </Tooltip>
             
             <input
               type="file"
@@ -1359,57 +1405,74 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               accept="video/*"
               className="hidden"
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                localVideoInputRef.current?.click();
-              }}
-            >
-              <Folder size={32} className="drop-shadow-lg" />
-            </Button>
-            <Button
-                variant="ghost"
-                size="icon"
-                className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFullScreen();
-                }}
-              >
-                {isFullScreen ? <Minimize size={32} className="drop-shadow-lg" /> : <Maximize size={32} className="drop-shadow-lg" />}
-            </Button>
-        </div>
 
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    localVideoInputRef.current?.click();
+                  }}
+                >
+                  <Folder size={32} className="drop-shadow-lg" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>{t('uploadFile')}</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {!isPlaying && (video.url || localVideoUrl) && (
-            <div className="pointer-events-auto">
-              
-            </div>
-          )}
-        </div>
-        
-        <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-3">
-          <div
-              data-progress-bar
-              ref={progressContainerRef}
-              className="w-full h-2.5 cursor-pointer group"
-              onClick={handleProgressClick}
-            >
-              <Progress
-                value={progress}
-                className="h-1 group-hover:h-2.5 transition-all duration-200"
-              />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFullScreen();
+                  }}
+                >
+                  {isFullScreen ? <Minimize size={32} className="drop-shadow-lg" /> : <Maximize size={32} className="drop-shadow-lg" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>{isFullScreen ? "Vollbild beenden" : "Vollbild"}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-          <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-            <h3 className="font-bold text-lg">{video.author}</h3>
-            <p className="text-base">{video.title}</p>
+
+
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {!isPlaying && (video.url || localVideoUrl) && (
+              <div className="pointer-events-auto">
+                
+              </div>
+            )}
+          </div>
+          
+          <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-3">
+            <div
+                data-progress-bar
+                ref={progressContainerRef}
+                className="w-full h-2.5 cursor-pointer group"
+                onClick={handleProgressClick}
+              >
+                <Progress
+                  value={progress}
+                  className="h-1 group-hover:h-2.5 transition-all duration-200"
+                />
+            </div>
+            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              <h3 className="font-bold text-lg">{video.author}</h3>
+              <p className="text-base">{video.title}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }
