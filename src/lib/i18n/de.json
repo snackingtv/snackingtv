@@ -92,5 +92,6 @@
   "channelsExistTitle": "Kanäle bereits vorhanden",
   "channelsExistDescription": "{count, plural, =1 {Einer der ausgewählten Kanäle ist bereits in Ihrer Bibliothek.} other {# der ausgewählten Kanäle sind bereits in Ihrer Bibliothek.}}",
   "noNewChannelsTitle": "Keine neuen Kanäle",
-  "noNewChannelsDescription": "Alle ausgewählten Kanäle sind bereits in Ihrer Bibliothek."
+  "noNewChannelsDescription": "Alle ausgewählten Kanäle sind bereits in Ihrer Bibliothek.",
+  "acceptPrivacyLabel": "Ich akzeptiere die"
 }

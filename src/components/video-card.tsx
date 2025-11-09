@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -651,24 +651,47 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   );
 }
 
-const authFormSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(1, "Password is required"),
 });
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  acceptPrivacy: z.boolean().refine(val => val === true, {
+    message: "You must accept the privacy policy",
+  }),
+});
+
 
 function SettingsSheetContent() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
   const { t, language, setLanguage } = useTranslation();
+  const [activeTab, setActiveTab] = useState('login');
+  const [showPassword, setShowPassword] = useState(false);
   
-  const form = useForm<z.infer<typeof authFormSchema>>({
-    resolver: zodResolver(authFormSchema),
+  const formSchema = activeTab === 'login' ? loginSchema : registerSchema;
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
+      ...(activeTab === 'register' && { acceptPrivacy: false }),
     },
+    mode: 'onChange',
   });
+
+  useEffect(() => {
+    form.reset({
+      email: "",
+      password: "",
+      ...(activeTab === 'register' && { acceptPrivacy: false }),
+    });
+  }, [activeTab, form]);
 
   const handleLogout = () => {
     if (auth) {
@@ -681,18 +704,23 @@ function SettingsSheetContent() {
     }
   };
 
-  const handleAuthAction = (action: 'login' | 'register') => {
+  const handleAuthAction = (values: z.infer<typeof formSchema>) => {
     if (!auth) return;
-    const { email, password } = form.getValues();
-    if (action === 'login') {
+    const { email, password } = values;
+
+    if (activeTab === 'login') {
       initiateEmailSignIn(auth, email, password);
+       toast({
+        title: t('loading'),
+        description: t('attemptingLogin'),
+      });
     } else {
       initiateEmailSignUp(auth, email, password);
+       toast({
+        title: t('loading'),
+        description: t('attemptingRegister'),
+      });
     }
-    toast({
-      title: t('loading'),
-      description: action === 'login' ? t('attemptingLogin') : t('attemptingRegister'),
-    });
   };
   
   return (
@@ -715,13 +743,13 @@ function SettingsSheetContent() {
             </li>
           ) : (
             <li>
-                <Tabs defaultValue="login">
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="login">{t('login')}</TabsTrigger>
                     <TabsTrigger value="register">{t('register')}</TabsTrigger>
                   </TabsList>
                   <Form {...form}>
-                    <form onSubmit={(e) => e.preventDefault()} className="space-y-4 pt-4">
+                    <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
                       <FormField
                         control={form.control}
                         name="email"
@@ -741,18 +769,53 @@ function SettingsSheetContent() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>{t('password')}</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
+                             <div className="relative">
+                              <FormControl>
+                                <Input type={showPassword ? "text" : "password"} {...field} />
+                              </FormControl>
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                              </button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                       <TabsContent value="login">
-                          <Button onClick={() => handleAuthAction('login')} className="w-full" disabled={!form.formState.isValid}>{t('login')}</Button>
+                      <TabsContent value="login" forceMount>
+                          <Button type="submit" className="w-full" disabled={!form.formState.isValid}>{t('login')}</Button>
                        </TabsContent>
-                       <TabsContent value="register">
-                          <Button onClick={() => handleAuthAction('register')} className="w-full" disabled={!form.formState.isValid}>{t('register')}</Button>
+                       <TabsContent value="register" forceMount>
+                          <FormField
+                            control={form.control}
+                            name="acceptPrivacy"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel>
+                                    {t('acceptPrivacyLabel')} {' '}
+                                    <Sheet>
+                                      <SheetTrigger asChild>
+                                        <button className="text-primary underline">{t('privacyPolicy')}</button>
+                                      </SheetTrigger>
+                                      <PrivacyPolicySheetContent />
+                                    </Sheet>
+                                  </FormLabel>
+                                  <FormMessage />
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
                        </TabsContent>
                     </form>
                   </Form>

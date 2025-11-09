@@ -92,5 +92,6 @@
   "channelsExistTitle": "Channels Already Exist",
   "channelsExistDescription": "{count, plural, =1 {One of the selected channels is already in your library.} other {# of the selected channels are already in your library.}}",
   "noNewChannelsTitle": "No New Channels",
-  "noNewChannelsDescription": "All selected channels are already in your library."
+  "noNewChannelsDescription": "All selected channels are already in your library.",
+  "acceptPrivacyLabel": "I accept the"
 }
