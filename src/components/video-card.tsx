@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -682,7 +682,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
     defaultValues: {
       email: "",
       password: "",
-      ...(activeTab === 'register' && { acceptPrivacy: false }),
+      ...(activeTab === 'register' ? { acceptPrivacy: false } : {}),
     },
     mode: 'onChange',
   });
@@ -691,7 +691,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
     form.reset({
       email: "",
       password: "",
-      ...(activeTab === 'register' && { acceptPrivacy: false }),
+      ...(activeTab === 'register' ? { acceptPrivacy: false } : {}),
     });
   }, [activeTab, form]);
 
@@ -752,71 +752,112 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
                   </TabsList>
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('email')}</FormLabel>
-                            <FormControl>
-                              <Input placeholder="you@example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('password')}</FormLabel>
-                             <div className="relative">
-                              <FormControl>
-                                <Input type={showPassword ? "text" : "password"} {...field} />
-                              </FormControl>
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 flex items-center pr-3"
-                              >
-                                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                              </button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <TabsContent value="login" forceMount>
-                          <Button type="submit" className="w-full" disabled={!form.formState.isValid}>{t('login')}</Button>
-                       </TabsContent>
-                       <TabsContent value="register" forceMount>
+                       <TabsContent value="login" forceMount className={activeTab === 'login' ? '' : 'hidden'}>
                           <FormField
                             control={form.control}
-                            name="acceptPrivacy"
+                            name="email"
                             render={({ field }) => (
-                              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                              <FormItem>
+                                <FormLabel>{t('email')}</FormLabel>
                                 <FormControl>
-                                  <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                  />
+                                  <Input placeholder="you@example.com" {...field} />
                                 </FormControl>
-                                <div className="space-y-1 leading-none">
-                                  <FormLabel>
-                                    {t('acceptPrivacyLabel')} {' '}
-                                    <Sheet>
-                                      <SheetTrigger asChild>
-                                        <button className="text-primary underline">{t('privacyPolicy')}</button>
-                                      </SheetTrigger>
-                                      <PrivacyPolicySheetContent container={container} />
-                                    </Sheet>
-                                  </FormLabel>
-                                  <FormMessage />
-                                </div>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
+                          <div className="space-y-2 pt-4">
+                            <FormField
+                              control={form.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>{t('password')}</FormLabel>
+                                   <div className="relative">
+                                    <FormControl>
+                                      <Input type={showPassword ? "text" : "password"} {...field} />
+                                    </FormControl>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    >
+                                      {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                                    </button>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                           <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('login')}</Button>
+                       </TabsContent>
+                       <TabsContent value="register" forceMount className={activeTab === 'register' ? '' : 'hidden'}>
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('email')}</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="you@example.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="space-y-2 pt-4">
+                            <FormField
+                              control={form.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>{t('password')}</FormLabel>
+                                   <div className="relative">
+                                    <FormControl>
+                                      <Input type={showPassword ? "text" : "password"} {...field} />
+                                    </FormControl>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                      className="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    >
+                                      {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                                    </button>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                           </div>
+                          <div className="space-y-2 pt-4">
+                            <FormField
+                              control={form.control}
+                              name="acceptPrivacy"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                      {t('acceptPrivacyLabel')} {' '}
+                                      <Sheet>
+                                        <SheetTrigger asChild>
+                                          <button className="text-primary underline">{t('privacyPolicy')}</button>
+                                        </SheetTrigger>
+                                        <PrivacyPolicySheetContent container={container} />
+                                      </Sheet>
+                                    </FormLabel>
+                                    <FormMessage />
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                           </div>
                           <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
                        </TabsContent>
                     </form>
@@ -1258,7 +1299,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               </SheetTrigger>
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
             </Sheet>
-
+            
             <input
               type="file"
               ref={localVideoInputRef}
