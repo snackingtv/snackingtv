@@ -18,7 +18,7 @@ import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { Checkbox } from '@/components/ui/checkbox';
 import { deleteChannels } from '@/firebase/firestore/deletions';
@@ -400,32 +400,64 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const handleSaveSelectedChannels = async () => {
     if (!firestore || !user) return;
     if (selectedVerifiedChannels.size === 0) {
-      toast({ variant: 'destructive', title: t('noChannelsSelectedTitle'), description: t('noChannelsSelectedDescription') });
-      return;
+        toast({ variant: 'destructive', title: t('noChannelsSelectedTitle'), description: t('noChannelsSelectedDescription') });
+        return;
     }
-  
+
     setIsLoading(true);
     const userChannelsRef = collection(firestore, 'user_channels');
+    
+    // 1. Fetch existing channel URLs for the user
+    const q = query(userChannelsRef, where('userId', '==', user.uid));
+    const querySnapshot = await getDocs(q);
+    const existingUrls = new Set(querySnapshot.docs.map(doc => doc.data().url));
+
+    // 2. Filter out channels that already exist
+    const channelsToAdd = verifiedChannels.filter(channel => 
+        selectedVerifiedChannels.has(channel.url) && !existingUrls.has(channel.url)
+    );
+
+    const channelsToUpdate = verifiedChannels.filter(channel => 
+        selectedVerifiedChannels.has(channel.url) && existingUrls.has(channel.url)
+    );
+
+    if (channelsToUpdate.length > 0) {
+        toast({
+            title: "Kanäle bereits vorhanden",
+            description: `${channelsToUpdate.length} der ausgewählten Kanäle sind bereits in Ihrer Bibliothek.`,
+        });
+    }
+
+    if (channelsToAdd.length === 0) {
+        setIsLoading(false);
+        if (channelsToUpdate.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: "Keine neuen Kanäle",
+                description: "Alle ausgewählten Kanäle sind bereits in Ihrer Bibliothek.",
+            });
+        }
+        setVerifiedChannels([]);
+        setSelectedVerifiedChannels(new Set());
+        return;
+    }
+
+    // 3. Add only the new channels
     let addedCount = 0;
-  
-    for (const channelUrl of selectedVerifiedChannels) {
-      const channel = verifiedChannels.find(c => c.url === channelUrl);
-      if (channel) {
-        // Using non-blocking update
+    for (const channel of channelsToAdd) {
         addDocumentNonBlocking(userChannelsRef, {
-          ...channel,
-          userId: user.uid,
-          addedAt: serverTimestamp(),
+            ...channel,
+            userId: user.uid,
+            addedAt: serverTimestamp(),
         });
         addedCount++;
-      }
     }
-  
+
     toast({
-      title: t('channelAddedTitle'),
-      description: t('channelAddedDescription', { count: addedCount }),
+        title: t('channelAddedTitle'),
+        description: t('channelAddedDescription', { count: addedCount }),
     });
-  
+
     setIsLoading(false);
     setVerifiedChannels([]);
     setSelectedVerifiedChannels(new Set());
