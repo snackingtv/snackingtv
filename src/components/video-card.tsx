@@ -1351,7 +1351,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     </SheetTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{user ? t('welcome') : t('login')}</p>
+                    <p>{user ? t('profile') : t('login')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <AuthSheetContent container={containerRef.current} />
@@ -1386,7 +1386,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <p>Favoriten</p>
                 </TooltipContent>
               </Tooltip>
-
+            
             <Sheet>
               <Tooltip>
                 <TooltipTrigger asChild>
