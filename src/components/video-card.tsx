@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
 import { Input } from '@/components/ui/input';
-import { signOut, User } from 'firebase/auth';
+import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
@@ -668,6 +668,22 @@ const registerSchema = z.object({
   }),
 });
 
+const updateEmailSchema = z.object({
+  newEmail: z.string().email("invalidEmail"),
+  currentPassword: z.string().min(1, "passwordRequired"),
+});
+
+const updatePasswordSchema = z
+  .object({
+    newPassword: z.string().min(6, "passwordTooShort"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "passwordsDontMatch",
+    path: ["confirmPassword"],
+  });
+
+
 function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTMLElement | null, initialTab?: 'login' | 'register' }) {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
@@ -675,26 +691,34 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [showPassword, setShowPassword] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const formSchema = activeTab === 'login' ? loginSchema : registerSchema;
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      ...(activeTab === 'register' ? { acceptPrivacy: false } : {}),
-    },
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
     mode: 'onChange',
   });
 
+  const registerForm = useForm<z.infer<typeof registerSchema>>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { email: "", password: "", acceptPrivacy: false },
+    mode: 'onChange',
+  });
+  
+  const emailForm = useForm<z.infer<typeof updateEmailSchema>>({
+    resolver: zodResolver(updateEmailSchema),
+    defaultValues: { newEmail: "", currentPassword: "" },
+  });
+
+  const passwordForm = useForm<z.infer<typeof updatePasswordSchema>>({
+    resolver: zodResolver(updatePasswordSchema),
+    defaultValues: { newPassword: "", confirmPassword: "" },
+  });
+
   useEffect(() => {
-    form.reset({
-      email: "",
-      password: "",
-      ...(activeTab === 'register' ? { acceptPrivacy: false } : {}),
-    });
-  }, [activeTab, form]);
+    loginForm.reset();
+    registerForm.reset();
+  }, [activeTab, loginForm, registerForm]);
   
   useEffect(() => {
     setActiveTab(initialTab);
@@ -711,25 +735,74 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
     }
   };
 
-  const handleAuthAction = (values: z.infer<typeof formSchema>) => {
+  const handleLogin = (values: z.infer<typeof loginSchema>) => {
     if (!auth) return;
-    const { email, password } = values;
-
-    if (activeTab === 'login') {
-      initiateEmailSignIn(auth, email, password);
-       toast({
-        title: t('loading'),
-        description: t('attemptingLogin'),
-      });
-    } else {
-      initiateEmailSignUp(auth, email, password);
-       toast({
-        title: t('loading'),
-        description: t('attemptingRegister'),
-      });
-    }
+    initiateEmailSignIn(auth, values.email, values.password);
+    toast({
+      title: t('loading'),
+      description: t('attemptingLogin'),
+    });
   };
   
+  const handleRegister = (values: z.infer<typeof registerSchema>) => {
+    if (!auth) return;
+    initiateEmailSignUp(auth, values.email, values.password);
+    toast({
+      title: t('loading'),
+      description: t('attemptingRegister'),
+    });
+  };
+
+  const handleChangeEmail = async (values: z.infer<typeof updateEmailSchema>) => {
+    if (!user || !user.email) return;
+
+    setIsUpdating(true);
+    try {
+      const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updateEmail(user, values.newEmail);
+      toast({
+        title: t('emailUpdateSuccessTitle'),
+        description: t('emailUpdateSuccessDescription'),
+      });
+      emailForm.reset();
+    } catch (error: any) {
+      console.error("Email update failed:", error);
+      toast({
+        variant: "destructive",
+        title: t('emailUpdateErrorTitle'),
+        description: error.code === 'auth/wrong-password' 
+          ? t('wrongPasswordError') 
+          : error.message,
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleChangePassword = async (values: z.infer<typeof updatePasswordSchema>) => {
+    if (!user) return;
+    
+    setIsUpdating(true);
+    try {
+      await updatePassword(user, values.newPassword);
+      toast({
+        title: t('passwordUpdateSuccessTitle'),
+        description: t('passwordUpdateSuccessDescription'),
+      });
+      passwordForm.reset();
+    } catch (error: any) {
+      console.error("Password update failed:", error);
+       toast({
+        variant: "destructive",
+        title: t('passwordUpdateErrorTitle'),
+        description: t('reauthenticationNeededError'),
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (isUserLoading) {
     return (
       <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
@@ -744,13 +817,99 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
   }
   
   if (user) {
-     return (
-      <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
+    return (
+      <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-auto overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{t('myProfile')}</SheetTitle>
         </SheetHeader>
         <div className="p-4 space-y-4">
           <p className="text-sm font-medium">{t('welcome')}, <span className='font-mono text-muted-foreground'>{user.email}</span></p>
+
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="change-email">
+              <AccordionTrigger>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" /> {t('changeEmail')}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Form {...emailForm}>
+                  <form onSubmit={emailForm.handleSubmit(handleChangeEmail)} className="space-y-4 pt-2">
+                    <FormField
+                      control={emailForm.control}
+                      name="newEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('newEmail')}</FormLabel>
+                          <FormControl><Input type="email" placeholder="new.email@example.com" {...field} /></FormControl>
+                          <FormMessage>{emailForm.formState.errors.newEmail && t(emailForm.formState.errors.newEmail.message)}</FormMessage>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={emailForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('currentPassword')}</FormLabel>
+                           <div className="relative">
+                            <FormControl><Input type={showPassword ? "text" : "password"} {...field} /></FormControl>
+                             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">
+                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                            </button>
+                          </div>
+                          <FormMessage>{emailForm.formState.errors.currentPassword && t(emailForm.formState.errors.currentPassword.message)}</FormMessage>
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? t('loading') : t('updateEmail')}</Button>
+                  </form>
+                </Form>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="change-password">
+              <AccordionTrigger>
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4" /> {t('changePassword')}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                 <Form {...passwordForm}>
+                  <form onSubmit={passwordForm.handleSubmit(handleChangePassword)} className="space-y-4 pt-2">
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('newPassword')}</FormLabel>
+                           <div className="relative">
+                            <FormControl><Input type={showPassword ? "text" : "password"} {...field} /></FormControl>
+                             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3">
+                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                            </button>
+                          </div>
+                          <FormMessage>{passwordForm.formState.errors.newPassword && t(passwordForm.formState.errors.newPassword.message)}</FormMessage>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('confirmNewPassword')}</FormLabel>
+                          <FormControl><Input type={showPassword ? "text" : "password"} {...field} /></FormControl>
+                          <FormMessage>{passwordForm.formState.errors.confirmPassword && t(passwordForm.formState.errors.confirmPassword.message)}</FormMessage>
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? t('loading') : t('updatePassword')}</Button>
+                  </form>
+                </Form>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
           <Button onClick={handleLogout} variant="outline" className="w-full">
             <LogOut className="mr-2 h-4 w-4" />
             {t('logout')}
@@ -759,6 +918,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
       </SheetContent>
     );
   }
+
 
   return (
      <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
@@ -772,10 +932,10 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
             <SheetTitle>{t('login')}</SheetTitle>
           </SheetHeader>
           <div className="p-4">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4">
+            <Form {...loginForm}>
+              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <FormField
-                  control={form.control}
+                  control={loginForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -789,7 +949,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
                 />
                 <div className="space-y-2">
                   <FormField
-                    control={form.control}
+                    control={loginForm.control}
                     name="password"
                     render={({ field }) => (
                       <FormItem>
@@ -811,7 +971,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('login')}</Button>
+                <Button type="submit" className="w-full mt-4" disabled={!loginForm.formState.isValid}>{t('login')}</Button>
               </form>
             </Form>
           </div>
@@ -821,10 +981,10 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
             <SheetTitle>{t('register')}</SheetTitle>
           </SheetHeader>
           <div className="p-4">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4">
+            <Form {...registerForm}>
+              <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                 <FormField
-                  control={form.control}
+                  control={registerForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
@@ -838,7 +998,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
                 />
                 <div className="space-y-2">
                   <FormField
-                    control={form.control}
+                    control={registerForm.control}
                     name="password"
                     render={({ field }) => (
                       <FormItem>
@@ -862,7 +1022,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
                 </div>
                 <div className="space-y-2">
                   <FormField
-                    control={form.control}
+                    control={registerForm.control}
                     name="acceptPrivacy"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -888,7 +1048,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
                     )}
                   />
                 </div>
-                <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
+                <Button type="submit" className="w-full mt-4" disabled={!registerForm.formState.isValid}>{t('register')}</Button>
               </form>
             </Form>
           </div>
@@ -1388,18 +1548,18 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               </Tooltip>
             
             <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                        <Tv2 size={32} className="drop-shadow-lg" />
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>{t('channels')}</p>
-                  </TooltipContent>
-                </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                      <Tv2 size={32} className="drop-shadow-lg" />
+                    </Button>
+                  </SheetTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>{t('channels')}</p>
+                </TooltipContent>
+              </Tooltip>
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
             </Sheet>
             
