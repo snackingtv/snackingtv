@@ -154,8 +154,8 @@ export function VideoFeed() {
   const placeholderVideo: Video = {
     id: 'placeholder',
     url: '',
-    title: 'SnackingTV Beta',
-    author: 'Add a channel or select a local file',
+    title: '',
+    author: '',
     avatarId: 'iptv_placeholder'
   };
 
