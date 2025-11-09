@@ -106,3 +106,10 @@ body {
     100% { transform: translateX(-100%); }
   }
 }
+
+/* Add this to allow sheets within relative containers to position correctly */
+@layer base {
+  div[data-radix-portal][role="dialog"] > div[data-state="open"] {
+    position: absolute;
+  }
+}

@@ -51,10 +51,10 @@ interface Channel {
   url: string; // Add url for the channel
 }
 
-function PrivacyPolicySheetContent() {
+function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
       <SheetHeader>
         <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
@@ -80,10 +80,10 @@ function PrivacyPolicySheetContent() {
   )
 }
 
-function ImprintSheetContent() {
+function ImprintSheetContent({ container }: { container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
       <SheetHeader>
         <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
@@ -114,12 +114,14 @@ function ChannelListSheetContent({
   channels, 
   onChannelSelect,
   favoriteChannels,
-  title
+  title,
+  container
 }: { 
   channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
   favoriteChannels: WithId<M3uChannel>[];
   title: string;
+  container?: HTMLElement | null;
 }) {
   const { t } = useTranslation();
   const firestore = useFirestore();
@@ -206,7 +208,7 @@ function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
+    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
       <SheetHeader className="text-center">
         <div className="relative flex justify-center items-center">
           <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
@@ -260,7 +262,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
+function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean, container?: HTMLElement | null }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -544,7 +546,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
 
   if (verifiedChannels.length > 0) {
     return (
-      <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[75vh] flex flex-col">
+      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[75vh] flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
         </SheetHeader>
@@ -576,7 +578,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
+    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
       <SheetHeader>
         <SheetTitle>{t('addChannel')}</SheetTitle>
       </SheetHeader>
@@ -665,7 +667,7 @@ const registerSchema = z.object({
 });
 
 
-function SettingsSheetContent() {
+function SettingsSheetContent({ container }: { container?: HTMLElement | null }) {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
@@ -724,7 +726,7 @@ function SettingsSheetContent() {
   };
   
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
       <SheetHeader>
         <SheetTitle>{t('settings')}</SheetTitle>
       </SheetHeader>
@@ -807,7 +809,7 @@ function SettingsSheetContent() {
                                       <SheetTrigger asChild>
                                         <button className="text-primary underline">{t('privacyPolicy')}</button>
                                       </SheetTrigger>
-                                      <PrivacyPolicySheetContent />
+                                      <PrivacyPolicySheetContent container={container} />
                                     </Sheet>
                                   </FormLabel>
                                   <FormMessage />
@@ -841,7 +843,7 @@ function SettingsSheetContent() {
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
-              <PrivacyPolicySheetContent />
+              <PrivacyPolicySheetContent container={container}/>
             </Sheet>
           </li>
           <li>
@@ -852,7 +854,7 @@ function SettingsSheetContent() {
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
-              <ImprintSheetContent />
+              <ImprintSheetContent container={container} />
             </Sheet>
           </li>
         </ul>
@@ -861,10 +863,10 @@ function SettingsSheetContent() {
   );
 }
 
-function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
+function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (term: string) => void, searchTerm: string, container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
+    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
       <SheetHeader>
         <SheetTitle>{t('searchChannels')}</SheetTitle>
       </SheetHeader>
@@ -1223,7 +1225,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Search size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
+              <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -1231,7 +1233,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Plus size={28} className="drop-shadow-lg" />
                 </Button>              
               </SheetTrigger>
-              <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
+              <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
             </Sheet>
             <Sheet>
               <SheetTrigger asChild>
@@ -1239,7 +1241,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Settings size={28} className="drop-shadow-lg"/>
                 </Button>
               </SheetTrigger>
-              <SettingsSheetContent/>
+              <SettingsSheetContent container={containerRef.current} />
             </Sheet>
           </div>
         </div>
@@ -1254,7 +1256,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <Tv2 size={32} className="drop-shadow-lg" />
                 </Button>
               </SheetTrigger>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
             </Sheet>
 
             <input
