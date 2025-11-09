@@ -94,5 +94,8 @@
   "noNewChannelsTitle": "Keine neuen Kanäle",
   "noNewChannelsDescription": "Alle ausgewählten Kanäle sind bereits in Ihrer Bibliothek.",
   "acceptPrivacyLabel": "Ich akzeptiere die",
-  "profile": "Profil"
+  "profile": "Profil",
+  "deviceStorage": "Geräte Speicher",
+  "fullscreen": "Vollbild",
+  "exitFullscreen": "Vollbild beenden"
 }

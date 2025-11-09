@@ -1319,7 +1319,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     </SheetTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Suche</p>
+                    <p>{t('searchChannels')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
@@ -1335,7 +1335,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     </SheetTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Kanal hinzufügen</p>
+                    <p>{t('addChannel')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
@@ -1367,7 +1367,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     </SheetTrigger>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Einstellungen</p>
+                    <p>{t('settings')}</p>
                   </TooltipContent>
                 </Tooltip>
                 <SettingsSheetContent container={containerRef.current} />
@@ -1383,7 +1383,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>Favoriten</p>
+                  <p>{t('favorites')}</p>
                 </TooltipContent>
               </Tooltip>
             
@@ -1397,7 +1397,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </SheetTrigger>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>Kanäle</p>
+                  <p>{t('channels')}</p>
                 </TooltipContent>
               </Tooltip>
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
@@ -1426,7 +1426,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p>Geräte Speicher</p>
+                <p>{t('deviceStorage')}</p>
               </TooltipContent>
             </Tooltip>
 
@@ -1445,7 +1445,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p>{isFullScreen ? "Vollbild beenden" : "Vollbild"}</p>
+                <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
               </TooltipContent>
             </Tooltip>
           </div>

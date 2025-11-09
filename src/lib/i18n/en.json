@@ -94,5 +94,8 @@
   "noNewChannelsTitle": "No New Channels",
   "noNewChannelsDescription": "All selected channels are already in your library.",
   "acceptPrivacyLabel": "I accept the",
-  "profile": "Profile"
+  "profile": "Profile",
+  "deviceStorage": "Device Storage",
+  "fullscreen": "Fullscreen",
+  "exitFullscreen": "Exit Fullscreen"
 }
