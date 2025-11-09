@@ -398,7 +398,14 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   };
   
   const handleSaveSelectedChannels = async () => {
-    if (!firestore || !user) return;
+    if (!firestore || !user) {
+        toast({
+            variant: 'destructive',
+            title: t('notLoggedInTitle'),
+            description: t('notLoggedInDescription'),
+        });
+        return;
+    }
     if (selectedVerifiedChannels.size === 0) {
         toast({ variant: 'destructive', title: t('noChannelsSelectedTitle'), description: t('noChannelsSelectedDescription') });
         return;
@@ -423,8 +430,8 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
 
     if (channelsToUpdate.length > 0) {
         toast({
-            title: "Kanäle bereits vorhanden",
-            description: `${channelsToUpdate.length} der ausgewählten Kanäle sind bereits in Ihrer Bibliothek.`,
+            title: t('channelsExistTitle'),
+            description: t('channelsExistDescription', { count: channelsToUpdate.length }),
         });
     }
 
@@ -433,8 +440,8 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
         if (channelsToUpdate.length === 0) {
             toast({
                 variant: 'destructive',
-                title: "Keine neuen Kanäle",
-                description: "Alle ausgewählten Kanäle sind bereits in Ihrer Bibliothek.",
+                title: t('noNewChannelsTitle'),
+                description: t('noNewChannelsDescription'),
             });
         }
         setVerifiedChannels([]);
@@ -578,7 +585,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                   placeholder="https://.../playlist.m3u"
                   value={channelLink}
                   onChange={(e) => setChannelLink(e.target.value)}
-                  disabled={isDisabled}
+                  disabled={isDisabled || !user}
                   className="flex-grow"
                 />
                 <Button onClick={handleAddFromUrl} disabled={isDisabled || !channelLink || !user}>
@@ -599,7 +606,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                 onChange={handleFileChange}
                 accept=".m3u,.m3u8"
                 className="hidden"
-                disabled={isDisabled}
+                disabled={isDisabled || !user}
               />
               <Button
                 onClick={() => fileInputRef.current?.click()}

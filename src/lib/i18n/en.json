@@ -88,5 +88,9 @@
   "deleteErrorDescription": "An error occurred while deleting the channels.",
   "noOtherChannels": "No other channels.",
   "notLoggedInTitle": "Not logged in",
-  "notLoggedInDescription": "You must be logged in to add channels."
+  "notLoggedInDescription": "You must be logged in to add channels.",
+  "channelsExistTitle": "Channels Already Exist",
+  "channelsExistDescription": "{count, plural, =1 {One of the selected channels is already in your library.} other {# of the selected channels are already in your library.}}",
+  "noNewChannelsTitle": "No New Channels",
+  "noNewChannelsDescription": "All selected channels are already in your library."
 }

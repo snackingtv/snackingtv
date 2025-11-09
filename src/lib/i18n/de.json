@@ -88,5 +88,9 @@
   "deleteErrorDescription": "Ein Fehler ist beim Löschen der Kanäle aufgetreten.",
   "noOtherChannels": "Keine weiteren Kanäle.",
   "notLoggedInTitle": "Nicht angemeldet",
-  "notLoggedInDescription": "Sie müssen angemeldet sein, um Kanäle hinzuzufügen."
+  "notLoggedInDescription": "Sie müssen angemeldet sein, um Kanäle hinzuzufügen.",
+  "channelsExistTitle": "Kanäle bereits vorhanden",
+  "channelsExistDescription": "{count, plural, =1 {Einer der ausgewählten Kanäle ist bereits in Ihrer Bibliothek.} other {# der ausgewählten Kanäle sind bereits in Ihrer Bibliothek.}}",
+  "noNewChannelsTitle": "Keine neuen Kanäle",
+  "noNewChannelsDescription": "Alle ausgewählten Kanäle sind bereits in Ihrer Bibliothek."
 }
