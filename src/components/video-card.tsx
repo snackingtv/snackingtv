@@ -747,7 +747,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
      return (
       <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
         <SheetHeader>
-          <SheetTitle>{t('welcome')}</SheetTitle>
+          <SheetTitle>{t('myProfile')}</SheetTitle>
         </SheetHeader>
         <div className="p-4 space-y-4">
           <p className="text-sm font-medium">{t('welcome')}, <span className='font-mono text-muted-foreground'>{user.email}</span></p>

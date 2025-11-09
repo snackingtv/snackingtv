@@ -97,5 +97,6 @@
   "profile": "Profil",
   "deviceStorage": "Geräte Speicher",
   "fullscreen": "Vollbild",
-  "exitFullscreen": "Vollbild beenden"
+  "exitFullscreen": "Vollbild beenden",
+  "myProfile": "Mein Profil"
 }

@@ -97,5 +97,6 @@
   "profile": "Profile",
   "deviceStorage": "Device Storage",
   "fullscreen": "Fullscreen",
-  "exitFullscreen": "Exit Fullscreen"
+  "exitFullscreen": "Exit Fullscreen",
+  "myProfile": "My Profile"
 }
