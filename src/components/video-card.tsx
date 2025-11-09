@@ -762,133 +762,138 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
 
   return (
      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
-      <SheetHeader>
-        <SheetTitle>{activeTab === 'login' ? t('login') : t('register')}</SheetTitle>
-      </SheetHeader>
-      <div className="p-4">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register' )}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('login')}</TabsTrigger>
-              <TabsTrigger value="register">{t('register')}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="login">{t('login')}</TabsTrigger>
+          <TabsTrigger value="register">{t('register')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="login">
+          <SheetHeader>
+            <SheetTitle>{t('login')}</SheetTitle>
+          </SheetHeader>
+          <div className="p-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('email')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="you@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="space-y-2">
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('email')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="you@example.com" {...field} />
-                        </FormControl>
+                        <FormLabel>{t('password')}</FormLabel>
+                        <div className="relative">
+                          <FormControl>
+                            <Input type={showPassword ? "text" : "password"} {...field} />
+                          </FormControl>
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                          </button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <div className="space-y-2 pt-4">
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('password')}</FormLabel>
-                            <div className="relative">
-                            <FormControl>
-                              <Input type={showPassword ? "text" : "password"} {...field} />
-                            </FormControl>
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute inset-y-0 right-0 flex items-center pr-3"
-                            >
-                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                            </button>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                    <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('login')}</Button>
-                </form>
-              </Form>
-            </TabsContent>
-            <TabsContent value="register">
-               <Form {...form}>
-                 <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('email')}</FormLabel>
+                </div>
+                <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('login')}</Button>
+              </form>
+            </Form>
+          </div>
+        </TabsContent>
+        <TabsContent value="register">
+          <SheetHeader>
+            <SheetTitle>{t('register')}</SheetTitle>
+          </SheetHeader>
+          <div className="p-4">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('email')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="you@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('password')}</FormLabel>
+                        <div className="relative">
                           <FormControl>
-                            <Input placeholder="you@example.com" {...field} />
+                            <Input type={showPassword ? "text" : "password"} {...field} />
                           </FormControl>
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                          </button>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <FormField
+                    control={form.control}
+                    name="acceptPrivacy"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value as boolean}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            {t('acceptPrivacyLabel')} {' '}
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <button className="text-primary underline">{t('privacyPolicy')}</button>
+                              </SheetTrigger>
+                              <PrivacyPolicySheetContent container={container} />
+                            </Sheet>
+                          </FormLabel>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="space-y-2 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('password')}</FormLabel>
-                              <div className="relative">
-                              <FormControl>
-                                <Input type={showPassword ? "text" : "password"} {...field} />
-                              </FormControl>
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 flex items-center pr-3"
-                              >
-                                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                              </button>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      </div>
-                    <div className="space-y-2 pt-4">
-                      <FormField
-                        control={form.control}
-                        name="acceptPrivacy"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value as boolean}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>
-                                {t('acceptPrivacyLabel')} {' '}
-                                <Sheet>
-                                  <SheetTrigger asChild>
-                                    <button className="text-primary underline">{t('privacyPolicy')}</button>
-                                  </SheetTrigger>
-                                  <PrivacyPolicySheetContent container={container} />
-                                </Sheet>
-                              </FormLabel>
-                              <FormMessage />
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      </div>
-                    <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
-      </div>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
+              </form>
+            </Form>
+          </div>
+        </TabsContent>
+      </Tabs>
     </SheetContent>
   );
 }
@@ -1304,69 +1309,69 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             </div>
 
             <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Sheet>
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                         <Search size={28} className="drop-shadow-lg"/>
                       </Button>
                     </SheetTrigger>
-                    <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
-                  </Sheet>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Suche</p>
-                </TooltipContent>
-              </Tooltip>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Suche</p>
+                  </TooltipContent>
+                </Tooltip>
+                <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
+              </Sheet>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Sheet>
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                         <Plus size={28} className="drop-shadow-lg" />
                       </Button>              
                     </SheetTrigger>
-                    <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
-                  </Sheet>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Kanal hinzufügen</p>
-                </TooltipContent>
-              </Tooltip>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Kanal hinzufügen</p>
+                  </TooltipContent>
+                </Tooltip>
+                <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
+              </Sheet>
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Sheet>
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                         <UserIcon size={28} className="drop-shadow-lg"/>
                       </Button>
                     </SheetTrigger>
-                    <AuthSheetContent container={containerRef.current} />
-                  </Sheet>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{user ? t('welcome') : t('login')}</p>
-                </TooltipContent>
-              </Tooltip>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{user ? t('welcome') : t('login')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <AuthSheetContent container={containerRef.current} />
+              </Sheet>
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Sheet>
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <SheetTrigger asChild>
                       <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                         <Settings size={28} className="drop-shadow-lg"/>
                       </Button>
                     </SheetTrigger>
-                    <SettingsSheetContent container={containerRef.current} />
-                  </Sheet>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Einstellungen</p>
-                </TooltipContent>
-              </Tooltip>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Einstellungen</p>
+                  </TooltipContent>
+                </Tooltip>
+                <SettingsSheetContent container={containerRef.current} />
+              </Sheet>
             </div>
           </div>
 
@@ -1382,21 +1387,21 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                 </TooltipContent>
               </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Sheet>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                        <Tv2 size={32} className="drop-shadow-lg" />
-                      </Button>
-                    </SheetTrigger>
-                    <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
-                  </Sheet>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Kanäle</p>
-              </TooltipContent>
-            </Tooltip>
+            <Sheet>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                      <Tv2 size={32} className="drop-shadow-lg" />
+                    </Button>
+                  </SheetTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Kanäle</p>
+                </TooltipContent>
+              </Tooltip>
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
+            </Sheet>
             
             <input
               type="file"
