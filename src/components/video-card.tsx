@@ -1068,8 +1068,8 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
       <SheetHeader>
         <SheetTitle>{t('settings')}</SheetTitle>
       </SheetHeader>
-      <div className="p-4">
-        <ul className="space-y-4">
+      <div className="p-4 flex flex-col h-full">
+        <ul className="space-y-4 flex-grow">
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
             <div className="flex items-center gap-2">
@@ -1104,6 +1104,9 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
             </Sheet>
           </li>
         </ul>
+        <div className="text-center text-xs text-muted-foreground pt-4">
+          Build 1.0.1 Beta
+        </div>
       </div>
     </SheetContent>
   );
@@ -1641,3 +1644,5 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     </TooltipProvider>
   );
 }
+
+    
