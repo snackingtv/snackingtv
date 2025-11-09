@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { I18nProvider } from '@/lib/i18n';
+import { GoogleAnalytics } from '@/components/google-analytics';
 
 export const metadata: Metadata = {
   title: 'SnackingTV',
@@ -22,6 +23,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
         <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet" />
+        <GoogleAnalytics />
       </head>
       <body className="font-body antialiased">
         <I18nProvider>

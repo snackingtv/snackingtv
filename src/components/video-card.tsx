@@ -1105,7 +1105,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.6 beta
+          Build 1.0.7 beta
         </div>
       </div>
     </SheetContent>
@@ -1573,7 +1573,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               </Tooltip>
             
             <Sheet>
-               <Tooltip>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
