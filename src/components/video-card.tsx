@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -27,6 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WeatherAndDate } from './weather-and-date';
 
 
 interface VideoCardProps {
@@ -666,15 +667,14 @@ const registerSchema = z.object({
   }),
 });
 
-
-function SettingsSheetContent({ container }: { container?: HTMLElement | null }) {
+function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTMLElement | null, initialTab?: 'login' | 'register' }) {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
-  const { t, language, setLanguage } = useTranslation();
-  const [activeTab, setActiveTab] = useState('login');
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const formSchema = activeTab === 'login' ? loginSchema : registerSchema;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -694,6 +694,10 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
       ...(activeTab === 'register' ? { acceptPrivacy: false } : {}),
     });
   }, [activeTab, form]);
+  
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const handleLogout = () => {
     if (auth) {
@@ -725,6 +729,174 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
     }
   };
   
+  if (isUserLoading) {
+    return (
+      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+        <SheetHeader>
+          <SheetTitle>{t('loading')}</SheetTitle>
+        </SheetHeader>
+        <div className="p-4">
+          <p>{t('loading')}...</p>
+        </div>
+      </SheetContent>
+    );
+  }
+  
+  if (user) {
+     return (
+      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+        <SheetHeader>
+          <SheetTitle>{t('welcome')}</SheetTitle>
+        </SheetHeader>
+        <div className="p-4 space-y-4">
+          <p className="text-sm font-medium">{t('welcome')}, <span className='font-mono text-muted-foreground'>{user.email}</span></p>
+          <Button onClick={handleLogout} variant="outline" className="w-full">
+            <LogOut className="mr-2 h-4 w-4" />
+            {t('logout')}
+          </Button>
+        </div>
+      </SheetContent>
+    );
+  }
+
+  return (
+     <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+      <SheetHeader>
+        <SheetTitle>{activeTab === 'login' ? t('login') : t('register')}</SheetTitle>
+      </SheetHeader>
+      <div className="p-4">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register' )}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">{t('login')}</TabsTrigger>
+              <TabsTrigger value="register">{t('register')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('email')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder="you@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-2 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('password')}</FormLabel>
+                            <div className="relative">
+                            <FormControl>
+                              <Input type={showPassword ? "text" : "password"} {...field} />
+                            </FormControl>
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3"
+                            >
+                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                    <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('login')}</Button>
+                </form>
+              </Form>
+            </TabsContent>
+            <TabsContent value="register">
+               <Form {...form}>
+                 <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('email')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="space-y-2 pt-4">
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('password')}</FormLabel>
+                              <div className="relative">
+                              <FormControl>
+                                <Input type={showPassword ? "text" : "password"} {...field} />
+                              </FormControl>
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                              </button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      </div>
+                    <div className="space-y-2 pt-4">
+                      <FormField
+                        control={form.control}
+                        name="acceptPrivacy"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value as boolean}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>
+                                {t('acceptPrivacyLabel')} {' '}
+                                <Sheet>
+                                  <SheetTrigger asChild>
+                                    <button className="text-primary underline">{t('privacyPolicy')}</button>
+                                  </SheetTrigger>
+                                  <PrivacyPolicySheetContent container={container} />
+                                </Sheet>
+                              </FormLabel>
+                              <FormMessage />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                      </div>
+                    <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
+      </div>
+    </SheetContent>
+  );
+}
+
+
+function SettingsSheetContent({ container }: { container?: HTMLElement | null }) {
+  const { user, isUserLoading } = useUser();
+  const { t, language, setLanguage } = useTranslation();
+  
   return (
     <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
       <SheetHeader>
@@ -732,150 +904,17 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
       </SheetHeader>
       <div className="p-4">
         <ul className="space-y-4">
-          {isUserLoading ? (
-            <p>{t('loading')}</p>
-          ) : user ? (
-            <li className="space-y-2">
-              <p className="text-sm font-medium">{t('welcome')}, <span className='font-mono text-muted-foreground'>{user.email}</span></p>
-              
-              <Button onClick={handleLogout} variant="outline" className="w-full">
-                <LogOut className="mr-2 h-4 w-4" />
-                {t('logout')}
+          <li className="space-y-2">
+            <p className="text-sm font-medium">{t('language')}</p>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setLanguage('de')} variant={language === 'de' ? 'default' : 'outline'} className="flex-1">
+                {t('german')}
               </Button>
-            </li>
-          ) : (
-            <li>
-                <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="login">{t('login')}</TabsTrigger>
-                    <TabsTrigger value="register">{t('register')}</TabsTrigger>
-                  </TabsList>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleAuthAction)} className="space-y-4 pt-4">
-                       <TabsContent value="login" forceMount className={activeTab === 'login' ? '' : 'hidden'}>
-                          <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('email')}</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="you@example.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="space-y-2 pt-4">
-                            <FormField
-                              control={form.control}
-                              name="password"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>{t('password')}</FormLabel>
-                                   <div className="relative">
-                                    <FormControl>
-                                      <Input type={showPassword ? "text" : "password"} {...field} />
-                                    </FormControl>
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowPassword(!showPassword)}
-                                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                                    >
-                                      {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                                    </button>
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                           <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('login')}</Button>
-                       </TabsContent>
-                       <TabsContent value="register" forceMount className={activeTab === 'register' ? '' : 'hidden'}>
-                          <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t('email')}</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="you@example.com" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <div className="space-y-2 pt-4">
-                            <FormField
-                              control={form.control}
-                              name="password"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>{t('password')}</FormLabel>
-                                   <div className="relative">
-                                    <FormControl>
-                                      <Input type={showPassword ? "text" : "password"} {...field} />
-                                    </FormControl>
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowPassword(!showPassword)}
-                                      className="absolute inset-y-0 right-0 flex items-center pr-3"
-                                    >
-                                      {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                                    </button>
-                                  </div>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                           </div>
-                          <div className="space-y-2 pt-4">
-                            <FormField
-                              control={form.control}
-                              name="acceptPrivacy"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value}
-                                      onCheckedChange={field.onChange}
-                                    />
-                                  </FormControl>
-                                  <div className="space-y-1 leading-none">
-                                    <FormLabel>
-                                      {t('acceptPrivacyLabel')} {' '}
-                                      <Sheet>
-                                        <SheetTrigger asChild>
-                                          <button className="text-primary underline">{t('privacyPolicy')}</button>
-                                        </SheetTrigger>
-                                        <PrivacyPolicySheetContent container={container} />
-                                      </Sheet>
-                                    </FormLabel>
-                                    <FormMessage />
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                           </div>
-                          <Button type="submit" className="w-full mt-4" disabled={!form.formState.isValid}>{t('register')}</Button>
-                       </TabsContent>
-                    </form>
-                  </Form>
-                </Tabs>
-            </li>
-          )}
-           <li className="space-y-2">
-              <p className="text-sm font-medium">{t('language')}</p>
-              <div className="flex items-center gap-2">
-                <Button onClick={() => setLanguage('de')} variant={language === 'de' ? 'default' : 'outline'} className="flex-1">
-                  {t('german')}
-                </Button>
-                <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
-                  {t('english')}
-                </Button>
-              </div>
-            </li>
+              <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
+                {t('english')}
+              </Button>
+            </div>
+          </li>
           <li>
             <Sheet>
               <SheetTrigger asChild>
@@ -1255,8 +1294,11 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         }`}
       >
         <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
-          <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-            {currentTime}
+          <div className='flex flex-col'>
+            <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              {currentTime}
+            </div>
+            <WeatherAndDate />
           </div>
 
           <div className="flex items-center gap-2">
@@ -1276,6 +1318,16 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               </SheetTrigger>
               <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
             </Sheet>
+            
+            <Sheet>
+              <SheetTrigger asChild>
+                 <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                   <UserIcon size={28} className="drop-shadow-lg"/>
+                 </Button>
+              </SheetTrigger>
+              <AuthSheetContent container={containerRef.current} />
+            </Sheet>
+            
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
