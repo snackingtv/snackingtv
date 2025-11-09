@@ -1316,7 +1316,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </Sheet>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('searchChannels')}</p>
+                  <p>Suche</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -1332,7 +1332,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </Sheet>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('addChannel')}</p>
+                  <p>Kanal hinzufügen</p>
                 </TooltipContent>
               </Tooltip>
               
@@ -1364,7 +1364,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </Sheet>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{t('settings')}</p>
+                  <p>Einstellungen</p>
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -1378,7 +1378,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  <p>{t('favorites')}</p>
+                  <p>Favoriten</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -1394,7 +1394,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </Sheet>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p>{t('channels')}</p>
+                <p>Kanäle</p>
               </TooltipContent>
             </Tooltip>
             
@@ -1421,7 +1421,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left">
-                <p>{t('uploadFile')}</p>
+                <p>Geräte Speicher</p>
               </TooltipContent>
             </Tooltip>
 
