@@ -56,7 +56,7 @@ interface Channel {
 function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+    <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-3/4">
       <SheetHeader>
         <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
@@ -85,7 +85,7 @@ function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | nu
 function ImprintSheetContent({ container }: { container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-3/4">
+    <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-3/4">
       <SheetHeader>
         <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
@@ -210,7 +210,7 @@ function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[60vh]">
+    <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-[60vh]">
       <SheetHeader className="text-center">
         <div className="relative flex justify-center items-center">
           <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
@@ -548,7 +548,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }
 
   if (verifiedChannels.length > 0) {
     return (
-      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-[75vh] flex flex-col">
+      <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-[75vh] flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
         </SheetHeader>
@@ -580,7 +580,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
+    <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-auto">
       <SheetHeader>
         <SheetTitle>{t('addChannel')}</SheetTitle>
       </SheetHeader>
@@ -732,7 +732,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
   
   if (isUserLoading) {
     return (
-      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+      <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
         <SheetHeader>
           <SheetTitle>{t('loading')}</SheetTitle>
         </SheetHeader>
@@ -745,7 +745,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
   
   if (user) {
      return (
-      <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+      <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
         <SheetHeader>
           <SheetTitle>{t('myProfile')}</SheetTitle>
         </SheetHeader>
@@ -761,7 +761,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
   }
 
   return (
-     <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+     <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">{t('login')}</TabsTrigger>
@@ -904,7 +904,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
   const { t, language, setLanguage } = useTranslation();
   
   return (
-    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x">
+    <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border">
       <SheetHeader>
         <SheetTitle>{t('settings')}</SheetTitle>
       </SheetHeader>
@@ -952,7 +952,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
 function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (term: string) => void, searchTerm: string, container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent container={container} side="bottom" className="rounded-t-lg max-w-2xl mx-auto border-x h-auto">
+    <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-auto">
       <SheetHeader>
         <SheetTitle>{t('searchChannels')}</SheetTitle>
       </SheetHeader>
@@ -1388,18 +1388,18 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               </Tooltip>
             
             <Sheet>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                      <Tv2 size={32} className="drop-shadow-lg" />
-                    </Button>
-                  </SheetTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>{t('channels')}</p>
-                </TooltipContent>
-              </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                        <Tv2 size={32} className="drop-shadow-lg" />
+                      </Button>
+                    </SheetTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>{t('channels')}</p>
+                  </TooltipContent>
+                </Tooltip>
               <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
             </Sheet>
             
