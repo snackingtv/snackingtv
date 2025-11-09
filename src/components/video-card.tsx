@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -507,8 +507,19 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
     event.target.value = '';
   }
 
-  const handleCancelVerification = () => {
+  const handleCancelVerification = async () => {
     isCancelledRef.current = true;
+    setIsVerifying(false);
+    
+    if (onlineChannelsRef.current.length > 0) {
+      const addedCount = await handleSaveChannels(onlineChannelsRef.current);
+      if (addedCount > 0) {
+        toast({
+          title: t('channelAddedTitle'),
+          description: t('channelAddedDescription', { count: addedCount }),
+        });
+      }
+    }
   };
   
   const handleToggleSelectVerified = (channelUrl: string) => {
@@ -600,10 +611,10 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                   placeholder="https://.../playlist.m3u"
                   value={channelLink}
                   onChange={(e) => setChannelLink(e.target.value)}
-                  disabled={!user || isUserLoading}
+                  disabled={!user || isDisabled}
                   className="flex-grow"
                 />
-                <Button onClick={handleAddFromUrl} disabled={!user || isUserLoading || isLoading || !channelLink}>
+                <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
                   {isLoading ? t('loading') : t('add')}
                 </Button>
               </div>
@@ -621,13 +632,13 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                 onChange={handleFileChange}
                 accept=".m3u,.m3u8"
                 className="hidden"
-                disabled={!user || isUserLoading}
+                disabled={!user || isDisabled}
               />
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
                 className="w-full"
-                disabled={!user || isUserLoading || isLoading}
+                disabled={!user || isDisabled}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 {t('uploadFile')}
@@ -808,6 +819,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 
 
 export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect }: VideoCardProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressContainerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -828,6 +840,9 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   // Progress bar state
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  // Fullscreen state
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
 
@@ -1069,8 +1084,32 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     setProgress(clickRatio * 100);
   };
 
+  // Fullscreen logic
+  const toggleFullScreen = useCallback(() => {
+    const elem = containerRef.current;
+    if (!elem) return;
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().catch(err => {
+        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
+  }, []);
+
   return (
     <div
+      ref={containerRef}
       className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
       onClick={handleVideoClick}
       onMouseLeave={handleSeekEnd} 
@@ -1172,6 +1211,17 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               }}
             >
               <Folder size={32} className="drop-shadow-lg" />
+            </Button>
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFullScreen();
+                }}
+              >
+                {isFullScreen ? <Minimize size={32} className="drop-shadow-lg" /> : <Maximize size={32} className="drop-shadow-lg" />}
             </Button>
         </div>
 
