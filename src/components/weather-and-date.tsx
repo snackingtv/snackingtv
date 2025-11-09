@@ -30,8 +30,8 @@ export function WeatherAndDate() {
   }, [language]);
 
   return (
-    <div className="flex items-center gap-1 text-white font-medium" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)', fontSize: '8px' }}>
-      <CloudRain size={12} className="drop-shadow-lg" />
+    <div className="flex items-center gap-1 text-white font-medium" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)', fontSize: '6px' }}>
+      <CloudRain size={10} className="drop-shadow-lg" />
       <span>7°</span>
       <span>|</span>
       <span>{dateString}</span>
