@@ -274,8 +274,63 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef(false);
   const [verifiedChannels, setVerifiedChannels] = useState<M3uChannel[]>([]);
+  const onlineChannelsRef = useRef<M3uChannel[]>([]);
   const [selectedVerifiedChannels, setSelectedVerifiedChannels] = useState<Set<string>>(new Set());
 
+  const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
+    if (!firestore || !user) {
+        toast({
+            variant: 'destructive',
+            title: t('notLoggedInTitle'),
+            description: t('notLoggedInDescription'),
+        });
+        return 0;
+    }
+    if (channelsToSave.length === 0) {
+        return 0;
+    }
+
+    const userChannelsRef = collection(firestore, 'user_channels');
+    
+    // 1. Fetch existing channel URLs for the user
+    const q = query(userChannelsRef, where('userId', '==', user.uid));
+    const querySnapshot = await getDocs(q);
+    const existingUrls = new Set(querySnapshot.docs.map(doc => doc.data().url));
+
+    // 2. Filter out channels that already exist
+    const newChannelsToAdd = channelsToSave.filter(channel => !existingUrls.has(channel.url));
+
+    const channelsThatExist = channelsToSave.length - newChannelsToAdd.length;
+    if (channelsThatExist > 0) {
+        toast({
+            title: t('channelsExistTitle'),
+            description: t('channelsExistDescription', { count: channelsThatExist }),
+        });
+    }
+    
+    if (newChannelsToAdd.length === 0) {
+        if (channelsThatExist === 0) {
+            toast({
+                variant: 'destructive',
+                title: t('noNewChannelsTitle'),
+                description: t('noNewChannelsDescription'),
+            });
+        }
+        return 0;
+    }
+
+    // 3. Add only the new channels
+    for (const channel of newChannelsToAdd) {
+        addDocumentNonBlocking(userChannelsRef, {
+            ...channel,
+            userId: user.uid,
+            addedAt: serverTimestamp(),
+        });
+    }
+
+    return newChannelsToAdd.length;
+  };
+  
   const processM3uContent = async (content: string, source: string) => {
     isCancelledRef.current = false;
     setVerifiedChannels([]);
@@ -286,6 +341,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
     setOnlineCount(0);
     setOfflineCount(0);
     setTotalCount(0);
+    onlineChannelsRef.current = [];
 
     let parsedChannels: M3uChannel[] = [];
     try {
@@ -328,6 +384,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
         const result = await checkChannelStatus({ url: channel.url });
         if (result.online) {
           onlineChannels.push(channel);
+          onlineChannelsRef.current.push(channel);
           setOnlineCount(c => c + 1);
         } else {
           setOfflineCount(c => c + 1);
@@ -341,13 +398,28 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
         }
       }
     }
+    
+    setIsVerifying(false);
+    setIsLoading(false);
 
     if (isCancelledRef.current) {
-      toast({
+       toast({
           title: t('verificationCancelledTitle'),
           description: t('verificationCancelledDescription'),
       });
-    } else if (onlineChannels.length > 0) {
+      if (onlineChannelsRef.current.length > 0) {
+          const addedCount = await handleSaveChannels(onlineChannelsRef.current);
+          if (addedCount > 0) {
+             toast({
+              title: t('channelAddedTitle'),
+              description: t('channelAddedDescription', { count: addedCount }),
+            });
+          }
+      }
+      return false;
+    } 
+    
+    if (onlineChannels.length > 0) {
       setVerifiedChannels(onlineChannels);
        toast({
         title: t('verificationCompleteTitle'),
@@ -361,8 +433,6 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
       });
     }
     
-    setIsLoading(false);
-    setIsVerifying(false); 
     return onlineChannels.length > 0;
   }
 
@@ -398,73 +468,18 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   };
   
   const handleSaveSelectedChannels = async () => {
-    if (!firestore || !user) {
-        toast({
-            variant: 'destructive',
-            title: t('notLoggedInTitle'),
-            description: t('notLoggedInDescription'),
-        });
-        return;
-    }
-    if (selectedVerifiedChannels.size === 0) {
-        toast({ variant: 'destructive', title: t('noChannelsSelectedTitle'), description: t('noChannelsSelectedDescription') });
-        return;
-    }
-
     setIsLoading(true);
-    const userChannelsRef = collection(firestore, 'user_channels');
-    
-    // 1. Fetch existing channel URLs for the user
-    const q = query(userChannelsRef, where('userId', '==', user.uid));
-    const querySnapshot = await getDocs(q);
-    const existingUrls = new Set(querySnapshot.docs.map(doc => doc.data().url));
-
-    // 2. Filter out channels that already exist
-    const channelsToAdd = verifiedChannels.filter(channel => 
-        selectedVerifiedChannels.has(channel.url) && !existingUrls.has(channel.url)
+    const channelsToSave = verifiedChannels.filter(channel => 
+        selectedVerifiedChannels.has(channel.url)
     );
+    const addedCount = await handleSaveChannels(channelsToSave);
 
-    const channelsToUpdate = verifiedChannels.filter(channel => 
-        selectedVerifiedChannels.has(channel.url) && existingUrls.has(channel.url)
-    );
-
-    if (channelsToUpdate.length > 0) {
-        toast({
-            title: t('channelsExistTitle'),
-            description: t('channelsExistDescription', { count: channelsToUpdate.length }),
-        });
-    }
-
-    if (channelsToAdd.length === 0) {
-        setIsLoading(false);
-        if (channelsToUpdate.length === 0) {
-            toast({
-                variant: 'destructive',
-                title: t('noNewChannelsTitle'),
-                description: t('noNewChannelsDescription'),
-            });
-        }
-        setVerifiedChannels([]);
-        setSelectedVerifiedChannels(new Set());
-        return;
-    }
-
-    // 3. Add only the new channels
-    let addedCount = 0;
-    for (const channel of channelsToAdd) {
-        addDocumentNonBlocking(userChannelsRef, {
-            ...channel,
-            userId: user.uid,
-            addedAt: serverTimestamp(),
-        });
-        addedCount++;
-    }
-
-    toast({
+    if (addedCount > 0) {
+       toast({
         title: t('channelAddedTitle'),
         description: t('channelAddedDescription', { count: addedCount }),
-    });
-
+      });
+    }
     setIsLoading(false);
     setVerifiedChannels([]);
     setSelectedVerifiedChannels(new Set());
@@ -585,10 +600,10 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                   placeholder="https://.../playlist.m3u"
                   value={channelLink}
                   onChange={(e) => setChannelLink(e.target.value)}
-                  disabled={isDisabled || !user}
+                  disabled={!user || isUserLoading}
                   className="flex-grow"
                 />
-                <Button onClick={handleAddFromUrl} disabled={isDisabled || !channelLink || !user}>
+                <Button onClick={handleAddFromUrl} disabled={!user || isUserLoading || isLoading || !channelLink}>
                   {isLoading ? t('loading') : t('add')}
                 </Button>
               </div>
@@ -606,13 +621,13 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
                 onChange={handleFileChange}
                 accept=".m3u,.m3u8"
                 className="hidden"
-                disabled={isDisabled || !user}
+                disabled={!user || isUserLoading}
               />
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 variant="outline"
                 className="w-full"
-                disabled={isDisabled || !user}
+                disabled={!user || isUserLoading || isLoading}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 {t('uploadFile')}
@@ -1112,7 +1127,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
                   <Plus size={28} className="drop-shadow-lg" />
-                </Button>
+                </Button>              
               </SheetTrigger>
               <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
             </Sheet>
