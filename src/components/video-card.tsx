@@ -1105,7 +1105,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.1 beta
+          Build 1.0.2 beta
         </div>
       </div>
     </SheetContent>
