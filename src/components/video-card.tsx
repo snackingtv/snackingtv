@@ -1105,7 +1105,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.2 beta
+          Build 1.0.3 beta
         </div>
       </div>
     </SheetContent>
@@ -1114,18 +1114,40 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
 
 function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (term: string) => void, searchTerm: string, container?: HTMLElement | null }) {
   const { t } = useTranslation();
+  const [localSearch, setLocalSearch] = useState(searchTerm);
+
+  const handleSearch = () => {
+    onSearch(localSearch);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  useEffect(() => {
+    setLocalSearch(searchTerm);
+  }, [searchTerm]);
+
   return (
     <SheetContent container={container} side="bottom" className="rounded-lg max-w-2xl mx-2 mb-2 border h-auto">
       <SheetHeader>
         <SheetTitle>{t('searchChannels')}</SheetTitle>
       </SheetHeader>
       <div className="p-4">
-        <Input
-          placeholder={t('searchPlaceholder')}
-          value={searchTerm}
-          onChange={(e) => onSearch(e.target.value)}
-          className="w-full"
-        />
+        <div className="flex w-full items-center space-x-2">
+          <Input
+            placeholder={t('searchPlaceholder')}
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-grow"
+          />
+          <Button type="submit" onClick={handleSearch}>
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </SheetContent>
   );
@@ -1644,5 +1666,3 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     </TooltipProvider>
   );
 }
-
-    
