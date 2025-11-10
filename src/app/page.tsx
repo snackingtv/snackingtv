@@ -116,12 +116,13 @@ export default function Home() {
           />
           <div 
             data-progress-bar
-            className="fixed bottom-16 left-0 right-0 h-2.5 cursor-pointer group z-20"
+            className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
             onClick={handleProgressClick}
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <Progress
               value={progress}
-              className="h-1 group-hover:h-2.5 transition-all duration-200"
+              className="h-full group-hover:h-2.5 transition-all duration-200"
             />
           </div>
           <BottomNavigation 
