@@ -41,13 +41,12 @@ interface VideoCardProps {
   onToggleFavorite: (channelUrl: string) => void;
   onSearch: (term: string) => void;
   searchTerm: string;
-  localVideoItem: Video | null;
-  onLocalVideoSelect: (file: File) => void;
   showClock: boolean;
   onToggleClock: () => void;
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
+  localVideoItem: Video | null;
 }
 
 // Define the Channel type
@@ -1160,7 +1159,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect, showClock, onToggleClock, onProgressUpdate, onDurationChange, activeVideoRef }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, showClock, onToggleClock, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1170,7 +1169,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [currentTime, setCurrentTime] = useState('');
   
   const { user, isUserLoading } = useUser();
-  const localVideoInputRef = useRef<HTMLInputElement>(null);
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   
   // Swipe to seek state
@@ -1302,14 +1300,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       }
     };
   }, [handleInteraction]);
-
-  const handleLocalFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      onLocalVideoSelect(file);
-    }
-    event.target.value = '';
-  };
   
   // --- Swipe to Seek Handlers ---
   const initialSeekX = useRef(0);
@@ -1585,13 +1575,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           </div>
         </div>
 
-        <input
-            type="file"
-            ref={localVideoInputRef}
-            onChange={handleLocalFileChange}
-            accept="video/*"
-            className="hidden"
-        />
       </div>
     </TooltipProvider>
   );

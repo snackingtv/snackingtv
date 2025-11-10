@@ -16,10 +16,11 @@ interface VideoFeedProps {
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
+  localVideoItem: Video | null;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef }: VideoFeedProps) {
+export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
@@ -28,7 +29,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
   const [showClock, setShowClock] = useState(true);
 
   useEffect(() => {
@@ -131,24 +131,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
     }
   }, [feedItems, emblaApi]);
 
-  const handleLocalVideoSelect = (file: File) => {
-    const newVideoItem: Video = {
-      id: `local-${file.name}-${Date.now()}`,
-      url: file as any, // This is not a real URL, just placeholder for the blob
-      title: file.name,
-      author: 'Local File',
-      avatarId: 'local_file_placeholder'
-    };
-    setLocalVideoItem(newVideoItem);
-    // If there are other items, we can decide where to show it.
-    // For now, let's just make it the only active item.
-    if (emblaApi) {
-      // This is a bit of a hack. We replace the feed to just show the local video.
-      // A better approach might be to insert it and scroll.
-    }
-  };
-
-
   const currentFeed = localVideoItem ? [localVideoItem] : feedItems.filter(item => 
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -169,6 +151,15 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   };
 
   const displayFeed = currentFeed.length > 0 ? currentFeed : [placeholderVideo];
+  
+  useEffect(() => {
+    // If the feed becomes empty (e.g. search returns no results) and it's not a local video,
+    // ensure we reset the active index to 0 for the placeholder.
+    if (currentFeed.length === 0 && !localVideoItem) {
+      setActiveIndex(0);
+    }
+  }, [currentFeed, localVideoItem]);
+
 
   return (
     <div className="overflow-hidden h-full" ref={emblaRef}>
@@ -185,13 +176,12 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
                 onToggleFavorite={handleToggleFavorite}
                 onSearch={setSearchTerm}
                 searchTerm={searchTerm}
-                localVideoItem={localVideoItem}
-                onLocalVideoSelect={handleLocalVideoSelect}
                 showClock={showClock}
                 onToggleClock={handleToggleClock}
                 onProgressUpdate={onProgressUpdate}
                 onDurationChange={onDurationChange}
                 activeVideoRef={activeVideoRef}
+                localVideoItem={video === localVideoItem ? localVideoItem : null}
               />
             </div>
           ))}

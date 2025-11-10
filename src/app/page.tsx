@@ -21,6 +21,8 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const localVideoInputRef = useRef<HTMLInputElement>(null);
+  const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
 
   const userChannelsQuery = useMemoFirebase(
     () =>
@@ -50,12 +52,31 @@ export default function Home() {
   }, [feedItems]);
 
   const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
+    setLocalVideoItem(null); // Switch away from local video if a channel is selected
     setActiveChannel(channel);
   }, []);
 
   const handleLocalVideoSelect = () => {
-    // This might need implementation if the button is to be functional globally
+    localVideoInputRef.current?.click();
   };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const newVideoItem: Video = {
+        id: `local-${file.name}-${Date.now()}`,
+        url: file as any,
+        title: file.name,
+        author: 'Local File',
+        avatarId: 'local_file_placeholder'
+      };
+      setLocalVideoItem(newVideoItem);
+      setActiveChannel(null); // De-select any active channel
+    }
+    // Reset file input to allow selecting the same file again
+    if(event.target) event.target.value = '';
+  };
+
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const progressBar = e.currentTarget;
@@ -77,6 +98,13 @@ export default function Home() {
         <SplashScreen onAnimationEnd={() => setShowSplash(false)} />
       ) : (
         <>
+           <input
+            type="file"
+            ref={localVideoInputRef}
+            onChange={handleFileChange}
+            accept="video/*"
+            className="hidden"
+          />
           <h1 className="sr-only">SnackingTV - A vertical video feed</h1>
           <VideoFeed 
             onChannelSelect={handleChannelSelect} 
@@ -84,6 +112,7 @@ export default function Home() {
             onProgressUpdate={setProgress}
             onDurationChange={setDuration}
             activeVideoRef={activeVideoRef}
+            localVideoItem={localVideoItem}
           />
           <div 
             data-progress-bar
