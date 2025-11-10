@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Home } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -29,6 +29,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
+import { BottomNavigation } from './bottom-navigation';
 
 
 interface VideoCardProps {
@@ -210,7 +211,7 @@ function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent side="bottom" className="h-[60vh]">
+    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader className="text-center">
         <div className="relative flex justify-center items-center">
           <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
@@ -548,7 +549,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
 
   if (verifiedChannels.length > 0) {
     return (
-      <SheetContent side="bottom" className="h-[75vh] flex flex-col">
+      <SheetContent side="bottom" className="h-[75vh] flex flex-col rounded-t-lg mx-2 mb-2">
         <SheetHeader>
           <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
         </SheetHeader>
@@ -580,9 +581,9 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddCh
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent side="bottom" className="h-auto">
+    <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
       <SheetHeader>
-        <SheetTitle>{t('addChannel')}</SheetTitle>
+        <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 space-y-4">
         {isVerifying ? (
@@ -805,9 +806,9 @@ function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 're
 
   if (isUserLoading) {
     return (
-      <SheetContent side="bottom">
+      <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
         <SheetHeader>
-          <SheetTitle>{t('loading')}</SheetTitle>
+          <SheetTitle className="text-center">{t('loading')}</SheetTitle>
         </SheetHeader>
         <div className="p-4">
           <p>{t('loading')}...</p>
@@ -818,9 +819,9 @@ function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 're
   
   if (user) {
     return (
-      <SheetContent side="bottom" className="h-auto overflow-y-auto">
+      <SheetContent side="bottom" className="h-auto overflow-y-auto rounded-t-lg mx-2 mb-2">
         <SheetHeader>
-          <SheetTitle>{t('myProfile')}</SheetTitle>
+          <SheetTitle className="text-center">{t('myProfile')}</SheetTitle>
         </SheetHeader>
         <div className="p-4 space-y-4">
           <p className="text-sm font-medium">{t('welcome')}, <span className='font-mono text-muted-foreground'>{user.email}</span></p>
@@ -920,7 +921,7 @@ function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 're
 
 
   return (
-     <SheetContent side="bottom">
+     <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">{t('login')}</TabsTrigger>
@@ -928,7 +929,7 @@ function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 're
         </TabsList>
         <TabsContent value="login">
           <SheetHeader>
-            <SheetTitle>{t('login')}</SheetTitle>
+            <SheetTitle className="text-center">{t('login')}</SheetTitle>
           </SheetHeader>
           <div className="p-4">
             <Form {...loginForm}>
@@ -977,7 +978,7 @@ function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 're
         </TabsContent>
         <TabsContent value="register">
           <SheetHeader>
-            <SheetTitle>{t('register')}</SheetTitle>
+            <SheetTitle className="text-center">{t('register')}</SheetTitle>
           </SheetHeader>
           <div className="p-4">
             <Form {...registerForm}>
@@ -1063,9 +1064,9 @@ function SettingsSheetContent({ showClock, onToggleClock }: { showClock: boolean
   const { t, language, setLanguage } = useTranslation();
   
   return (
-    <SheetContent side="bottom">
+    <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
       <SheetHeader>
-        <SheetTitle>{t('settings')}</SheetTitle>
+        <SheetTitle className="text-center">{t('settings')}</SheetTitle>
       </SheetHeader>
       <div className="p-4 flex flex-col h-full">
         <ul className="space-y-4 flex-grow">
@@ -1134,9 +1135,9 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
   }, [searchTerm]);
 
   return (
-    <SheetContent side="bottom" className="h-auto">
+    <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
       <SheetHeader>
-        <SheetTitle>{t('searchChannels')}</SheetTitle>
+        <SheetTitle className="text-center">{t('searchChannels')}</SheetTitle>
       </SheetHeader>
       <div className="p-4">
         <div className="flex w-full items-center space-x-2">
@@ -1489,7 +1490,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           muted={false} 
         />
         {isSeeking && seekSpeed !== 0 && (
-            <div className="absolute bottom-16 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
+            <div className="absolute bottom-24 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
                 {seekSpeed > 0 ? `FWD ${seekSpeed}x` : `REW ${Math.abs(seekSpeed)}x`}
             </div>
         )}
@@ -1521,22 +1522,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </TooltipContent>
                 </Tooltip>
                 <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
-              </Sheet>
-
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <Plus size={28} className="drop-shadow-lg" />
-                      </Button>              
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('addChannel')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
               </Sheet>
               
               <Sheet>
@@ -1584,49 +1569,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <p>{t('favorites')}</p>
                 </TooltipContent>
               </Tooltip>
-            
-            <Sheet>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                      <Tv2 size={32} className="drop-shadow-lg" />
-                    </Button>
-                  </SheetTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>{t('channels')}</p>
-                </TooltipContent>
-              </Tooltip>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
-            </Sheet>
-            
-            <input
-              type="file"
-              ref={localVideoInputRef}
-              onChange={handleLocalFileChange}
-              accept="video/*"
-              className="hidden"
-            />
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    localVideoInputRef.current?.click();
-                  }}
-                >
-                  <Folder size={32} className="drop-shadow-lg" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>{t('deviceStorage')}</p>
-              </TooltipContent>
-            </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -1648,7 +1590,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             </Tooltip>
           </div>
 
-
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {!isPlaying && (video.url || localVideoUrl) && (
               <div className="pointer-events-auto">
@@ -1657,11 +1598,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             )}
           </div>
           
-          <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-3">
-            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              <h3 className="font-bold text-lg">{video.author}</h3>
-              <p className="text-base">{video.title}</p>
-            </div>
+          <div className="absolute bottom-[72px] left-4 right-4 md:bottom-24 md:left-6 md:right-6 space-y-3">
             <div
                 data-progress-bar
                 ref={progressContainerRef}
@@ -1673,8 +1610,32 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   className="h-1 group-hover:h-2.5 transition-all duration-200"
                 />
             </div>
+            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              <h3 className="font-bold text-lg">{video.author}</h3>
+              <p className="text-base">{video.title}</p>
+            </div>
           </div>
         </div>
+
+        <input
+            type="file"
+            ref={localVideoInputRef}
+            onChange={handleLocalFileChange}
+            accept="video/*"
+            className="hidden"
+        />
+
+        <BottomNavigation 
+          onAddChannels={onAddChannels}
+          onChannelSelect={onChannelSelect}
+          addedChannels={addedChannels}
+          favoriteChannels={favoriteChannels}
+          onLocalVideoSelect={() => localVideoInputRef.current?.click()}
+          user={user}
+          isUserLoading={isUserLoading}
+          showControls={showControls || !isPlaying || isSeeking}
+        />
+
       </div>
     </TooltipProvider>
   );
