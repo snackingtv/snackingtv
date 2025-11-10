@@ -17,12 +17,11 @@ interface VideoFeedProps {
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
-  showClock: boolean;
-  onToggleClock: () => void;
+  searchTerm: string;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, showClock, onToggleClock }: VideoFeedProps) {
+export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, searchTerm }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
@@ -30,7 +29,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -161,10 +159,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
                 addedChannels={userChannels || []}
                 isFavorite={favoriteChannels.includes(video.url)}
                 onToggleFavorite={handleToggleFavorite}
-                onSearch={setSearchTerm}
-                searchTerm={searchTerm}
-                showClock={showClock}
-                onToggleClock={onToggleClock}
                 onProgressUpdate={onProgressUpdate}
                 onDurationChange={onDurationChange}
                 activeVideoRef={activeVideoRef}

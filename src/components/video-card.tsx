@@ -39,10 +39,6 @@ interface VideoCardProps {
   addedChannels: WithId<M3uChannel>[];
   isFavorite: boolean;
   onToggleFavorite: (channelUrl: string) => void;
-  onSearch: (term: string) => void;
-  searchTerm: string;
-  showClock: boolean;
-  onToggleClock: () => void;
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
@@ -1060,7 +1056,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 }
 
 
-function SettingsSheetContent({ showClock, onToggleClock }: { showClock: boolean, onToggleClock: () => void }) {
+export function SettingsSheetContent({ showClock, onToggleClock }: { showClock: boolean, onToggleClock: () => void }) {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
   
@@ -1117,7 +1113,7 @@ function SettingsSheetContent({ showClock, onToggleClock }: { showClock: boolean
   );
 }
 
-function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
+export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
   const { t } = useTranslation();
   const [localSearch, setLocalSearch] = useState(searchTerm);
 
@@ -1159,7 +1155,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, showClock, onToggleClock, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1455,41 +1451,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             showControls || !isPlaying || isSeeking ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white z-10">
-            <div className="flex items-center gap-2 ml-auto">
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <Search size={28} className="drop-shadow-lg"/>
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('searchChannels')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
-              </Sheet>
-              
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <Settings size={28} className="drop-shadow-lg"/>
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('settings')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <SettingsSheetContent showClock={showClock} onToggleClock={onToggleClock} />
-              </Sheet>
-            </div>
-          </div>
 
           <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
               <Tooltip>

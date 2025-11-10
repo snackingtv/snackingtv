@@ -9,8 +9,15 @@ import { Video } from '@/lib/videos';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
+import { Search, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetTrigger } from '@/components/ui/sheet';
+import { SearchSheetContent, SettingsSheetContent } from '@/components/video-card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTranslation } from '@/lib/i18n';
 
 export default function Home() {
+  const { t } = useTranslation();
   const [showSplash, setShowSplash] = useState(true);
   const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [activeChannel, setActiveChannel] = useState<M3uChannel | Video | null>(null);
@@ -26,6 +33,8 @@ export default function Home() {
 
   const [showClock, setShowClock] = useState(true);
   const [currentTime, setCurrentTime] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
 
   useEffect(() => {
     const storedValue = localStorage.getItem('showClock');
@@ -126,7 +135,7 @@ export default function Home() {
       {showSplash ? (
         <SplashScreen onAnimationEnd={() => setShowSplash(false)} />
       ) : (
-        <>
+        <TooltipProvider>
            <input
             type="file"
             ref={localVideoInputRef}
@@ -142,6 +151,40 @@ export default function Home() {
             </div>
           )}
 
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <Search size={28} className="drop-shadow-lg"/>
+                      </Button>
+                    </SheetTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('searchChannels')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <SearchSheetContent onSearch={setSearchTerm} searchTerm={searchTerm} />
+              </Sheet>
+              
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <Settings size={28} className="drop-shadow-lg"/>
+                      </Button>
+                    </SheetTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('settings')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <SettingsSheetContent showClock={showClock} onToggleClock={handleToggleClock} />
+              </Sheet>
+          </div>
+
           <VideoFeed 
             onChannelSelect={handleChannelSelect} 
             activeChannel={activeChannel}
@@ -149,8 +192,7 @@ export default function Home() {
             onDurationChange={setDuration}
             activeVideoRef={activeVideoRef}
             localVideoItem={localVideoItem}
-            showClock={showClock}
-            onToggleClock={handleToggleClock}
+            searchTerm={searchTerm}
           />
           <div 
             data-progress-bar
@@ -170,7 +212,7 @@ export default function Home() {
             user={user}
             isUserLoading={isUserLoading}
           />
-        </>
+        </TooltipProvider>
       )}
     </main>
   );
