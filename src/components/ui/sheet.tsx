@@ -62,23 +62,48 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, container, ...props }, ref) => (
-  <SheetPortal container={container} {...props}>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+>(({ side = "right", className, children, container, ...props }, ref) => {
+
+  const Portal = container ? SheetPrimitive.Portal : React.Fragment;
+  const portalProps = container ? { container } : {};
+
+  const content = (
+    <>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
+    </>
+  );
+
+  return container ? (
+    <SheetPrimitive.Portal container={container} {...props}>
+      {content}
+    </SheetPrimitive.Portal>
+  ) : (
+    <Dialog open>
+      {content}
+    </Dialog>
+  );
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
+
+const Dialog = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>
+>(({ ...props }, ref) => {
+  return <SheetPrimitive.Root {...props} />
+})
+Dialog.displayName = "Dialog"
+
 
 const SheetHeader = ({
   className,
