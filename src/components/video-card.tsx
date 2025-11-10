@@ -1188,13 +1188,14 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
   const handleShare = () => {
     if (!video || !video.url) return;
-
+    
     // Create a data object with the channel info
-    const channelData = {
+    const channelData: M3uChannel = {
       name: video.title,
-      logo: 'avatarId' in video ? `https://picsum.photos/seed/${video.avatarId}/64/64` : 'https://picsum.photos/seed/iptv/64/64', // simplistic logo generation
+      // Attempt to find a real logo from addedChannels, otherwise create a placeholder
+      logo: (addedChannels.find(c => c.url === video.url)?.logo) || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
       url: video.url,
-      group: 'author' in video ? video.author : 'Shared'
+      group: video.author || 'Shared'
     };
     
     // Base64 encode the JSON string

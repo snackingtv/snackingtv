@@ -89,6 +89,7 @@
   "noOtherChannels": "No other channels.",
   "notLoggedInTitle": "Not logged in",
   "notLoggedInDescription": "You must be logged in to add channels.",
+  "notLoggedInToSave": "You must be logged in to save channels to your account.",
   "channelsExistTitle": "Channels Already Exist",
   "channelsExistDescription": "{count, plural, =1 {One of the selected channels is already in your library.} other {# of the selected channels are already in your library.}}",
   "noNewChannelsTitle": "No New Channels",
@@ -119,5 +120,13 @@
   "passwordTooShort": "Password must be at least 6 characters long.",
   "invalidEmail": "Invalid email address.",
   "passwordRequired": "Password is required.",
-  "showClock": "Show Clock"
+  "showClock": "Show Clock",
+  "shareChannel": "Share Channel",
+  "linkCopiedTitle": "Link Copied",
+  "linkCopiedDescription": "The channel link has been copied to your clipboard.",
+  "copyErrorTitle": "Copy Error",
+  "copyErrorDescription": "Could not copy the link to your clipboard.",
+  "importSharedChannelTitle": "Import Shared Channel?",
+  "importSharedChannelDescription": "Do you want to add the channel '{channelName}' to your list?",
+  "wasAdded": "was added to your library."
 }

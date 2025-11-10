@@ -7,7 +7,8 @@ import { BottomNavigation } from '@/components/bottom-navigation';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { Video } from '@/lib/videos';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
 import { Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,18 @@ import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { SearchSheetContent, SettingsSheetContent } from '@/components/video-card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslation } from '@/lib/i18n';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+
 
 export default function Home() {
   const { t } = useTranslation();
@@ -24,6 +37,7 @@ export default function Home() {
 
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -35,6 +49,49 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [sharedChannel, setSharedChannel] = useState<M3uChannel | null>(null);
+  const [isShareDialogVisible, setIsShareDialogVisible] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const channelData = params.get('channel');
+    if (channelData) {
+      try {
+        const decodedChannel = JSON.parse(atob(channelData));
+        setSharedChannel(decodedChannel);
+        setIsShareDialogVisible(true);
+        // Clean the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {
+        console.error("Failed to parse shared channel data:", e);
+      }
+    }
+  }, []);
+
+  const handleConfirmShare = async () => {
+    if (!sharedChannel) return;
+
+    if (user && firestore) {
+      const channelWithId = {
+        ...sharedChannel,
+        userId: user.uid,
+        addedAt: serverTimestamp(),
+      };
+      await addDocumentNonBlocking(collection(firestore, 'user_channels'), channelWithId);
+      toast({
+        title: t('channelAddedTitle', { count: 1 }),
+        description: `${sharedChannel.name} ${t('wasAdded')}`,
+      });
+    } else {
+       toast({
+          variant: 'destructive',
+          title: t('notLoggedInTitle'),
+          description: t('notLoggedInToSave'),
+        });
+    }
+    setSharedChannel(null);
+    setIsShareDialogVisible(false);
+  };
 
   useEffect(() => {
     const storedValue = localStorage.getItem('showClock');
@@ -144,6 +201,23 @@ export default function Home() {
             className="hidden"
           />
           <h1 className="sr-only">SnackingTV - A vertical video feed</h1>
+
+          {isShareDialogVisible && sharedChannel && (
+            <AlertDialog open onOpenChange={setIsShareDialogVisible}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('importSharedChannelTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('importSharedChannelDescription', { channelName: sharedChannel.name })}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setIsShareDialogVisible(false)}>{t('cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleConfirmShare}>{t('add')}</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
 
           {showClock && (
             <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-bold text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>

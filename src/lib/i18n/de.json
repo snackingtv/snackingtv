@@ -89,6 +89,7 @@
   "noOtherChannels": "Keine weiteren Kanäle.",
   "notLoggedInTitle": "Nicht angemeldet",
   "notLoggedInDescription": "Sie müssen angemeldet sein, um Kanäle hinzuzufügen.",
+  "notLoggedInToSave": "Sie müssen angemeldet sein, um Kanäle in Ihrem Konto zu speichern.",
   "channelsExistTitle": "Kanäle bereits vorhanden",
   "channelsExistDescription": "{count, plural, =1 {Einer der ausgewählten Kanäle ist bereits in Ihrer Bibliothek.} other {# der ausgewählten Kanäle sind bereits in Ihrer Bibliothek.}}",
   "noNewChannelsTitle": "Keine neuen Kanäle",
@@ -119,5 +120,13 @@
   "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein.",
   "invalidEmail": "Ungültige E-Mail-Adresse.",
   "passwordRequired": "Passwort ist erforderlich.",
-  "showClock": "Uhr anzeigen"
+  "showClock": "Uhr anzeigen",
+  "shareChannel": "Kanal teilen",
+  "linkCopiedTitle": "Link kopiert",
+  "linkCopiedDescription": "Der Kanallink wurde in die Zwischenablage kopiert.",
+  "copyErrorTitle": "Fehler beim Kopieren",
+  "copyErrorDescription": "Der Link konnte nicht in die Zwischenablage kopiert werden.",
+  "importSharedChannelTitle": "Geteilten Kanal importieren?",
+  "importSharedChannelDescription": "Möchten Sie den Kanal '{channelName}' zu Ihrer Liste hinzufügen?",
+  "wasAdded": "wurde zu deiner Bibliothek hinzugefügt."
 }
