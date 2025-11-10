@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Home } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Home, Share2 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
@@ -919,15 +919,17 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 
   return (
      <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
+       <SheetHeader>
+          <SheetTitle className="text-center">
+            {activeTab === 'login' ? t('login') : t('register')}
+          </SheetTitle>
+        </SheetHeader>
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">{t('login')}</TabsTrigger>
           <TabsTrigger value="register">{t('register')}</TabsTrigger>
         </TabsList>
-        <TabsContent value="login">
-          <SheetHeader>
-            <SheetTitle className="text-center">{t('login')}</SheetTitle>
-          </SheetHeader>
+        <TabsContent value="login" className="pt-4">
           <div className="p-4">
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
@@ -973,10 +975,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
             </Form>
           </div>
         </TabsContent>
-        <TabsContent value="register">
-          <SheetHeader>
-            <SheetTitle className="text-center">{t('register')}</SheetTitle>
-          </SheetHeader>
+        <TabsContent value="register" className="pt-4">
           <div className="p-4">
             <Form {...registerForm}>
               <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
@@ -1159,7 +1158,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showControls, setShowControls] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
   
@@ -1174,7 +1173,51 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   // Fullscreen state
   const [isFullScreen, setIsFullScreen] = useState(false);
   
+  const firestore = useFirestore();
+  const userChannelsQuery = useMemoFirebase(
+    () =>
+      user && firestore
+        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
+        : null,
+    [user, firestore]
+  );
+  const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
+  const { toast } = useToast();
+  
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
+
+  const handleShare = () => {
+    if (!video || !video.url) return;
+
+    // Create a data object with the channel info
+    const channelData = {
+      name: video.title,
+      logo: 'avatarId' in video ? `https://picsum.photos/seed/${video.avatarId}/64/64` : 'https://picsum.photos/seed/iptv/64/64', // simplistic logo generation
+      url: video.url,
+      group: 'author' in video ? video.author : 'Shared'
+    };
+    
+    // Base64 encode the JSON string
+    const encodedData = btoa(JSON.stringify(channelData));
+    
+    // Create the shareable link
+    const shareLink = `${window.location.origin}${window.location.pathname}?channel=${encodedData}`;
+
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareLink).then(() => {
+      toast({
+        title: t('linkCopiedTitle'),
+        description: t('linkCopiedDescription'),
+      });
+    }).catch(err => {
+      console.error('Failed to copy link: ', err);
+      toast({
+        variant: 'destructive',
+        title: t('copyErrorTitle'),
+        description: t('copyErrorDescription'),
+      });
+    });
+  };
 
   useEffect(() => {
     if (isActive) {
@@ -1461,6 +1504,17 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                 </TooltipTrigger>
                 <TooltipContent side="left">
                   <p>{t('favorites')}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                    <Share2 size={32} className="drop-shadow-lg" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>{t('shareChannel')}</p>
                 </TooltipContent>
               </Tooltip>
 
