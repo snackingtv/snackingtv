@@ -1106,7 +1106,7 @@ export function SettingsSheetContent({ showClock, onToggleClock }: { showClock: 
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.12
+          Build 1.0.13
         </div>
       </div>
     </SheetContent>
