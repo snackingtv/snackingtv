@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
@@ -1061,7 +1061,7 @@ export function SettingsSheetContent({ showClock, onToggleClock }: { showClock: 
   const { t, language, setLanguage } = useTranslation();
   
   return (
-    <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
+    <SheetContent side="top" className="rounded-b-lg mx-2 mt-2">
       <SheetHeader>
         <SheetTitle className="text-center">{t('settings')}</SheetTitle>
       </SheetHeader>
@@ -1132,7 +1132,7 @@ export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: 
   }, [searchTerm]);
 
   return (
-    <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+    <SheetContent side="top" className="h-auto rounded-b-lg mx-2 mt-2">
       <SheetHeader>
         <SheetTitle className="text-center">{t('searchChannels')}</SheetTitle>
       </SheetHeader>
