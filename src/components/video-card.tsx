@@ -1103,7 +1103,7 @@ function SettingsSheetContent() {
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.10 beta
+          Build 1.0.11 beta
         </div>
       </div>
     </SheetContent>
@@ -1244,6 +1244,17 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 }, [isActive, video.url, localVideoUrl]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Check if the click was on the splash screen to trigger fullscreen and start
+    const splash = document.getElementById('splash-screen');
+    if (splash && splash.contains(e.target as Node)) {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        }
+        // This should be handled by the splash screen component itself now
+        return; 
+    }
+
     if (isSeeking) return;
 
     const target = e.target as HTMLElement;
