@@ -27,7 +27,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { WeatherAndDate } from './weather-and-date';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -1102,7 +1101,7 @@ function SettingsSheetContent() {
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.9
+          Build 1.0.7
         </div>
       </div>
     </SheetContent>
@@ -1494,13 +1493,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           }`}
         >
           <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
-            <div className='flex flex-col'>
-              <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                {currentTime}
-              </div>
-              <WeatherAndDate />
+            <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              {currentTime}
             </div>
-
+            
             <div className="flex items-center gap-2">
               <Sheet>
                 <Tooltip>
