@@ -53,10 +53,10 @@ interface Channel {
   url: string; // Add url for the channel
 }
 
-function PrivacyPolicySheetContent({ container }: { container?: React.RefObject<HTMLElement> }) {
+function PrivacyPolicySheetContent() {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="h-3/4" container={container}>
+    <SheetContent side="bottom" className="h-3/4">
       <SheetHeader>
         <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
@@ -82,10 +82,10 @@ function PrivacyPolicySheetContent({ container }: { container?: React.RefObject<
   )
 }
 
-function ImprintSheetContent({ container }: { container?: React.RefObject<HTMLElement> }) {
+function ImprintSheetContent() {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="h-3/4" container={container}>
+    <SheetContent side="bottom" className="h-3/4">
       <SheetHeader>
         <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
@@ -117,13 +117,11 @@ function ChannelListSheetContent({
   onChannelSelect,
   favoriteChannels,
   title,
-  container
 }: { 
   channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
   favoriteChannels: WithId<M3uChannel>[];
   title: string;
-  container?: React.RefObject<HTMLElement>;
 }) {
   const { t } = useTranslation();
   const firestore = useFirestore();
@@ -210,7 +208,7 @@ function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent side="bottom" className="h-[60vh]" container={container}>
+    <SheetContent side="bottom" className="h-[60vh]">
       <SheetHeader className="text-center">
         <div className="relative flex justify-center items-center">
           <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
@@ -264,7 +262,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean, container?: React.RefObject<HTMLElement> }) {
+function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -548,7 +546,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }
 
   if (verifiedChannels.length > 0) {
     return (
-      <SheetContent side="bottom" className="h-[75vh] flex flex-col" container={container}>
+      <SheetContent side="bottom" className="h-[75vh] flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
         </SheetHeader>
@@ -580,7 +578,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent side="bottom" className="h-auto" container={container}>
+    <SheetContent side="bottom" className="h-auto">
       <SheetHeader>
         <SheetTitle>{t('addChannel')}</SheetTitle>
       </SheetHeader>
@@ -684,7 +682,7 @@ const updatePasswordSchema = z
   });
 
 
-function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'login' | 'register', container?: React.RefObject<HTMLElement> }) {
+function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 'register' }) {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
@@ -805,7 +803,7 @@ function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'l
 
   if (isUserLoading) {
     return (
-      <SheetContent side="bottom" container={container}>
+      <SheetContent side="bottom">
         <SheetHeader>
           <SheetTitle>{t('loading')}</SheetTitle>
         </SheetHeader>
@@ -818,7 +816,7 @@ function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'l
   
   if (user) {
     return (
-      <SheetContent side="bottom" className="h-auto overflow-y-auto" container={container}>
+      <SheetContent side="bottom" className="h-auto overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{t('myProfile')}</SheetTitle>
         </SheetHeader>
@@ -862,8 +860,7 @@ function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'l
                         </FormItem>
                       )}
                     />
-                    <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? t('loading') : t('updateEmail')}</Button>
-                  </form>
+                    <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? t('loading') : t('updateEmail')}</Button>                  </form>
                 </Form>
               </AccordionContent>
             </AccordionItem>
@@ -921,7 +918,7 @@ function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'l
 
 
   return (
-     <SheetContent side="bottom" container={container}>
+     <SheetContent side="bottom">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">{t('login')}</TabsTrigger>
@@ -1039,7 +1036,7 @@ function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'l
                               <SheetTrigger asChild>
                                 <button className="text-primary underline">{t('privacyPolicy')}</button>
                               </SheetTrigger>
-                              <PrivacyPolicySheetContent container={container} />
+                              <PrivacyPolicySheetContent />
                             </Sheet>
                           </FormLabel>
                           <FormMessage />
@@ -1059,12 +1056,12 @@ function AuthSheetContent({ initialTab = 'login', container }: { initialTab?: 'l
 }
 
 
-function SettingsSheetContent({ container }: { container?: React.RefObject<HTMLElement> }) {
+function SettingsSheetContent() {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
   
   return (
-    <SheetContent side="bottom" container={container}>
+    <SheetContent side="bottom">
       <SheetHeader>
         <SheetTitle>{t('settings')}</SheetTitle>
       </SheetHeader>
@@ -1089,7 +1086,7 @@ function SettingsSheetContent({ container }: { container?: React.RefObject<HTMLE
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
-              <PrivacyPolicySheetContent container={container} />
+              <PrivacyPolicySheetContent />
             </Sheet>
           </li>
           <li>
@@ -1100,19 +1097,19 @@ function SettingsSheetContent({ container }: { container?: React.RefObject<HTMLE
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
-              <ImprintSheetContent container={container} />
+              <ImprintSheetContent />
             </Sheet>
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.12 beta
+          Build 1.0.9
         </div>
       </div>
     </SheetContent>
   );
 }
 
-function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (term: string) => void, searchTerm: string, container?: React.RefObject<HTMLElement> }) {
+function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
   const { t } = useTranslation();
   const [localSearch, setLocalSearch] = useState(searchTerm);
 
@@ -1131,7 +1128,7 @@ function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (te
   }, [searchTerm]);
 
   return (
-    <SheetContent side="bottom" className="h-auto" container={container}>
+    <SheetContent side="bottom" className="h-auto">
       <SheetHeader>
         <SheetTitle>{t('searchChannels')}</SheetTitle>
       </SheetHeader>
@@ -1518,7 +1515,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('searchChannels')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef} />
+                <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
               </Sheet>
 
               <Sheet>
@@ -1534,7 +1531,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('addChannel')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef} />
+                <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
               </Sheet>
               
               <Sheet>
@@ -1550,7 +1547,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{user ? t('profile') : t('login')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <AuthSheetContent container={containerRef} />
+                <AuthSheetContent />
               </Sheet>
               
               <Sheet>
@@ -1566,7 +1563,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('settings')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <SettingsSheetContent container={containerRef} />
+                <SettingsSheetContent />
               </Sheet>
             </div>
           </div>
@@ -1596,7 +1593,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <p>{t('channels')}</p>
                 </TooltipContent>
               </Tooltip>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
             </Sheet>
             
             <input
