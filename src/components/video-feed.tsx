@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, MutableRefObject } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import type { EmblaCarouselType } from 'embla-carousel';
 import type { Video } from '@/lib/videos';
@@ -13,10 +13,13 @@ import { collection, query, where } from 'firebase/firestore';
 interface VideoFeedProps {
   onChannelSelect: (channel: M3uChannel | Video) => void;
   activeChannel: M3uChannel | Video | null;
+  onProgressUpdate: (progress: number) => void;
+  onDurationChange: (duration: number) => void;
+  activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel }: VideoFeedProps) {
+export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
@@ -186,6 +189,9 @@ export function VideoFeed({ onChannelSelect, activeChannel }: VideoFeedProps) {
                 onLocalVideoSelect={handleLocalVideoSelect}
                 showClock={showClock}
                 onToggleClock={handleToggleClock}
+                onProgressUpdate={onProgressUpdate}
+                onDurationChange={onDurationChange}
+                activeVideoRef={activeVideoRef}
               />
             </div>
           ))}

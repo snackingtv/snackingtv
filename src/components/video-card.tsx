@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
 import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Home } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,9 @@ interface VideoCardProps {
   onLocalVideoSelect: (file: File) => void;
   showClock: boolean;
   onToggleClock: () => void;
+  onProgressUpdate: (progress: number) => void;
+  onDurationChange: (duration: number) => void;
+  activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
 }
 
 // Define the Channel type
@@ -1157,10 +1160,9 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect, showClock, onToggleClock }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect, showClock, onToggleClock, onProgressUpdate, onDurationChange, activeVideoRef }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const progressContainerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1175,10 +1177,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekSpeed, setSeekSpeed] = useState(0);
   const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
-
-  // Progress bar state
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
 
   // Fullscreen state
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -1197,6 +1195,12 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
     return () => clearInterval(timerId);
   }, []);
+
+  useEffect(() => {
+    if (isActive) {
+      activeVideoRef.current = videoRef.current;
+    }
+  }, [isActive, activeVideoRef]);
 
   useEffect(() => {
     if (isActive && localVideoItem) {
@@ -1218,10 +1222,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
     const sourceUrl = localVideoUrl || (isActive ? video.url : null);
     
-    // Reset progress when source changes
-    setProgress(0);
-    setDuration(0);
-
     if (sourceUrl) {
         if (videoElement.currentSrc !== sourceUrl) {
             videoElement.src = sourceUrl;
@@ -1249,14 +1249,12 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 }, [isActive, video.url, localVideoUrl]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    // Check if the click was on the splash screen to trigger fullscreen and start
     const splash = document.getElementById('splash-screen');
     if (splash && splash.contains(e.target as Node)) {
         const elem = document.documentElement;
         if (elem.requestFullscreen) {
             elem.requestFullscreen();
         }
-        // This should be handled by the splash screen component itself now
         return; 
     }
 
@@ -1328,7 +1326,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       const playPromise = videoEl.play();
         if (playPromise !== undefined) {
           playPromise.catch(e => {
-            // Ignore AbortError which can happen if pause() is called right after.
             if(e.name !== 'AbortError') console.error(e)
           });
         }
@@ -1342,8 +1339,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     const videoEl = videoRef.current;
     const swipeDelta = clientX - initialSeekX.current;
     
-    // Softer acceleration
-    const speedRatio = Math.min(Math.abs(swipeDelta) / (videoEl.clientWidth / 2), 1); // Ratio of swipe distance to half of video width
+    const speedRatio = Math.min(Math.abs(swipeDelta) / (videoEl.clientWidth / 2), 1);
     let speed;
     if (speedRatio < 0.25) speed = 2;
     else if (speedRatio < 0.5) speed = 4;
@@ -1358,7 +1354,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     } else if (swipeDelta < -10) { // Rewind
       setSeekSpeed(-speed);
       if(!videoEl.paused) videoEl.pause();
-      const rewindAmount = 0.1 * (speed / 2); // Rewind speed is a bit slower
+      const rewindAmount = 0.1 * (speed / 2);
       rewindInterval.current = setInterval(() => {
         videoEl.currentTime = Math.max(0, videoEl.currentTime - rewindAmount);
       }, 100);
@@ -1377,7 +1373,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     const videoEl = videoRef.current;
     if (videoEl) {
         videoEl.playbackRate = 1;
-        // Restore previous play state
         if(wasPlayingBeforeSeek && videoEl.paused) {
             const playPromise = videoEl.play();
             if (playPromise !== undefined) {
@@ -1407,31 +1402,16 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     handleSeekMove(e.clientX);
   };
   
-  // Progress bar logic
   const handleTimeUpdate = () => {
     if (videoRef.current && !isNaN(videoRef.current.duration)) {
-      setProgress((videoRef.current.currentTime / videoRef.current.duration) * 100);
+      onProgressUpdate((videoRef.current.currentTime / videoRef.current.duration) * 100);
     }
   };
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setDuration(videoRef.current.duration);
+      onDurationChange(videoRef.current.duration);
     }
-  };
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const progressContainer = progressContainerRef.current;
-    const videoElement = videoRef.current;
-    if (!progressContainer || !videoElement || isNaN(videoElement.duration)) return;
-  
-    const rect = progressContainer.getBoundingClientRect();
-    const clickPositionX = e.clientX - rect.left;
-    const clickRatio = clickPositionX / rect.width;
-    const newTime = clickRatio * videoElement.duration;
-  
-    videoElement.currentTime = newTime;
-    setProgress(clickRatio * 100);
   };
 
   // Fullscreen logic
@@ -1597,21 +1577,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             )}
           </div>
           
-          <div className="absolute bottom-20 left-0 right-0 space-y-3 px-4 pb-2">
+          <div className="absolute bottom-20 left-4 right-4 space-y-3 pb-2">
             <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
               <h3 className="font-bold text-lg">{video.author}</h3>
               <p className="text-base">{video.title}</p>
-            </div>
-            <div
-                data-progress-bar
-                ref={progressContainerRef}
-                className="w-full h-2.5 cursor-pointer group"
-                onClick={handleProgressClick}
-              >
-                <Progress
-                  value={progress}
-                  className="h-1 group-hover:h-2.5 transition-all duration-200"
-                />
             </div>
           </div>
         </div>
