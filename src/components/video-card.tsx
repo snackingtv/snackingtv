@@ -53,7 +53,7 @@ interface Channel {
   url: string; // Add url for the channel
 }
 
-function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | null }) {
+function PrivacyPolicySheetContent() {
   const { t } = useTranslation();
   return (
     <SheetContent side="bottom" className="h-3/4">
@@ -82,7 +82,7 @@ function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | nu
   )
 }
 
-function ImprintSheetContent({ container }: { container?: HTMLElement | null }) {
+function ImprintSheetContent() {
   const { t } = useTranslation();
   return (
     <SheetContent side="bottom" className="h-3/4">
@@ -116,14 +116,12 @@ function ChannelListSheetContent({
   channels, 
   onChannelSelect,
   favoriteChannels,
-  title,
-  container
+  title
 }: { 
   channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
   favoriteChannels: WithId<M3uChannel>[];
   title: string;
-  container?: HTMLElement | null;
 }) {
   const { t } = useTranslation();
   const firestore = useFirestore();
@@ -264,7 +262,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean, container?: HTMLElement | null }) {
+function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -684,7 +682,7 @@ const updatePasswordSchema = z
   });
 
 
-function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTMLElement | null, initialTab?: 'login' | 'register' }) {
+function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 'register' }) {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
@@ -1059,7 +1057,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
 }
 
 
-function SettingsSheetContent({ container }: { container?: HTMLElement | null }) {
+function SettingsSheetContent() {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
   
@@ -1105,14 +1103,14 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.9 beta
+          Build 1.0.10 beta
         </div>
       </div>
     </SheetContent>
   );
 }
 
-function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (term: string) => void, searchTerm: string, container?: HTMLElement | null }) {
+function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
   const { t } = useTranslation();
   const [localSearch, setLocalSearch] = useState(searchTerm);
 
