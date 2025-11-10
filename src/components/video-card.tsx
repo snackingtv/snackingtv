@@ -115,7 +115,7 @@ function ImprintSheetContent() {
   )
 }
 
-function ChannelListSheetContent({ 
+export function ChannelListSheetContent({ 
   channels, 
   onChannelSelect,
   favoriteChannels,
@@ -265,7 +265,7 @@ function ChannelListSheetContent({
   );
 }
 
-function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
+export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -1599,6 +1599,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           </div>
           
           <div className="absolute bottom-[72px] left-4 right-4 md:bottom-24 md:left-6 md:right-6 space-y-3">
+            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              <h3 className="font-bold text-lg">{video.author}</h3>
+              <p className="text-base">{video.title}</p>
+            </div>
             <div
                 data-progress-bar
                 ref={progressContainerRef}
@@ -1609,10 +1613,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   value={progress}
                   className="h-1 group-hover:h-2.5 transition-all duration-200"
                 />
-            </div>
-            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              <h3 className="font-bold text-lg">{video.author}</h3>
-              <p className="text-base">{video.title}</p>
             </div>
           </div>
         </div>
