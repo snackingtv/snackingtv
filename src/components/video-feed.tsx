@@ -10,6 +10,7 @@ import type { M3uChannel } from '@/lib/m3u-parser';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import { BottomNavigation } from '@/components/bottom-navigation';
+import { Progress } from '@/components/ui/progress';
 
 interface VideoFeedProps {
   onChannelSelect: (channel: M3uChannel | Video) => void;
