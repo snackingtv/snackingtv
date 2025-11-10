@@ -56,7 +56,7 @@ interface Channel {
 function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent container={container} side="bottom" className="h-3/4">
+    <SheetContent side="bottom" className="h-3/4">
       <SheetHeader>
         <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
@@ -85,7 +85,7 @@ function PrivacyPolicySheetContent({ container }: { container?: HTMLElement | nu
 function ImprintSheetContent({ container }: { container?: HTMLElement | null }) {
   const { t } = useTranslation();
   return (
-    <SheetContent container={container} side="bottom" className="h-3/4">
+    <SheetContent side="bottom" className="h-3/4">
       <SheetHeader>
         <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
@@ -210,7 +210,7 @@ function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent container={container} side="bottom" className="h-[60vh]">
+    <SheetContent side="bottom" className="h-[60vh]">
       <SheetHeader className="text-center">
         <div className="relative flex justify-center items-center">
           <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
@@ -548,7 +548,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }
 
   if (verifiedChannels.length > 0) {
     return (
-      <SheetContent container={container} side="bottom" className="h-[75vh] flex flex-col">
+      <SheetContent side="bottom" className="h-[75vh] flex flex-col">
         <SheetHeader>
           <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
         </SheetHeader>
@@ -580,7 +580,7 @@ function AddChannelSheetContent({ onAddChannel, user, isUserLoading, container }
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent container={container} side="bottom" className="h-auto">
+    <SheetContent side="bottom" className="h-auto">
       <SheetHeader>
         <SheetTitle>{t('addChannel')}</SheetTitle>
       </SheetHeader>
@@ -805,7 +805,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
 
   if (isUserLoading) {
     return (
-      <SheetContent container={container} side="bottom">
+      <SheetContent side="bottom">
         <SheetHeader>
           <SheetTitle>{t('loading')}</SheetTitle>
         </SheetHeader>
@@ -818,7 +818,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
   
   if (user) {
     return (
-      <SheetContent container={container} side="bottom" className="h-auto overflow-y-auto">
+      <SheetContent side="bottom" className="h-auto overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{t('myProfile')}</SheetTitle>
         </SheetHeader>
@@ -921,7 +921,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
 
 
   return (
-     <SheetContent container={container} side="bottom">
+     <SheetContent side="bottom">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">{t('login')}</TabsTrigger>
@@ -1039,7 +1039,7 @@ function AuthSheetContent({ container, initialTab = 'login' }: { container?: HTM
                               <SheetTrigger asChild>
                                 <button className="text-primary underline">{t('privacyPolicy')}</button>
                               </SheetTrigger>
-                              <PrivacyPolicySheetContent container={container} />
+                              <PrivacyPolicySheetContent />
                             </Sheet>
                           </FormLabel>
                           <FormMessage />
@@ -1064,7 +1064,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
   const { t, language, setLanguage } = useTranslation();
   
   return (
-    <SheetContent container={container} side="bottom">
+    <SheetContent side="bottom">
       <SheetHeader>
         <SheetTitle>{t('settings')}</SheetTitle>
       </SheetHeader>
@@ -1089,7 +1089,7 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
-              <PrivacyPolicySheetContent container={container}/>
+              <PrivacyPolicySheetContent />
             </Sheet>
           </li>
           <li>
@@ -1100,12 +1100,12 @@ function SettingsSheetContent({ container }: { container?: HTMLElement | null })
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>
               </SheetTrigger>
-              <ImprintSheetContent container={container} />
+              <ImprintSheetContent />
             </Sheet>
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.8 beta
+          Build 1.0.9 beta
         </div>
       </div>
     </SheetContent>
@@ -1131,7 +1131,7 @@ function SearchSheetContent({ onSearch, searchTerm, container }: { onSearch: (te
   }, [searchTerm]);
 
   return (
-    <SheetContent container={container} side="bottom" className="h-auto">
+    <SheetContent side="bottom" className="h-auto">
       <SheetHeader>
         <SheetTitle>{t('searchChannels')}</SheetTitle>
       </SheetHeader>
@@ -1507,7 +1507,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('searchChannels')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} container={containerRef.current} />
+                <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
               </Sheet>
 
               <Sheet>
@@ -1523,7 +1523,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('addChannel')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} container={containerRef.current} />
+                <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />
               </Sheet>
               
               <Sheet>
@@ -1539,7 +1539,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{user ? t('profile') : t('login')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <AuthSheetContent container={containerRef.current} />
+                <AuthSheetContent />
               </Sheet>
               
               <Sheet>
@@ -1555,7 +1555,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('settings')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <SettingsSheetContent container={containerRef.current} />
+                <SettingsSheetContent />
               </Sheet>
             </div>
           </div>
@@ -1585,7 +1585,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   <p>{t('channels')}</p>
                 </TooltipContent>
               </Tooltip>
-              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} container={containerRef.current} />
+              <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />
             </Sheet>
             
             <input

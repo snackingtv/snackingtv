@@ -13,11 +13,7 @@ const SheetTrigger = SheetPrimitive.Trigger
 
 const SheetClose = SheetPrimitive.Close
 
-const SheetPortal = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Portal>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Portal>
->(({ ...props }, ref) => <SheetPrimitive.Portal ref={ref} {...props} />)
-SheetPortal.displayName = SheetPrimitive.Portal.displayName
+const SheetPortal = SheetPrimitive.Portal
 
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
@@ -56,19 +52,15 @@ const sheetVariants = cva(
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {
-      container?: HTMLElement | null
+      container?: HTMLElement | null; // Keep for compatibility, but won't be used in the logic.
     }
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, container, ...props }, ref) => {
-
-  const Portal = container ? SheetPrimitive.Portal : React.Fragment;
-  const portalProps = container ? { container } : {};
-
-  const content = (
-    <>
+>(({ side = "right", className, children, ...props }, ref) => {
+  return (
+    <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
         ref={ref}
@@ -81,29 +73,10 @@ const SheetContent = React.forwardRef<
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
-    </>
-  );
-
-  return container ? (
-    <SheetPrimitive.Portal container={container} {...props}>
-      {content}
-    </SheetPrimitive.Portal>
-  ) : (
-    <Dialog open>
-      {content}
-    </Dialog>
+    </SheetPortal>
   );
 })
 SheetContent.displayName = SheetPrimitive.Content.displayName
-
-const Dialog = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Root {...props} />
-})
-Dialog.displayName = "Dialog"
-
 
 const SheetHeader = ({
   className,
