@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
@@ -686,7 +686,7 @@ const updatePasswordSchema = z
   });
 
 
-function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 'register' }) {
+export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 'register' }) {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
@@ -1471,22 +1471,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   </TooltipContent>
                 </Tooltip>
                 <SearchSheetContent onSearch={onSearch} searchTerm={searchTerm} />
-              </Sheet>
-              
-              <Sheet>
-                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <UserIcon size={28} className="drop-shadow-lg"/>
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{user ? t('profile') : t('login')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <AuthSheetContent />
               </Sheet>
               
               <Sheet>

@@ -1,9 +1,9 @@
 'use client';
 
-import { Home, PlusCircle, Tv2, Folder } from 'lucide-react';
+import { Home, PlusCircle, Tv2, Folder, User as UserIcon } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { AddChannelSheetContent, ChannelListSheetContent } from './video-card';
+import { AddChannelSheetContent, ChannelListSheetContent, AuthSheetContent } from './video-card';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { User } from 'firebase/auth';
@@ -54,6 +54,12 @@ export function BottomNavigation({
       action: onLocalVideoSelect,
       sheetContent: null,
     },
+    {
+      label: user ? t('profile') : t('login'),
+      icon: UserIcon,
+      action: null,
+      sheetContent: <AuthSheetContent />,
+    },
   ];
 
   return (
@@ -68,7 +74,7 @@ export function BottomNavigation({
               <Sheet>
                 <SheetTrigger asChild>
                   <button className="flex flex-col items-center justify-center gap-1">
-                    <item.icon size={24} />
+                    <item.icon size={20} />
                     <span className="text-xs">{item.label}</span>
                   </button>
                 </SheetTrigger>
@@ -76,7 +82,7 @@ export function BottomNavigation({
               </Sheet>
             ) : (
               <button onClick={item.action} className="flex flex-col items-center justify-center gap-1">
-                <item.icon size={24} />
+                <item.icon size={20} />
                 <span className="text-xs">{item.label}</span>
               </button>
             )}
