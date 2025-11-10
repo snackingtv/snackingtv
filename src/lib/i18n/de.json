@@ -118,5 +118,6 @@
   "passwordsDontMatch": "Die Passwörter stimmen nicht überein.",
   "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein.",
   "invalidEmail": "Ungültige E-Mail-Adresse.",
-  "passwordRequired": "Passwort ist erforderlich."
+  "passwordRequired": "Passwort ist erforderlich.",
+  "showClock": "Uhr anzeigen"
 }

@@ -20,6 +20,21 @@ export function VideoFeed() {
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
+  const [showClock, setShowClock] = useState(true);
+
+  useEffect(() => {
+    const storedValue = localStorage.getItem('showClock');
+    // Set to true if not found in storage, otherwise use stored value
+    setShowClock(storedValue === null ? true : storedValue === 'true');
+  }, []);
+
+  const handleToggleClock = () => {
+    setShowClock(prev => {
+      const newValue = !prev;
+      localStorage.setItem('showClock', String(newValue));
+      return newValue;
+    });
+  };
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -178,6 +193,8 @@ export function VideoFeed() {
                 searchTerm={searchTerm}
                 localVideoItem={localVideoItem}
                 onLocalVideoSelect={handleLocalVideoSelect}
+                showClock={showClock}
+                onToggleClock={handleToggleClock}
               />
             </div>
           ))}

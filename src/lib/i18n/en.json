@@ -118,5 +118,6 @@
   "passwordsDontMatch": "Passwords do not match.",
   "passwordTooShort": "Password must be at least 6 characters long.",
   "invalidEmail": "Invalid email address.",
-  "passwordRequired": "Password is required."
+  "passwordRequired": "Password is required.",
+  "showClock": "Show Clock"
 }

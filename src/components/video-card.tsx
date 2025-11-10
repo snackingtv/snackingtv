@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +28,7 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Switch } from '@/components/ui/switch';
 
 
 interface VideoCardProps {
@@ -42,6 +43,8 @@ interface VideoCardProps {
   searchTerm: string;
   localVideoItem: Video | null;
   onLocalVideoSelect: (file: File) => void;
+  showClock: boolean;
+  onToggleClock: () => void;
 }
 
 // Define the Channel type
@@ -1055,7 +1058,7 @@ function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login' | 're
 }
 
 
-function SettingsSheetContent() {
+function SettingsSheetContent({ showClock, onToggleClock }: { showClock: boolean, onToggleClock: () => void }) {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
   
@@ -1066,6 +1069,10 @@ function SettingsSheetContent() {
       </SheetHeader>
       <div className="p-4 flex flex-col h-full">
         <ul className="space-y-4 flex-grow">
+          <li className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t('showClock')}</span>
+              <Switch checked={showClock} onCheckedChange={onToggleClock} />
+          </li>
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
             <div className="flex items-center gap-2">
@@ -1101,7 +1108,7 @@ function SettingsSheetContent() {
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.7
+          Build 1.0.12
         </div>
       </div>
     </SheetContent>
@@ -1150,7 +1157,7 @@ function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string)
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onSearch, searchTerm, localVideoItem, onLocalVideoSelect, showClock, onToggleClock }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressContainerRef = useRef<HTMLDivElement>(null);
@@ -1493,11 +1500,13 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           }`}
         >
           <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
-            <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              {currentTime}
-            </div>
+             {showClock && (
+                <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                  {currentTime}
+                </div>
+              )}
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-auto">
               <Sheet>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1559,7 +1568,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                     <p>{t('settings')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <SettingsSheetContent />
+                <SettingsSheetContent showClock={showClock} onToggleClock={onToggleClock} />
               </Sheet>
             </div>
           </div>
@@ -1649,6 +1658,10 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           </div>
           
           <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-6 md:right-6 space-y-3">
+            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              <h3 className="font-bold text-lg">{video.author}</h3>
+              <p className="text-base">{video.title}</p>
+            </div>
             <div
                 data-progress-bar
                 ref={progressContainerRef}
@@ -1659,10 +1672,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   value={progress}
                   className="h-1 group-hover:h-2.5 transition-all duration-200"
                 />
-            </div>
-            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              <h3 className="font-bold text-lg">{video.author}</h3>
-              <p className="text-base">{video.title}</p>
             </div>
           </div>
         </div>
