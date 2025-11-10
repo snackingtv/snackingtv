@@ -10,7 +10,13 @@ import type { M3uChannel } from '@/lib/m3u-parser';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 
-export function VideoFeed() {
+interface VideoFeedProps {
+  onChannelSelect: (channel: M3uChannel | Video) => void;
+  activeChannel: M3uChannel | Video | null;
+}
+
+
+export function VideoFeed({ onChannelSelect, activeChannel }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
@@ -72,6 +78,15 @@ export function VideoFeed() {
   }, [userChannels]);
 
   useEffect(() => {
+    if (activeChannel && emblaApi) {
+        const index = feedItems.findIndex(item => item.url === activeChannel.url);
+        if (index !== -1) {
+            emblaApi.scrollTo(index, false);
+        }
+    }
+  }, [activeChannel, emblaApi, feedItems]);
+
+  useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
     if (storedFavorites) {
       setFavoriteChannels(JSON.parse(storedFavorites));
@@ -88,54 +103,30 @@ export function VideoFeed() {
     });
   };
 
-  const onSelect = useCallback((emblaApi: EmblaCarouselType) => {
+  const onCarouselSelect = useCallback((emblaApi: EmblaCarouselType) => {
     setActiveIndex(emblaApi.selectedScrollSnap());
   }, []);
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect(emblaApi);
-    emblaApi.on('select', onSelect);
-    emblaApi.on('reInit', onSelect);
+    onCarouselSelect(emblaApi);
+    emblaApi.on('select', onCarouselSelect);
+    emblaApi.on('reInit', onCarouselSelect);
 
     return () => {
       if (emblaApi) {
-        emblaApi.off('select', onSelect);
-        emblaApi.off('reInit', onSelect);
+        emblaApi.off('select', onCarouselSelect);
+        emblaApi.off('reInit', onCarouselSelect);
       }
     };
-  }, [emblaApi, onSelect]);
+  }, [emblaApi, onCarouselSelect]);
 
-  const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
-    const existingUrls = new Set(feedItems.map(item => item.url));
-    const uniqueNewChannels = newChannels.filter(c => !existingUrls.has(c.url));
-    
-    if (uniqueNewChannels.length === 0) return;
-
-    const newFeedItems: Video[] = uniqueNewChannels.map((channel, index) => ({
-      id: Date.now() + index,
-      url: channel.url,
-      title: channel.name,
-      author: channel.group || 'IPTV',
-      avatarId: 'iptv_placeholder',
-    }));
-
-    setFeedItems(prev => [...prev, ...newFeedItems]);
-  }, [feedItems]);
 
   useEffect(() => {
     if (emblaApi) {
       emblaApi.reInit();
     }
   }, [feedItems, emblaApi]);
-
-  const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
-    const channelIndex = feedItems.findIndex(item => item.url === channel.url);
-    if (emblaApi && channelIndex !== -1) {
-      emblaApi.scrollTo(channelIndex, false);
-      setLocalVideoItem(null); // Deselect local video if a channel is selected
-    }
-  }, [emblaApi, feedItems]);
 
   const handleLocalVideoSelect = (file: File) => {
     const newVideoItem: Video = {
@@ -184,8 +175,8 @@ export function VideoFeed() {
               <VideoCard
                 video={video}
                 isActive={index === activeIndex}
-                onAddChannels={handleAddChannels}
-                onChannelSelect={handleChannelSelect}
+                onAddChannels={() => {}}
+                onChannelSelect={onChannelSelect}
                 addedChannels={userChannels || []}
                 isFavorite={favoriteChannels.includes(video.url)}
                 onToggleFavorite={handleToggleFavorite}
@@ -202,4 +193,3 @@ export function VideoFeed() {
     </div>
   );
 }
-    

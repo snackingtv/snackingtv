@@ -29,7 +29,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
-import { BottomNavigation } from './bottom-navigation';
 
 
 interface VideoCardProps {
@@ -1624,18 +1623,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             accept="video/*"
             className="hidden"
         />
-
-        <BottomNavigation 
-          onAddChannels={onAddChannels}
-          onChannelSelect={onChannelSelect}
-          addedChannels={addedChannels}
-          favoriteChannels={favoriteChannels}
-          onLocalVideoSelect={() => localVideoInputRef.current?.click()}
-          user={user}
-          isUserLoading={isUserLoading}
-          showControls={showControls || !isPlaying || isSeeking}
-        />
-
       </div>
     </TooltipProvider>
   );

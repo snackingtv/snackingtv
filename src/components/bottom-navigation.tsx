@@ -9,27 +9,25 @@ import { WithId } from '@/firebase/firestore/use-collection';
 import { User } from 'firebase/auth';
 
 interface BottomNavigationProps {
-    showControls: boolean;
     onAddChannels: (channels: M3uChannel[]) => void;
     onChannelSelect: (channel: M3uChannel) => void;
     onLocalVideoSelect: () => void;
     addedChannels: WithId<M3uChannel>[];
-    favoriteChannels: WithId<M3uChannel>[];
     user: User | null;
     isUserLoading: boolean;
 }
 
 export function BottomNavigation({
-    showControls,
     onAddChannels,
     onChannelSelect,
     onLocalVideoSelect,
     addedChannels,
-    favoriteChannels,
     user,
     isUserLoading,
 }: BottomNavigationProps) {
   const { t } = useTranslation();
+
+  const favoriteChannels = addedChannels.filter(c => c.favorite); // Assuming a favorite property
 
   const navItems = [
     {
@@ -60,9 +58,7 @@ export function BottomNavigation({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 h-20 bg-black/30 backdrop-blur-md transition-opacity duration-300 ${
-        showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      }`}
+      className="fixed bottom-0 left-0 right-0 h-20 bg-black/30 backdrop-blur-md z-20"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex justify-around items-center h-full text-white">
