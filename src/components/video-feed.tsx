@@ -17,10 +17,12 @@ interface VideoFeedProps {
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
+  showClock: boolean;
+  onToggleClock: () => void;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoFeedProps) {
+export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, showClock, onToggleClock }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
@@ -29,21 +31,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showClock, setShowClock] = useState(true);
-
-  useEffect(() => {
-    const storedValue = localStorage.getItem('showClock');
-    // Set to true if not found in storage, otherwise use stored value
-    setShowClock(storedValue === null ? true : storedValue === 'true');
-  }, []);
-
-  const handleToggleClock = () => {
-    setShowClock(prev => {
-      const newValue = !prev;
-      localStorage.setItem('showClock', String(newValue));
-      return newValue;
-    });
-  };
 
   const { user } = useUser();
   const firestore = useFirestore();
@@ -177,7 +164,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
                 onSearch={setSearchTerm}
                 searchTerm={searchTerm}
                 showClock={showClock}
-                onToggleClock={handleToggleClock}
+                onToggleClock={onToggleClock}
                 onProgressUpdate={onProgressUpdate}
                 onDurationChange={onDurationChange}
                 activeVideoRef={activeVideoRef}

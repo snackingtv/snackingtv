@@ -1166,7 +1166,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [showControls, setShowControls] = useState(false);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
-  const [currentTime, setCurrentTime] = useState('');
   
   const { user, isUserLoading } = useUser();
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
@@ -1180,19 +1179,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [isFullScreen, setIsFullScreen] = useState(false);
   
   const favoriteChannels = addedChannels.filter(channel => isFavorite);
-
-  useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setCurrentTime(timeString);
-    };
-    
-    updateClock();
-    const timerId = setInterval(updateClock, 1000);
-
-    return () => clearInterval(timerId);
-  }, []);
 
   useEffect(() => {
     if (isActive) {
@@ -1469,13 +1455,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
             showControls || !isPlaying || isSeeking ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white">
-             {showClock && (
-                <div className="font-headline text-2xl font-bold" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                  {currentTime}
-                </div>
-              )}
-            
+          <div className="absolute top-4 left-4 right-4 md:top-6 md:left-6 md:right-6 flex justify-between items-center gap-2 text-white z-10">
             <div className="flex items-center gap-2 ml-auto">
               <Sheet>
                 <Tooltip>

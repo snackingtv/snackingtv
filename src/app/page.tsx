@@ -24,6 +24,35 @@ export default function Home() {
   const localVideoInputRef = useRef<HTMLInputElement>(null);
   const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
 
+  const [showClock, setShowClock] = useState(true);
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const storedValue = localStorage.getItem('showClock');
+    setShowClock(storedValue === null ? true : storedValue === 'true');
+  }, []);
+
+  const handleToggleClock = () => {
+    setShowClock(prev => {
+      const newValue = !prev;
+      localStorage.setItem('showClock', String(newValue));
+      return newValue;
+    });
+  };
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setCurrentTime(timeString);
+    };
+    
+    updateClock();
+    const timerId = setInterval(updateClock, 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
   const userChannelsQuery = useMemoFirebase(
     () =>
       user
@@ -106,6 +135,13 @@ export default function Home() {
             className="hidden"
           />
           <h1 className="sr-only">SnackingTV - A vertical video feed</h1>
+
+          {showClock && (
+            <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-bold text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              {currentTime}
+            </div>
+          )}
+
           <VideoFeed 
             onChannelSelect={handleChannelSelect} 
             activeChannel={activeChannel}
@@ -113,12 +149,13 @@ export default function Home() {
             onDurationChange={setDuration}
             activeVideoRef={activeVideoRef}
             localVideoItem={localVideoItem}
+            showClock={showClock}
+            onToggleClock={handleToggleClock}
           />
           <div 
             data-progress-bar
             className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
             onClick={handleProgressClick}
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             <Progress
               value={progress}
