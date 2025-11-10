@@ -128,5 +128,9 @@
   "copyErrorDescription": "Der Link konnte nicht in die Zwischenablage kopiert werden.",
   "importSharedChannelTitle": "Geteilten Kanal importieren?",
   "importSharedChannelDescription": "Möchten Sie den Kanal '{channelName}' zu Ihrer Liste hinzufügen?",
-  "wasAdded": "wurde zu deiner Bibliothek hinzugefügt."
+  "wasAdded": "wurde zu deiner Bibliothek hinzugefügt.",
+  "continueAsGuest": "Als Gast fortfahren",
+  "attemptingGuestLogin": "Gastmodus wird gestartet...",
+  "guest": "Gast",
+  "browsingAsGuest": "Sie browsen als Gast."
 }

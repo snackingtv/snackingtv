@@ -128,5 +128,9 @@
   "copyErrorDescription": "Could not copy the link to your clipboard.",
   "importSharedChannelTitle": "Import Shared Channel?",
   "importSharedChannelDescription": "Do you want to add the channel '{channelName}' to your list?",
-  "wasAdded": "was added to your library."
+  "wasAdded": "was added to your library.",
+  "continueAsGuest": "Continue as Guest",
+  "attemptingGuestLogin": "Attempting to start guest mode...",
+  "guest": "Guest",
+  "browsingAsGuest": "You are browsing as a guest."
 }
