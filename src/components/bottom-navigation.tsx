@@ -13,6 +13,7 @@ interface BottomNavigationProps {
     onChannelSelect: (channel: M3uChannel) => void;
     onLocalVideoSelect: () => void;
     addedChannels: WithId<M3uChannel>[];
+    favoriteChannelUrls: string[];
     user: User | null;
     isUserLoading: boolean;
 }
@@ -22,12 +23,11 @@ export function BottomNavigation({
     onChannelSelect,
     onLocalVideoSelect,
     addedChannels,
+    favoriteChannelUrls,
     user,
     isUserLoading,
 }: BottomNavigationProps) {
   const { t } = useTranslation();
-
-  const favoriteChannels = addedChannels.filter(c => c.favorite); // Assuming a favorite property
 
   const navItems = [
     {
@@ -40,7 +40,7 @@ export function BottomNavigation({
       label: t('channels'),
       icon: Tv2,
       action: null,
-      sheetContent: <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannels={favoriteChannels} title={t('channels')} />,
+      sheetContent: <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannelUrls={favoriteChannelUrls} title={t('channels')} />,
     },
     {
       label: t('addChannel'),

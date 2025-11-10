@@ -115,12 +115,12 @@ function ImprintSheetContent() {
 export function ChannelListSheetContent({ 
   channels, 
   onChannelSelect,
-  favoriteChannels,
+  favoriteChannelUrls,
   title,
 }: { 
   channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
-  favoriteChannels: WithId<M3uChannel>[];
+  favoriteChannelUrls: string[];
   title: string;
 }) {
   const { t } = useTranslation();
@@ -170,7 +170,8 @@ export function ChannelListSheetContent({
     }
   };
 
-  const allOtherChannels = channels.filter(c => !favoriteChannels.find(f => f.url === c.url));
+  const favoriteChannels = channels.filter(c => favoriteChannelUrls.includes(c.url));
+  const allOtherChannels = channels.filter(c => !favoriteChannelUrls.includes(c.url));
 
   const renderChannelList = (channelList: WithId<M3uChannel>[], emptyMessage: string) => {
     return channelList.length > 0 ? (
@@ -1202,8 +1203,6 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
   const { toast } = useToast();
   
-  const favoriteChannels = addedChannels.filter(channel => isFavorite);
-
   const handleShare = () => {
     if (!video || !video.url) return;
     

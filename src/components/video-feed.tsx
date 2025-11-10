@@ -9,6 +9,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
+import { BottomNavigation } from '@/components/bottom-navigation';
 
 interface VideoFeedProps {
   onChannelSelect: (channel: M3uChannel | Video) => void;
@@ -30,7 +31,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
 
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const userChannelsQuery = useMemoFirebase(
@@ -147,26 +148,46 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
 
 
   return (
-    <div className="overflow-hidden h-full" ref={emblaRef}>
-      <div className="flex flex-col h-full">
-        {displayFeed.map((video, index) => (
-            <div className="flex-[0_0_100%] min-h-0 relative" key={video.id}>
-              <VideoCard
-                video={video}
-                isActive={index === activeIndex}
-                onAddChannels={() => {}}
-                onChannelSelect={onChannelSelect}
-                addedChannels={userChannels || []}
-                isFavorite={favoriteChannels.includes(video.url)}
-                onToggleFavorite={handleToggleFavorite}
-                onProgressUpdate={onProgressUpdate}
-                onDurationChange={onDurationChange}
-                activeVideoRef={activeVideoRef}
-                localVideoItem={video === localVideoItem ? localVideoItem : null}
-              />
-            </div>
-          ))}
+    <>
+      <div className="overflow-hidden h-full" ref={emblaRef}>
+        <div className="flex flex-col h-full">
+          {displayFeed.map((video, index) => (
+              <div className="flex-[0_0_100%] min-h-0 relative" key={video.id}>
+                <VideoCard
+                  video={video}
+                  isActive={index === activeIndex}
+                  onAddChannels={() => {}}
+                  onChannelSelect={onChannelSelect}
+                  addedChannels={userChannels || []}
+                  isFavorite={favoriteChannels.includes(video.url)}
+                  onToggleFavorite={handleToggleFavorite}
+                  onProgressUpdate={onProgressUpdate}
+                  onDurationChange={onDurationChange}
+                  activeVideoRef={activeVideoRef}
+                  localVideoItem={video === localVideoItem ? localVideoItem : null}
+                />
+              </div>
+            ))}
+        </div>
       </div>
-    </div>
+      <div 
+        data-progress-bar
+        className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
+      >
+        <Progress
+          value={onProgressUpdate as any}
+          className="h-full group-hover:h-2.5 transition-all duration-200"
+        />
+      </div>
+      <BottomNavigation 
+        onAddChannels={() => {}}
+        onChannelSelect={onChannelSelect as any}
+        addedChannels={userChannels || []}
+        favoriteChannelUrls={favoriteChannels}
+        onLocalVideoSelect={() => {}}
+        user={user}
+        isUserLoading={isUserLoading}
+      />
+    </>
   );
 }

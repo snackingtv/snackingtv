@@ -51,6 +51,25 @@ export default function Home() {
 
   const [sharedChannel, setSharedChannel] = useState<M3uChannel | null>(null);
   const [isShareDialogVisible, setIsShareDialogVisible] = useState(false);
+  
+  const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storedFavorites = localStorage.getItem('favoriteChannels');
+    if (storedFavorites) {
+      setFavoriteChannels(JSON.parse(storedFavorites));
+    }
+  }, []);
+
+  const handleToggleFavorite = (channelUrl: string) => {
+    setFavoriteChannels(prev => {
+      const newFavorites = prev.includes(channelUrl)
+        ? prev.filter(url => url !== channelUrl)
+        : [...prev, channelUrl];
+      localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
+      return newFavorites;
+    });
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -282,6 +301,7 @@ export default function Home() {
             onAddChannels={handleAddChannels}
             onChannelSelect={handleChannelSelect}
             addedChannels={userChannels || []}
+            favoriteChannelUrls={favoriteChannels}
             onLocalVideoSelect={handleLocalVideoSelect}
             user={user}
             isUserLoading={isUserLoading}
