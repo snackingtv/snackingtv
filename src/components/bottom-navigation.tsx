@@ -58,7 +58,7 @@ export function BottomNavigation({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 h-20 bg-black/30 backdrop-blur-md z-20"
+      className="fixed bottom-0 left-0 right-0 h-16 bg-black/30 backdrop-blur-md z-20"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex justify-around items-center h-full text-white">

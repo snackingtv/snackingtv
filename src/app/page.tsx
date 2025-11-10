@@ -87,7 +87,7 @@ export default function Home() {
           />
           <div 
             data-progress-bar
-            className="fixed bottom-20 left-0 right-0 h-2.5 cursor-pointer group z-20"
+            className="fixed bottom-16 left-0 right-0 h-2.5 cursor-pointer group z-20"
             onClick={handleProgressClick}
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
