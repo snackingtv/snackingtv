@@ -60,7 +60,7 @@ export function BottomNavigation({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 right-0 h-20 bg-black/30 backdrop-blur-md transition-opacity duration-300 ${
+      className={`absolute bottom-0 left-0 right-0 h-24 pb-4 bg-black/30 backdrop-blur-md transition-opacity duration-300 ${
         showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
