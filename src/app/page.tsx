@@ -315,11 +315,13 @@ export default function Home() {
           />
 
           {(activeChannel || localVideoItem) && (
-             <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 text-white/80 font-bold text-sm text-left pointer-events-none" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                <p>
+            <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 text-left pointer-events-none">
+              <div className="inline-block bg-black/30 backdrop-blur-sm p-2 rounded-lg max-w-full">
+                <p className="text-white/80 font-bold text-sm" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                   {localVideoItem?.title || activeChannel?.title}
                   {activeChannel?.author && ` • ${activeChannel.author}`}
                 </p>
+              </div>
             </div>
           )}
 
