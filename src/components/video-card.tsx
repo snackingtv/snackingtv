@@ -250,20 +250,21 @@ export function ChannelListSheetContent({
   return (
     <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader className="text-center">
-        <div className="relative flex justify-center items-center">
-          <SheetTitle className="flex-grow text-center">{title}</SheetTitle>
-          {channels.length > 0 && (
+        <div className="relative flex justify-between items-center">
+          {channels.length > 0 ? (
             <Button
               variant="ghost"
               onClick={() => {
                 setIsManaging(!isManaging);
                 setSelectedChannels(new Set());
               }}
-              className="absolute right-0"
+              className="w-24 text-left justify-start"
             >
               {isManaging ? t('done') : t('manage')}
             </Button>
-          )}
+          ) : <div className="w-24"></div> }
+          <SheetTitle className="absolute left-1/2 -translate-x-1/2">{title}</SheetTitle>
+          <div className="w-24"></div>
         </div>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
