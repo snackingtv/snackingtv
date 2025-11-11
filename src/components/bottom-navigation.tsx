@@ -16,6 +16,7 @@ interface BottomNavigationProps {
     favoriteChannelUrls: string[];
     user: User | null;
     isUserLoading: boolean;
+    onToggleFavorite: (channelUrl: string) => void;
 }
 
 export function BottomNavigation({
@@ -26,6 +27,7 @@ export function BottomNavigation({
     favoriteChannelUrls,
     user,
     isUserLoading,
+    onToggleFavorite,
 }: BottomNavigationProps) {
   const { t } = useTranslation();
   const favoriteChannels = addedChannels.filter(c => favoriteChannelUrls.includes(c.url));
@@ -41,7 +43,7 @@ export function BottomNavigation({
       label: t('favorites'),
       icon: Star,
       action: null,
-      sheetContent: <FavoriteChannelListSheetContent channels={favoriteChannels} onChannelSelect={onChannelSelect} title={t('favorites')} />,
+      sheetContent: <FavoriteChannelListSheetContent channels={favoriteChannels} onChannelSelect={onChannelSelect} title={t('favorites')} onToggleFavorite={onToggleFavorite} />,
     },
     {
       label: t('addChannel'),

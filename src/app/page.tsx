@@ -286,6 +286,7 @@ export default function Home() {
             activeVideoRef={activeVideoRef}
             localVideoItem={localVideoItem}
             searchTerm={searchTerm}
+            onToggleFavorite={handleToggleFavorite}
           />
           <div 
             data-progress-bar
@@ -305,6 +306,7 @@ export default function Home() {
             onLocalVideoSelect={handleLocalVideoSelect}
             user={user}
             isUserLoading={isUserLoading}
+            onToggleFavorite={handleToggleFavorite}
           />
         </TooltipProvider>
       )}

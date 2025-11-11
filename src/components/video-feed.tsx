@@ -20,10 +20,11 @@ interface VideoFeedProps {
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
   searchTerm: string;
+  onToggleFavorite: (channelUrl: string) => void;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, searchTerm }: VideoFeedProps) {
+export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, searchTerm, onToggleFavorite }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
@@ -84,13 +85,13 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   }, []);
 
   const handleToggleFavorite = (channelUrl: string) => {
-    setFavoriteChannels(prev => {
-      const newFavorites = prev.includes(channelUrl)
-        ? prev.filter(url => url !== channelUrl)
-        : [...prev, channelUrl];
-      localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
+    const newFavorites = favoriteChannels.includes(channelUrl)
+      ? favoriteChannels.filter(url => url !== channelUrl)
+      : [...favoriteChannels, channelUrl];
+    setFavoriteChannels(newFavorites);
+    localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
+    // Also call the prop to update parent state
+    onToggleFavorite(channelUrl);
   };
 
   const onCarouselSelect = useCallback((emblaApi: EmblaCarouselType) => {
@@ -188,6 +189,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
         onLocalVideoSelect={() => {}}
         user={user}
         isUserLoading={isUserLoading}
+        onToggleFavorite={handleToggleFavorite}
       />
     </>
   );
