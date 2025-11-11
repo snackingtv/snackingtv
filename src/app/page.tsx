@@ -61,7 +61,7 @@ export default function Home() {
     }
   }, []);
 
-  const handleToggleFavorite = (channelUrl: string) => {
+  const handleToggleFavorite = useCallback((channelUrl: string) => {
     setFavoriteChannels(prev => {
       const newFavorites = prev.includes(channelUrl)
         ? prev.filter(url => url !== channelUrl)
@@ -69,7 +69,7 @@ export default function Home() {
       localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
       return newFavorites;
     });
-  };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -286,6 +286,7 @@ export default function Home() {
             activeVideoRef={activeVideoRef}
             localVideoItem={localVideoItem}
             searchTerm={searchTerm}
+            favoriteChannels={favoriteChannels}
             onToggleFavorite={handleToggleFavorite}
           />
           <div 

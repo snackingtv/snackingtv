@@ -9,7 +9,6 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { BottomNavigation } from '@/components/bottom-navigation';
 import { Progress } from '@/components/ui/progress';
 
 interface VideoFeedProps {
@@ -20,20 +19,20 @@ interface VideoFeedProps {
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
   searchTerm: string;
+  favoriteChannels: string[];
   onToggleFavorite: (channelUrl: string) => void;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, searchTerm, onToggleFavorite }: VideoFeedProps) {
+export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, searchTerm, favoriteChannels, onToggleFavorite }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false, // Loop can cause issues with dynamic content
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedItems, setFeedItems] = useState<Video[]>([]);
-  const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
-
-  const { user, isUserLoading } = useUser();
+  
+  const { user } = useUser();
   const firestore = useFirestore();
 
   const userChannelsQuery = useMemoFirebase(
@@ -76,23 +75,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
         }
     }
   }, [activeChannel, emblaApi, feedItems]);
-
-  useEffect(() => {
-    const storedFavorites = localStorage.getItem('favoriteChannels');
-    if (storedFavorites) {
-      setFavoriteChannels(JSON.parse(storedFavorites));
-    }
-  }, []);
-
-  const handleToggleFavorite = (channelUrl: string) => {
-    const newFavorites = favoriteChannels.includes(channelUrl)
-      ? favoriteChannels.filter(url => url !== channelUrl)
-      : [...favoriteChannels, channelUrl];
-    setFavoriteChannels(newFavorites);
-    localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
-    // Also call the prop to update parent state
-    onToggleFavorite(channelUrl);
-  };
 
   const onCarouselSelect = useCallback((emblaApi: EmblaCarouselType) => {
     setActiveIndex(emblaApi.selectedScrollSnap());
@@ -162,7 +144,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
                   onChannelSelect={onChannelSelect}
                   addedChannels={userChannels || []}
                   isFavorite={favoriteChannels.includes(video.url)}
-                  onToggleFavorite={handleToggleFavorite}
+                  onToggleFavorite={onToggleFavorite}
                   onProgressUpdate={onProgressUpdate}
                   onDurationChange={onDurationChange}
                   activeVideoRef={activeVideoRef}
@@ -172,25 +154,6 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
             ))}
         </div>
       </div>
-      <div 
-        data-progress-bar
-        className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
-      >
-        <Progress
-          value={onProgressUpdate as any}
-          className="h-full group-hover:h-2.5 transition-all duration-200"
-        />
-      </div>
-      <BottomNavigation 
-        onAddChannels={() => {}}
-        onChannelSelect={onChannelSelect as any}
-        addedChannels={userChannels || []}
-        favoriteChannelUrls={favoriteChannels}
-        onLocalVideoSelect={() => {}}
-        user={user}
-        isUserLoading={isUserLoading}
-        onToggleFavorite={handleToggleFavorite}
-      />
     </>
   );
 }
