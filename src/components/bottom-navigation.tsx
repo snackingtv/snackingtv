@@ -9,7 +9,6 @@ import { WithId } from '@/firebase/firestore/use-collection';
 import { User } from 'firebase/auth';
 
 interface BottomNavigationProps {
-    onAddChannels: (channels: M3uChannel[]) => void;
     onChannelSelect: (channel: M3uChannel) => void;
     onLocalVideoSelect: () => void;
     addedChannels: WithId<M3uChannel>[];
@@ -20,7 +19,6 @@ interface BottomNavigationProps {
 }
 
 export function BottomNavigation({
-    onAddChannels,
     onChannelSelect,
     onLocalVideoSelect,
     addedChannels,
@@ -49,7 +47,7 @@ export function BottomNavigation({
       label: t('addChannel'),
       icon: PlusCircle,
       action: null,
-      sheetContent: <AddChannelSheetContent onAddChannel={onAddChannels} user={user} isUserLoading={isUserLoading} />,
+      sheetContent: <AddChannelSheetContent user={user} isUserLoading={isUserLoading} />,
     },
     {
       label: t('deviceStorage'),

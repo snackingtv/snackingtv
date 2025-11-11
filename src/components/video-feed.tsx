@@ -7,82 +7,62 @@ import type { Video } from '@/lib/videos';
 import { VideoCard } from '@/components/video-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import { Progress } from '@/components/ui/progress';
 
 interface VideoFeedProps {
+  feedItems: Video[];
   onChannelSelect: (channel: M3uChannel | Video) => void;
   activeChannel: M3uChannel | Video | null;
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
-  searchTerm: string;
   favoriteChannels: string[];
   onToggleFavorite: (channelUrl: string) => void;
+  onActiveIndexChange: (index: number) => void;
 }
 
 
-export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, searchTerm, favoriteChannels, onToggleFavorite }: VideoFeedProps) {
+export function VideoFeed({ 
+  feedItems, 
+  onChannelSelect, 
+  activeChannel, 
+  onProgressUpdate, 
+  onDurationChange, 
+  activeVideoRef, 
+  localVideoItem, 
+  favoriteChannels, 
+  onToggleFavorite,
+  onActiveIndexChange 
+}: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
-    loop: false, // Loop can cause issues with dynamic content
+    loop: false,
   });
   const [activeIndex, setActiveIndex] = useState(0);
-  const [feedItems, setFeedItems] = useState<Video[]>([]);
   
-  const { user } = useUser();
-  const firestore = useFirestore();
-
-  const userChannelsQuery = useMemoFirebase(
-    () =>
-      user
-        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
-        : null,
-    [user, firestore]
-  );
-  
-  const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
-  
-  useEffect(() => {
-    const combinedFeed: Video[] = [];
-    const combinedUrls = new Set<string>();
-
-    if (userChannels) {
-      userChannels.forEach((channel) => {
-        if (!combinedUrls.has(channel.url)) {
-          combinedFeed.push({
-            id: channel.id || channel.url,
-            url: channel.url,
-            title: channel.name,
-            author: channel.group || 'IPTV',
-            avatarId: 'iptv_placeholder',
-          });
-          combinedUrls.add(channel.url);
-        }
-      });
-    }
-    setFeedItems(combinedFeed);
-
-  }, [userChannels]);
-
   useEffect(() => {
     if (activeChannel && emblaApi) {
         const index = feedItems.findIndex(item => item.url === activeChannel.url);
-        if (index !== -1) {
-            emblaApi.scrollTo(index, false);
+        if (index !== -1 && index !== emblaApi.selectedScrollSnap()) {
+            emblaApi.scrollTo(index, true); // Use instant scroll
         }
     }
   }, [activeChannel, emblaApi, feedItems]);
 
   const onCarouselSelect = useCallback((emblaApi: EmblaCarouselType) => {
-    setActiveIndex(emblaApi.selectedScrollSnap());
-  }, []);
+    const newIndex = emblaApi.selectedScrollSnap();
+    setActiveIndex(newIndex);
+    onActiveIndexChange(newIndex);
+  }, [onActiveIndexChange]);
 
   useEffect(() => {
     if (!emblaApi) return;
-    onCarouselSelect(emblaApi);
+    
+    // Initial sync
+    const newIndex = emblaApi.selectedScrollSnap();
+    setActiveIndex(newIndex);
+    onActiveIndexChange(newIndex);
+
     emblaApi.on('select', onCarouselSelect);
     emblaApi.on('reInit', onCarouselSelect);
 
@@ -92,7 +72,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
         emblaApi.off('reInit', onCarouselSelect);
       }
     };
-  }, [emblaApi, onCarouselSelect]);
+  }, [emblaApi, onCarouselSelect, onActiveIndexChange]);
 
 
   useEffect(() => {
@@ -101,16 +81,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
     }
   }, [feedItems, emblaApi]);
 
-  const currentFeed = localVideoItem ? [localVideoItem] : feedItems.filter(item => 
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  useEffect(() => {
-    // When switching from local video back to feed, reset active index if needed
-    if (!localVideoItem && emblaApi && activeIndex >= currentFeed.length) {
-      setActiveIndex(Math.max(0, currentFeed.length - 1));
-    }
-  }, [localVideoItem, activeIndex, currentFeed.length, emblaApi]);
+  const currentFeed = localVideoItem ? [localVideoItem] : feedItems;
 
   const placeholderVideo: Video = {
     id: 'placeholder',
@@ -123,12 +94,11 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
   const displayFeed = currentFeed.length > 0 ? currentFeed : [placeholderVideo];
   
   useEffect(() => {
-    // If the feed becomes empty (e.g. search returns no results) and it's not a local video,
-    // ensure we reset the active index to 0 for the placeholder.
     if (currentFeed.length === 0 && !localVideoItem) {
       setActiveIndex(0);
+      onActiveIndexChange(0);
     }
-  }, [currentFeed, localVideoItem]);
+  }, [currentFeed, localVideoItem, onActiveIndexChange]);
 
 
   return (
@@ -142,7 +112,7 @@ export function VideoFeed({ onChannelSelect, activeChannel, onProgressUpdate, on
                   isActive={index === activeIndex}
                   onAddChannels={() => {}}
                   onChannelSelect={onChannelSelect}
-                  addedChannels={userChannels || []}
+                  addedChannels={[]}
                   isFavorite={favoriteChannels.includes(video.url)}
                   onToggleFavorite={onToggleFavorite}
                   onProgressUpdate={onProgressUpdate}

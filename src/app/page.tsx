@@ -52,6 +52,9 @@ export default function Home() {
   const [isShareDialogVisible, setIsShareDialogVisible] = useState(false);
   
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
+  
+  const [feedItems, setFeedItems] = useState<Video[]>([]);
+  const [filteredFeedItems, setFilteredFeedItems] = useState<Video[]>([]);
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -147,13 +150,47 @@ export default function Home() {
 
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
 
-  const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
-    // This function seems to be unused now, but we keep it for potential future use.
-    // The logic is handled inside the AddChannelSheetContent component.
-  }, []);
+  useEffect(() => {
+    const combinedFeed: Video[] = [];
+    const combinedUrls = new Set<string>();
+
+    if (userChannels) {
+      userChannels.forEach((channel) => {
+        if (!combinedUrls.has(channel.url)) {
+          combinedFeed.push({
+            id: channel.id || channel.url,
+            url: channel.url,
+            title: channel.name,
+            author: channel.group || 'IPTV',
+            avatarId: 'iptv_placeholder',
+          });
+          combinedUrls.add(channel.url);
+        }
+      });
+    }
+    setFeedItems(combinedFeed);
+  }, [userChannels]);
+
+  useEffect(() => {
+    const newFilteredItems = feedItems.filter(item => 
+        item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredFeedItems(newFilteredItems);
+  }, [feedItems, searchTerm]);
+
+  const handleActiveIndexChange = useCallback((index: number) => {
+    if (localVideoItem) {
+        setActiveChannel(localVideoItem);
+    } else if (filteredFeedItems[index]) {
+        setActiveChannel(filteredFeedItems[index]);
+    } else {
+        setActiveChannel(null);
+    }
+  }, [filteredFeedItems, localVideoItem]);
+
 
   const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
-    setLocalVideoItem(null); // Switch away from local video if a channel is selected
+    setLocalVideoItem(null); 
     setActiveChannel(channel);
   }, []);
 
@@ -172,9 +209,8 @@ export default function Home() {
         avatarId: 'local_file_placeholder'
       };
       setLocalVideoItem(newVideoItem);
-      setActiveChannel(null); // De-select any active channel
+      setActiveChannel(newVideoItem);
     }
-    // Reset file input to allow selecting the same file again
     if(event.target) event.target.value = '';
   };
 
@@ -266,18 +302,18 @@ export default function Home() {
           </div>
 
           <VideoFeed 
+            feedItems={filteredFeedItems}
             onChannelSelect={handleChannelSelect} 
             activeChannel={activeChannel}
             onProgressUpdate={setProgress}
             onDurationChange={setDuration}
             activeVideoRef={activeVideoRef}
             localVideoItem={localVideoItem}
-            searchTerm={searchTerm}
             favoriteChannels={favoriteChannels}
             onToggleFavorite={handleToggleFavorite}
+            onActiveIndexChange={handleActiveIndexChange}
           />
 
-          {/* Channel Title Display */}
           {(activeChannel || localVideoItem) && (
              <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 text-white font-bold text-sm text-left pointer-events-none" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
                 <p>{localVideoItem?.title || activeChannel?.title}</p>
@@ -295,7 +331,6 @@ export default function Home() {
             />
           </div>
           <BottomNavigation 
-            onAddChannels={handleAddChannels}
             onChannelSelect={handleChannelSelect}
             addedChannels={userChannels || []}
             favoriteChannelUrls={favoriteChannels}
