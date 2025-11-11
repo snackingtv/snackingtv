@@ -32,7 +32,6 @@ import {
 export default function Home() {
   const { t } = useTranslation();
   const [showSplash, setShowSplash] = useState(true);
-  const [feedItems, setFeedItems] = useState<Video[]>([]);
   const [activeChannel, setActiveChannel] = useState<M3uChannel | Video | null>(null);
 
   const { user, isUserLoading } = useUser();
@@ -149,21 +148,9 @@ export default function Home() {
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
 
   const handleAddChannels = useCallback((newChannels: M3uChannel[]) => {
-    const existingUrls = new Set(feedItems.map(item => item.url));
-    const uniqueNewChannels = newChannels.filter(c => !existingUrls.has(c.url));
-    
-    if (uniqueNewChannels.length === 0) return;
-
-    const newFeedItems: Video[] = uniqueNewChannels.map((channel, index) => ({
-      id: Date.now() + index,
-      url: channel.url,
-      title: channel.name,
-      author: channel.group || 'IPTV',
-      avatarId: 'iptv_placeholder',
-    }));
-
-    setFeedItems(prev => [...prev, ...newFeedItems]);
-  }, [feedItems]);
+    // This function seems to be unused now, but we keep it for potential future use.
+    // The logic is handled inside the AddChannelSheetContent component.
+  }, []);
 
   const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
     setLocalVideoItem(null); // Switch away from local video if a channel is selected
@@ -289,6 +276,14 @@ export default function Home() {
             favoriteChannels={favoriteChannels}
             onToggleFavorite={handleToggleFavorite}
           />
+
+          {/* Channel Title Display */}
+          {(activeChannel || localVideoItem) && (
+             <div className="absolute bottom-16 left-0 right-0 z-30 text-white font-bold text-lg text-center px-4 pointer-events-none" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                <p className="truncate">{localVideoItem?.title || activeChannel?.title}</p>
+            </div>
+          )}
+
           <div 
             data-progress-bar
             className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
