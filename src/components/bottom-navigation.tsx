@@ -35,7 +35,7 @@ export function BottomNavigation({
       label: t('channels'),
       icon: Tv2,
       action: null,
-      sheetContent: <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannelUrls={favoriteChannelUrls} title={t('channels')} />,
+      sheetContent: <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} title={t('channels')} />,
     },
     {
       label: t('favorites'),

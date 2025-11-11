@@ -160,12 +160,10 @@ export function FavoriteChannelListSheetContent({
 export function ChannelListSheetContent({ 
   channels, 
   onChannelSelect,
-  favoriteChannelUrls,
   title,
 }: { 
   channels: WithId<M3uChannel>[]; 
   onChannelSelect: (channel: M3uChannel) => void;
-  favoriteChannelUrls: string[];
   title: string;
 }) {
   const { t } = useTranslation();
@@ -186,12 +184,11 @@ export function ChannelListSheetContent({
     });
   };
   
-  const handleSelectAll = (channelList: WithId<M3uChannel>[]) => {
-      const allIds = channelList.map(c => c.id);
-      if(selectedChannels.size === allIds.length) {
+  const handleSelectAll = () => {
+      if(selectedChannels.size === channels.length) {
           setSelectedChannels(new Set());
       } else {
-          setSelectedChannels(new Set(allIds));
+          setSelectedChannels(new Set(channels.map(c => c.id)));
       }
   };
 
@@ -214,10 +211,7 @@ export function ChannelListSheetContent({
         });
     }
   };
-
-  const favoriteChannels = channels.filter(c => favoriteChannelUrls.includes(c.url));
-  const allOtherChannels = channels.filter(c => !favoriteChannelUrls.includes(c.url));
-
+  
   const renderChannelList = (channelList: WithId<M3uChannel>[], emptyMessage: string) => {
     return channelList.length > 0 ? (
       <ul className="space-y-1">
@@ -273,29 +267,12 @@ export function ChannelListSheetContent({
         </div>
       </SheetHeader>
       <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
-        {channels.length > 0 ? (
-          <Accordion type="multiple" defaultValue={['favorites', 'all-channels']} className="w-full">
-            <AccordionItem value="favorites">
-              <AccordionTrigger>{t('favorites')}</AccordionTrigger>
-              <AccordionContent>
-                {renderChannelList(favoriteChannels, t('noFavorites'))}
-              </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="all-channels">
-              <AccordionTrigger>{t('allChannels')}</AccordionTrigger>
-              <AccordionContent>
-                {renderChannelList(allOtherChannels, t('noOtherChannels'))}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        ) : (
-          <p className="text-muted-foreground text-center">{t('noChannels')}</p>
-        )}
+         {renderChannelList(channels, t('noChannels'))}
       </div>
       {isManaging && (
         <div className="absolute bottom-0 left-0 right-0 bg-background border-t p-2 flex justify-between items-center">
             <div className="flex items-center gap-2">
-                <Checkbox id="select-all" onCheckedChange={() => handleSelectAll(channels)} checked={selectedChannels.size > 0 && selectedChannels.size === channels.length} />
+                <Checkbox id="select-all" onCheckedChange={handleSelectAll} checked={selectedChannels.size > 0 && selectedChannels.size === channels.length} />
                 <label htmlFor="select-all">{t('selectAll')}</label>
             </div>
             <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedChannels.size === 0}>
