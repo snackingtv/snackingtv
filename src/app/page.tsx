@@ -48,6 +48,8 @@ export default function Home() {
   const [showCaptions, setShowCaptions] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [videoQuality, setVideoQuality] = useState<string>('auto');
+  const [qualityLevels, setQualityLevels] = useState<{ label: string; level: number }[]>([]);
 
   const [sharedChannel, setSharedChannel] = useState<M3uChannel | null>(null);
   const [isShareDialogVisible, setIsShareDialogVisible] = useState(false);
@@ -64,7 +66,21 @@ export default function Home() {
     }
     const storedShowCaptions = localStorage.getItem('showCaptions');
     setShowCaptions(storedShowCaptions === 'true');
+
+    const storedQuality = localStorage.getItem('videoQuality');
+    if (storedQuality) {
+      setVideoQuality(storedQuality);
+    }
   }, []);
+
+  const handleQualityChange = (quality: string) => {
+    setVideoQuality(quality);
+    localStorage.setItem('videoQuality', quality);
+    toast({
+      title: t('qualityChangedTitle'),
+      description: t('qualityChangedDescription', { quality: quality === 'auto' ? t('auto') : quality }),
+    });
+  };
 
   const handleToggleFavorite = useCallback((channelUrl: string) => {
     setFavoriteChannels(prev => {
@@ -314,6 +330,9 @@ export default function Home() {
                   onToggleClock={handleToggleClock}
                   showCaptions={showCaptions}
                   onToggleCaptions={handleToggleCaptions}
+                  quality={videoQuality}
+                  onQualityChange={handleQualityChange}
+                  qualityLevels={qualityLevels}
                 />
               </Sheet>
           </div>
@@ -330,6 +349,8 @@ export default function Home() {
             onToggleFavorite={handleToggleFavorite}
             onActiveIndexChange={handleActiveIndexChange}
             showCaptions={showCaptions}
+            videoQuality={videoQuality}
+            onQualityLevelsChange={setQualityLevels}
           />
 
           {(activeChannel || localVideoItem) && (

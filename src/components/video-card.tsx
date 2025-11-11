@@ -30,6 +30,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
 interface VideoCardProps {
@@ -45,6 +46,8 @@ interface VideoCardProps {
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
   showCaptions: boolean;
+  videoQuality: string;
+  onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
 }
 
 // Define the Channel type
@@ -1104,7 +1107,23 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 }
 
 
-export function SettingsSheetContent({ showClock, onToggleClock, showCaptions, onToggleCaptions }: { showClock: boolean, onToggleClock: () => void, showCaptions: boolean, onToggleCaptions: () => void }) {
+export function SettingsSheetContent({ 
+  showClock, 
+  onToggleClock, 
+  showCaptions, 
+  onToggleCaptions,
+  quality,
+  onQualityChange,
+  qualityLevels
+}: { 
+  showClock: boolean, 
+  onToggleClock: () => void, 
+  showCaptions: boolean, 
+  onToggleCaptions: () => void,
+  quality: string,
+  onQualityChange: (quality: string) => void,
+  qualityLevels: { label: string; level: number }[]
+}) {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
   
@@ -1122,6 +1141,20 @@ export function SettingsSheetContent({ showClock, onToggleClock, showCaptions, o
           <li className="flex items-center justify-between">
               <span className="text-sm font-medium">{t('subtitles')}</span>
               <Switch checked={showCaptions} onCheckedChange={onToggleCaptions} />
+          </li>
+          <li className="space-y-2">
+            <p className="text-sm font-medium">{t('quality')}</p>
+            <Select onValueChange={onQualityChange} value={quality}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t('quality')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">{t('auto')}</SelectItem>
+                {qualityLevels.map((q) => (
+                  <SelectItem key={q.level} value={String(q.level)}>{q.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </li>
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
@@ -1207,7 +1240,22 @@ export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: 
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, showCaptions }: VideoCardProps) {
+export function VideoCard({ 
+  video, 
+  isActive, 
+  onAddChannels, 
+  onChannelSelect, 
+  addedChannels, 
+  isFavorite, 
+  onToggleFavorite, 
+  onProgressUpdate, 
+  onDurationChange, 
+  activeVideoRef, 
+  localVideoItem, 
+  showCaptions,
+  videoQuality,
+  onQualityLevelsChange
+}: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -1325,18 +1373,32 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         hlsRef.current.destroy();
       }
       const hls = new Hls({
-        // Reduce latency
-        maxMaxBufferLength: 30, // Max buffer length in seconds
+        maxMaxBufferLength: 30,
       });
       hlsRef.current = hls;
       hls.loadSource(url);
       hls.attachMedia(videoElement);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+
+      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         setIsBuffering(false);
         videoElement.play().catch(e => {
           if (e.name !== 'AbortError') console.error("HLS play failed", e);
         });
+
+        const levels = hls.levels.map((level, index) => ({
+          label: level.height ? `${level.height}p` : `Level ${index}`,
+          level: index
+        }));
+        onQualityLevelsChange(levels);
+
+        const qualityLevel = parseInt(videoQuality);
+        if (videoQuality === 'auto') {
+          hls.currentLevel = -1; // Auto quality
+        } else if (!isNaN(qualityLevel) && qualityLevel >= 0 && qualityLevel < hls.levels.length) {
+          hls.currentLevel = qualityLevel;
+        }
       });
+
        hls.on(Hls.Events.ERROR, (event, data) => {
         if (data.fatal) {
           switch (data.type) {
@@ -1370,6 +1432,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       }
       setIsPlaying(false);
       setIsBuffering(false);
+      onQualityLevelsChange([]);
     };
 
     if (sourceUrl) {
@@ -1405,7 +1468,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     }
     
     return cleanup;
-}, [isActive, video.url, localVideoUrl]);
+}, [isActive, video.url, localVideoUrl, videoQuality, onQualityLevelsChange]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const splash = document.getElementById('splash-screen');

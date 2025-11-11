@@ -133,5 +133,9 @@
   "attemptingGuestLogin": "Gastmodus wird gestartet...",
   "guest": "Gast",
   "browsingAsGuest": "Sie browsen als Gast.",
-  "subtitles": "Untertitel (CC)"
+  "subtitles": "Untertitel (CC)",
+  "quality": "Qualität",
+  "auto": "Auto",
+  "qualityChangedTitle": "Qualität geändert",
+  "qualityChangedDescription": "Die Videoqualität wurde auf {quality} eingestellt."
 }

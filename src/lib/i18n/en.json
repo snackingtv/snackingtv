@@ -133,5 +133,9 @@
   "attemptingGuestLogin": "Attempting to start guest mode...",
   "guest": "Guest",
   "browsingAsGuest": "You are browsing as a guest.",
-  "subtitles": "Subtitles (CC)"
+  "subtitles": "Subtitles (CC)",
+  "quality": "Quality",
+  "auto": "Auto",
+  "qualityChangedTitle": "Quality Changed",
+  "qualityChangedDescription": "Video quality has been set to {quality}."
 }
