@@ -31,12 +31,6 @@ export function BottomNavigation({
 
   const navItems = [
     {
-      label: 'Home',
-      icon: Home,
-      action: () => { /* Maybe scroll to top? For now, nothing. */ },
-      sheetContent: null,
-    },
-    {
       label: t('channels'),
       icon: Tv2,
       action: null,
