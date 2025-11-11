@@ -319,7 +319,7 @@ export default function Home() {
               <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full max-w-full border border-white/40">
                 <p className="text-white font-normal text-sm">
                   {localVideoItem?.title || activeChannel?.title}
-                  {activeChannel?.author && ` • ${activeChannel.author}`}
+                  {activeChannel?.author && ` ${activeChannel.author}`}
                 </p>
               </div>
             </div>
