@@ -20,6 +20,7 @@ interface VideoFeedProps {
   favoriteChannels: string[];
   onToggleFavorite: (channelUrl: string) => void;
   onActiveIndexChange: (index: number) => void;
+  showCaptions: boolean;
 }
 
 const PRELOAD_COUNT = 1; // Number of items to preload on each side
@@ -76,7 +77,8 @@ export function VideoFeed({
   localVideoItem, 
   favoriteChannels, 
   onToggleFavorite,
-  onActiveIndexChange 
+  onActiveIndexChange,
+  showCaptions
 }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
@@ -169,6 +171,7 @@ export function VideoFeed({
                   onDurationChange={onDurationChange}
                   activeVideoRef={activeVideoRef}
                   localVideoItem={video === localVideoItem ? localVideoItem : null}
+                  showCaptions={showCaptions}
                 />
               </div>
             ))}

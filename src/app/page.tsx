@@ -45,6 +45,7 @@ export default function Home() {
   const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
 
   const [showClock, setShowClock] = useState(true);
+  const [showCaptions, setShowCaptions] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -61,6 +62,8 @@ export default function Home() {
     if (storedFavorites) {
       setFavoriteChannels(JSON.parse(storedFavorites));
     }
+    const storedShowCaptions = localStorage.getItem('showCaptions');
+    setShowCaptions(storedShowCaptions === 'true');
   }, []);
 
   const handleToggleFavorite = useCallback((channelUrl: string) => {
@@ -127,6 +130,14 @@ export default function Home() {
     });
   };
 
+  const handleToggleCaptions = () => {
+    setShowCaptions(prev => {
+      const newValue = !prev;
+      localStorage.setItem('showCaptions', String(newValue));
+      return newValue;
+    });
+  };
+
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
@@ -163,6 +174,7 @@ export default function Home() {
             title: channel.name,
             author: channel.group || 'IPTV',
             avatarId: 'iptv_placeholder',
+            subtitlesUrl: channel.subtitlesUrl,
           });
           combinedUrls.add(channel.url);
         }
@@ -297,7 +309,12 @@ export default function Home() {
                     <p>{t('settings')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <SettingsSheetContent showClock={showClock} onToggleClock={handleToggleClock} />
+                <SettingsSheetContent
+                  showClock={showClock}
+                  onToggleClock={handleToggleClock}
+                  showCaptions={showCaptions}
+                  onToggleCaptions={handleToggleCaptions}
+                />
               </Sheet>
           </div>
 
@@ -312,6 +329,7 @@ export default function Home() {
             favoriteChannels={favoriteChannels}
             onToggleFavorite={handleToggleFavorite}
             onActiveIndexChange={handleActiveIndexChange}
+            showCaptions={showCaptions}
           />
 
           {(activeChannel || localVideoItem) && (

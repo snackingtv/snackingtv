@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,7 @@ interface VideoCardProps {
   onDurationChange: (duration: number) => void;
   activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
   localVideoItem: Video | null;
+  showCaptions: boolean;
 }
 
 // Define the Channel type
@@ -1103,7 +1104,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 }
 
 
-export function SettingsSheetContent({ showClock, onToggleClock }: { showClock: boolean, onToggleClock: () => void }) {
+export function SettingsSheetContent({ showClock, onToggleClock, showCaptions, onToggleCaptions }: { showClock: boolean, onToggleClock: () => void, showCaptions: boolean, onToggleCaptions: () => void }) {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
   
@@ -1117,6 +1118,10 @@ export function SettingsSheetContent({ showClock, onToggleClock }: { showClock: 
           <li className="flex items-center justify-between">
               <span className="text-sm font-medium">{t('showClock')}</span>
               <Switch checked={showClock} onCheckedChange={onToggleClock} />
+          </li>
+          <li className="flex items-center justify-between">
+              <span className="text-sm font-medium">{t('subtitles')}</span>
+              <Switch checked={showCaptions} onCheckedChange={onToggleCaptions} />
           </li>
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
@@ -1202,7 +1207,7 @@ export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: 
 }
 
 
-export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoCardProps) {
+export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem, showCaptions }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -1628,7 +1633,17 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           onLoadedMetadata={handleLoadedMetadata}
           onProgress={handleVideoProgress}
           muted={false} 
-        />
+        >
+         {showCaptions && video.subtitlesUrl && (
+            <track
+              label="Deutsch"
+              kind="subtitles"
+              srcLang="de"
+              src={video.subtitlesUrl}
+              default={showCaptions}
+            />
+          )}
+        </video>
         {isSeeking && seekSpeed !== 0 && (
             <div className="absolute bottom-24 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
                 {seekSpeed > 0 ? `FWD ${seekSpeed}x` : `REW ${Math.abs(seekSpeed)}x`}

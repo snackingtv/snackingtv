@@ -3,6 +3,7 @@ export interface M3uChannel {
   logo: string;
   url: string;
   group: string;
+  subtitlesUrl?: string;
 }
 
 export function parseM3u(m3uContent: string): M3uChannel[] {
