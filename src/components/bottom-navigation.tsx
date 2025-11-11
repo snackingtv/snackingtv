@@ -78,7 +78,7 @@ export function BottomNavigation({
                 <SheetTrigger asChild>
                   <button className="flex flex-col items-center justify-center gap-1">
                     <item.icon size={20} />
-                    <span className="text-xs">{item.label}</span>
+                    <span className="text-[10px] font-medium">{item.label}</span>
                   </button>
                 </SheetTrigger>
                 {item.sheetContent}
@@ -86,7 +86,7 @@ export function BottomNavigation({
             ) : (
               <button onClick={item.action} className="flex flex-col items-center justify-center gap-1">
                 <item.icon size={20} />
-                <span className="text-xs">{item.label}</span>
+                <span className="text-[10px] font-medium">{item.label}</span>
               </button>
             )}
           </div>
