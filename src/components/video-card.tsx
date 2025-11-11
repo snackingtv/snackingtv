@@ -1211,6 +1211,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
+  const [bufferedPercent, setBufferedPercent] = useState(0);
   
   const { user, isUserLoading } = useUser();
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
@@ -1313,6 +1314,44 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     if (!videoElement) return;
 
     const sourceUrl = localVideoUrl || (isActive ? video.url : null);
+
+    const setupHls = (url: string) => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+      const hls = new Hls({
+        // Reduce latency
+        maxMaxBufferLength: 30, // Max buffer length in seconds
+      });
+      hlsRef.current = hls;
+      hls.loadSource(url);
+      hls.attachMedia(videoElement);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        setIsBuffering(false);
+        videoElement.play().catch(e => {
+          if (e.name !== 'AbortError') console.error("HLS play failed", e);
+        });
+      });
+       hls.on(Hls.Events.ERROR, (event, data) => {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.error('HLS fatal network error, trying to recover:', data);
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.error('HLS fatal media error, trying to recover:', data);
+              hls.recoverMediaError();
+              break;
+            default:
+              console.error('HLS fatal error, cannot recover:', data);
+              hls.destroy();
+              setIsBuffering(false);
+              break;
+          }
+        }
+      });
+    };
     
     // Cleanup function
     const cleanup = () => {
@@ -1320,37 +1359,23 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
         hlsRef.current.destroy();
         hlsRef.current = null;
       }
-      videoElement.removeAttribute('src');
-      videoElement.load();
+      if (videoElement) {
+        videoElement.removeAttribute('src');
+        videoElement.load();
+      }
       setIsPlaying(false);
       setIsBuffering(false);
     };
 
     if (sourceUrl) {
+      cleanup();
       setIsBuffering(true);
-      const isHls = sourceUrl.includes('.m3u');
-      if (isHls && Hls.isSupported()) {
-        if (hlsRef.current) {
-          hlsRef.current.destroy();
-        }
-        const hls = new Hls({
-          // You can add HLS.js config options here if needed, for example:
-          // maxMaxBufferLength: 30,
-        });
-        hlsRef.current = hls;
-        hls.loadSource(sourceUrl);
-        hls.attachMedia(videoElement);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          videoElement.play().catch(e => console.error("HLS play failed", e));
-        });
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          if (data.fatal) {
-            console.error('HLS fatal error:', data);
-            setIsBuffering(false);
-          }
-        });
+      const isHlsStream = sourceUrl.includes('.m3u8') || sourceUrl.includes('.m3u');
+      
+      if (isHlsStream && Hls.isSupported()) {
+        setupHls(sourceUrl);
       } else {
-        if (videoElement.currentSrc !== sourceUrl) {
+         if (videoElement.currentSrc !== sourceUrl) {
             videoElement.src = sourceUrl;
             videoElement.load();
         }
@@ -1535,6 +1560,15 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     }
   };
 
+  const handleVideoProgress = () => {
+    const video = videoRef.current;
+    if (!video || !video.duration || video.buffered.length === 0) return;
+
+    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+    const percentage = (bufferedEnd / video.duration) * 100;
+    setBufferedPercent(percentage);
+  };
+
   // Fullscreen logic
   const toggleFullScreen = useCallback(() => {
     const elem = containerRef.current;
@@ -1592,6 +1626,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           onPlaying={() => setIsBuffering(false)}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
+          onProgress={handleVideoProgress}
           muted={false} 
         />
         {isSeeking && seekSpeed !== 0 && (
@@ -1651,8 +1686,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             {isBuffering && (
-              <div className="bg-black/50 rounded-full p-3">
-                <Loader className="w-8 h-8 text-white animate-spin" />
+              <div className="bg-black/50 rounded-full p-3 text-white text-xs">
+                {t('loading')} {Math.floor(bufferedPercent)}%
               </div>
             )}
             {!isPlaying && !isBuffering && (video.url || localVideoUrl) && (
