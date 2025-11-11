@@ -2,11 +2,12 @@
 
 import React, { useCallback, useEffect, useState, MutableRefObject } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import type { EmblaCarouselType } from 'embla-carousel';
+import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import type { Video } from '@/lib/videos';
 import { VideoCard } from '@/components/video-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
+import Head from 'next/head';
 
 interface VideoFeedProps {
   feedItems: Video[];
@@ -20,6 +21,49 @@ interface VideoFeedProps {
   onToggleFavorite: (channelUrl: string) => void;
   onActiveIndexChange: (index: number) => void;
 }
+
+const PRELOAD_COUNT = 1; // Number of items to preload on each side
+
+const usePreload = (emblaApi: EmblaCarouselType | undefined, feedItems: Video[]) => {
+  const [preloadUrls, setPreloadUrls] = useState<string[]>([]);
+
+  const updatePreload = useCallback(() => {
+    if (!emblaApi) return;
+
+    const engine = emblaApi.internalEngine();
+    const scrollSnapList = emblaApi.scrollSnapList();
+    if (scrollSnapList.length === 0) return;
+    
+    const currentIndex = emblaApi.selectedScrollSnap();
+    const urlsToPreload = new Set<string>();
+
+    for (let i = 1; i <= PRELOAD_COUNT; i++) {
+      const prevIndex = (currentIndex - i + scrollSnapList.length) % scrollSnapList.length;
+      const nextIndex = (currentIndex + i) % scrollSnapList.length;
+      
+      if (feedItems[prevIndex]?.url) urlsToPreload.add(feedItems[prevIndex].url);
+      if (feedItems[nextIndex]?.url) urlsToPreload.add(feedItems[nextIndex].url);
+    }
+    
+    setPreloadUrls(Array.from(urlsToPreload));
+
+  }, [emblaApi, feedItems]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    updatePreload();
+    emblaApi.on('select', updatePreload);
+    emblaApi.on('reInit', updatePreload);
+
+    return () => {
+      emblaApi.off('select', updatePreload);
+      emblaApi.off('reInit', updatePreload);
+    };
+  }, [emblaApi, updatePreload]);
+
+  return preloadUrls;
+};
 
 
 export function VideoFeed({ 
@@ -39,6 +83,7 @@ export function VideoFeed({
     loop: false,
   });
   const [activeIndex, setActiveIndex] = useState(0);
+  const preloadUrls = usePreload(emblaApi, feedItems);
   
   useEffect(() => {
     if (activeChannel && emblaApi) {
@@ -103,6 +148,11 @@ export function VideoFeed({
 
   return (
     <>
+       <Head>
+        {preloadUrls.map(url => (
+          <link key={url} rel="preload" href={url} as="fetch" crossOrigin="anonymous" />
+        ))}
+      </Head>
       <div className="overflow-hidden h-full" ref={emblaRef}>
         <div className="flex flex-col h-full">
           {displayFeed.map((video, index) => (

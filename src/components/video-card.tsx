@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
 import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2 } from 'lucide-react';
 import Image from 'next/image';
+import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
@@ -1204,6 +1205,7 @@ export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: 
 export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, addedChannels, isFavorite, onToggleFavorite, onProgressUpdate, onDurationChange, activeVideoRef, localVideoItem }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1311,30 +1313,55 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
 
     const sourceUrl = localVideoUrl || (isActive ? video.url : null);
     
+    // Cleanup function
+    const cleanup = () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+      videoElement.removeAttribute('src');
+      videoElement.load();
+      setIsPlaying(false);
+    };
+
     if (sourceUrl) {
+      const isHls = sourceUrl.includes('.m3u');
+      if (isHls && Hls.isSupported()) {
+        if (hlsRef.current) {
+          hlsRef.current.destroy();
+        }
+        const hls = new Hls();
+        hlsRef.current = hls;
+        hls.loadSource(sourceUrl);
+        hls.attachMedia(videoElement);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          videoElement.play().catch(e => console.error("HLS play failed", e));
+        });
+      } else {
         if (videoElement.currentSrc !== sourceUrl) {
             videoElement.src = sourceUrl;
             videoElement.load();
         }
-        const playPromise = videoElement.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => setIsPlaying(true)).catch((error) => {
-                if (error.name !== 'AbortError') {
-                    console.error("Video play failed:", error);
-                    videoElement.muted = true;
-                    videoElement.play().then(() => setIsPlaying(true)).catch(err => {
-                        console.error("Muted video play also failed:", err);
-                        setIsPlaying(false);
-                    });
-                }
-            });
-        }
+      }
+
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+          playPromise.then(() => setIsPlaying(true)).catch((error) => {
+              if (error.name !== 'AbortError') {
+                  console.error("Video play failed:", error);
+                  videoElement.muted = true;
+                  videoElement.play().then(() => setIsPlaying(true)).catch(err => {
+                      console.error("Muted video play also failed:", err);
+                      setIsPlaying(false);
+                  });
+              }
+          });
+      }
     } else {
-        videoElement.pause();
-        videoElement.removeAttribute('src');
-        videoElement.load();
-        setIsPlaying(false);
+      cleanup();
     }
+    
+    return cleanup;
 }, [isActive, video.url, localVideoUrl]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -1392,7 +1419,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
     };
   }, [handleInteraction]);
   
-  // --- Swipe to Seek Handlers ---
+  // --- Swipe to seek Handlers ---
   const initialSeekX = useRef(0);
   const rewindInterval = useRef<NodeJS.Timeout | null>(null);
 
