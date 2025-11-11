@@ -1231,38 +1231,58 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
   const { toast } = useToast();
   
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!video || !video.url) return;
-    
-    // Create a data object with the channel info
+
     const channelData: M3uChannel = {
       name: video.title,
-      // Attempt to find a real logo from addedChannels, otherwise create a placeholder
       logo: (addedChannels.find(c => c.url === video.url)?.logo) || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
       url: video.url,
       group: video.author || 'Shared'
     };
-    
-    // Base64 encode the JSON string
+
     const encodedData = btoa(JSON.stringify(channelData));
-    
-    // Create the shareable link
     const shareLink = `${window.location.origin}${window.location.pathname}?channel=${encodedData}`;
 
-    // Copy to clipboard
-    navigator.clipboard.writeText(shareLink).then(() => {
-      toast({
-        title: t('linkCopiedTitle'),
-        description: t('linkCopiedDescription'),
+    const shareData = {
+      title: t('shareChannel'),
+      text: `Schau mal, was ich auf SnackingTV gefunden habe: ${video.title}`,
+      url: shareLink,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: t('linkCopiedTitle'),
+        });
+      } catch (err) {
+        // Silently fail if user cancels share sheet
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Share failed:', err);
+          toast({
+            variant: 'destructive',
+            title: t('copyErrorTitle'),
+            description: (err as Error).message
+          });
+        }
+      }
+    } else {
+      // Fallback for desktop
+      navigator.clipboard.writeText(shareLink).then(() => {
+        toast({
+          title: t('linkCopiedTitle'),
+          description: t('linkCopiedDescription'),
+        });
+      }).catch(err => {
+        console.error('Failed to copy link: ', err);
+        toast({
+          variant: 'destructive',
+          title: t('copyErrorTitle'),
+          description: t('copyErrorDescription'),
+        });
       });
-    }).catch(err => {
-      console.error('Failed to copy link: ', err);
-      toast({
-        variant: 'destructive',
-        title: t('copyErrorTitle'),
-        description: t('copyErrorDescription'),
-      });
-    });
+    }
   };
 
   useEffect(() => {
