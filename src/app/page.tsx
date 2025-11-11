@@ -50,6 +50,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [videoQuality, setVideoQuality] = useState<string>('auto');
   const [qualityLevels, setQualityLevels] = useState<{ label: string; level: number }[]>([]);
+  const [bufferSize, setBufferSize] = useState<string>('auto');
 
   const [sharedChannel, setSharedChannel] = useState<M3uChannel | null>(null);
   const [isShareDialogVisible, setIsShareDialogVisible] = useState(false);
@@ -71,7 +72,21 @@ export default function Home() {
     if (storedQuality) {
       setVideoQuality(storedQuality);
     }
+    
+    const storedBufferSize = localStorage.getItem('bufferSize');
+    if (storedBufferSize) {
+      setBufferSize(storedBufferSize);
+    }
   }, []);
+  
+  const handleBufferSizeChange = (size: string) => {
+    setBufferSize(size);
+    localStorage.setItem('bufferSize', size);
+    toast({
+      title: t('bufferSizeChangedTitle'),
+      description: t('bufferSizeChangedDescription', { size: t(`buffer_${size}`) }),
+    });
+  };
 
   const handleQualityChange = (quality: string) => {
     setVideoQuality(quality);
@@ -333,6 +348,8 @@ export default function Home() {
                   quality={videoQuality}
                   onQualityChange={handleQualityChange}
                   qualityLevels={qualityLevels}
+                  bufferSize={bufferSize}
+                  onBufferSizeChange={handleBufferSizeChange}
                 />
               </Sheet>
           </div>
@@ -351,6 +368,7 @@ export default function Home() {
             showCaptions={showCaptions}
             videoQuality={videoQuality}
             onQualityLevelsChange={setQualityLevels}
+            bufferSize={bufferSize}
           />
 
           {(activeChannel || localVideoItem) && (

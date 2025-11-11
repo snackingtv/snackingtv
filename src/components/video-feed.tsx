@@ -23,6 +23,7 @@ interface VideoFeedProps {
   showCaptions: boolean;
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
+  bufferSize: string;
 }
 
 const PRELOAD_COUNT = 1; // Number of items to preload on each side
@@ -82,7 +83,8 @@ export function VideoFeed({
   onActiveIndexChange,
   showCaptions,
   videoQuality,
-  onQualityLevelsChange
+  onQualityLevelsChange,
+  bufferSize,
 }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
@@ -178,6 +180,7 @@ export function VideoFeed({
                   showCaptions={showCaptions}
                   videoQuality={videoQuality}
                   onQualityLevelsChange={onQualityLevelsChange}
+                  bufferSize={bufferSize}
                 />
               </div>
             ))}

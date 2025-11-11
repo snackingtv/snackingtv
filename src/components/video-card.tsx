@@ -31,6 +31,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 
 interface VideoCardProps {
@@ -48,6 +50,7 @@ interface VideoCardProps {
   showCaptions: boolean;
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
+  bufferSize: string;
 }
 
 // Define the Channel type
@@ -1114,7 +1117,9 @@ export function SettingsSheetContent({
   onToggleCaptions,
   quality,
   onQualityChange,
-  qualityLevels
+  qualityLevels,
+  bufferSize,
+  onBufferSizeChange
 }: { 
   showClock: boolean, 
   onToggleClock: () => void, 
@@ -1122,7 +1127,9 @@ export function SettingsSheetContent({
   onToggleCaptions: () => void,
   quality: string,
   onQualityChange: (quality: string) => void,
-  qualityLevels: { label: string; level: number }[]
+  qualityLevels: { label: string; level: number }[],
+  bufferSize: string,
+  onBufferSizeChange: (size: string) => void
 }) {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
@@ -1155,6 +1162,35 @@ export function SettingsSheetContent({
                 ))}
               </SelectContent>
             </Select>
+          </li>
+           <li className="space-y-2">
+            <p className="text-sm font-medium">{t('bufferSize')}</p>
+            <RadioGroup value={bufferSize} onValueChange={onBufferSizeChange} className="grid grid-cols-2 gap-2">
+              <div>
+                <RadioGroupItem value="2" id="buffer-low" className="peer sr-only" />
+                <Label htmlFor="buffer-low" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  {t('buffer_low')}
+                </Label>
+              </div>
+               <div>
+                <RadioGroupItem value="5" id="buffer-medium" className="peer sr-only" />
+                <Label htmlFor="buffer-medium" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  {t('buffer_medium')}
+                </Label>
+              </div>
+               <div>
+                <RadioGroupItem value="10" id="buffer-high" className="peer sr-only" />
+                <Label htmlFor="buffer-high" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  {t('buffer_high')}
+                </Label>
+              </div>
+               <div>
+                <RadioGroupItem value="auto" id="buffer-auto" className="peer sr-only" />
+                <Label htmlFor="buffer-auto" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  {t('buffer_auto')}
+                </Label>
+              </div>
+            </RadioGroup>
           </li>
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
@@ -1254,7 +1290,8 @@ export function VideoCard({
   localVideoItem, 
   showCaptions,
   videoQuality,
-  onQualityLevelsChange
+  onQualityLevelsChange,
+  bufferSize,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -1372,9 +1409,17 @@ export function VideoCard({
       if (hlsRef.current) {
         hlsRef.current.destroy();
       }
-      const hls = new Hls({
-        maxMaxBufferLength: 30,
-      });
+      
+      const bufferInSeconds = bufferSize === 'auto' ? 30 : parseInt(bufferSize, 10);
+      const hlsConfig: Partial<Hls.Config> = {
+        // The maximum buffer length in seconds. If buffer length is greater than this value,
+        // a buffer flush operation is triggered.
+        maxBufferLength: bufferInSeconds,
+        // The maximum buffer length in seconds, representing the maximum duration of media that can be buffered.
+        maxMaxBufferLength: bufferInSeconds,
+      };
+
+      const hls = new Hls(hlsConfig);
       hlsRef.current = hls;
       hls.loadSource(url);
       hls.attachMedia(videoElement);
@@ -1468,7 +1513,7 @@ export function VideoCard({
     }
     
     return cleanup;
-}, [isActive, video.url, localVideoUrl, videoQuality, onQualityLevelsChange]);
+}, [isActive, video.url, localVideoUrl, videoQuality, onQualityLevelsChange, bufferSize]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const splash = document.getElementById('splash-screen');

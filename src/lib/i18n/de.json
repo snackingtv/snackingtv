@@ -137,5 +137,12 @@
   "quality": "Qualität",
   "auto": "Auto",
   "qualityChangedTitle": "Qualität geändert",
-  "qualityChangedDescription": "Die Videoqualität wurde auf {quality} eingestellt."
+  "qualityChangedDescription": "Die Videoqualität wurde auf {quality} eingestellt.",
+  "bufferSize": "Buffer-Größe",
+  "buffer_low": "Niedrig (2s)",
+  "buffer_medium": "Mittel (5s)",
+  "buffer_high": "Hoch (10s)",
+  "buffer_auto": "Automatisch",
+  "bufferSizeChangedTitle": "Puffergröße geändert",
+  "bufferSizeChangedDescription": "Die Puffergröße wurde auf {size} eingestellt."
 }
