@@ -148,8 +148,8 @@ export function FavoriteChannelListSheetContent({
                   />
                   <span className="font-medium flex-grow truncate">{channel.name}</span>
                 </button>
-                <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(channel.url)} className='text-yellow-400'>
-                  <Star className="h-5 w-5 fill-current" />
+                <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(channel.url)} className='text-destructive/80 hover:text-destructive'>
+                  <Trash2 className="h-5 w-5" />
                 </Button>
               </li>
             ))}
