@@ -315,7 +315,7 @@ export default function Home() {
           />
 
           {(activeChannel || localVideoItem) && (
-             <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 text-white font-bold text-sm text-left pointer-events-none" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+             <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 text-white/80 font-bold text-sm text-left pointer-events-none" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
                 <p>{localVideoItem?.title || activeChannel?.title}</p>
             </div>
           )}
