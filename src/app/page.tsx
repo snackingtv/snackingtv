@@ -315,7 +315,7 @@ export default function Home() {
           />
 
           {(activeChannel || localVideoItem) && (
-            <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 flex items-center gap-2 pointer-events-none">
+            <div className="absolute bottom-[5rem] left-4 z-30 flex items-center gap-2 pointer-events-none">
               <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                 <p className="text-white font-normal text-[10px]">
                   {localVideoItem?.title || activeChannel?.title}
