@@ -316,8 +316,8 @@ export default function Home() {
 
           {(activeChannel || localVideoItem) && (
             <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 text-left pointer-events-none">
-              <div className="inline-block bg-white/20 backdrop-blur-sm p-2 rounded-lg max-w-full">
-                <p className="text-black font-bold text-sm">
+              <div className="inline-block bg-black/30 backdrop-blur-sm p-2 rounded-lg max-w-full">
+                <p className="text-white font-bold text-sm" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
                   {localVideoItem?.title || activeChannel?.title}
                   {activeChannel?.author && ` • ${activeChannel.author}`}
                 </p>
