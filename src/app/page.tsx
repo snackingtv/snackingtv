@@ -317,13 +317,13 @@ export default function Home() {
           {(activeChannel || localVideoItem) && (
             <div className="absolute bottom-[4.5rem] left-4 right-4 z-30 flex items-center gap-2 pointer-events-none">
               <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                <p className="text-white font-normal text-sm">
+                <p className="text-white font-normal text-xs">
                   {localVideoItem?.title || activeChannel?.title}
                 </p>
               </div>
               {activeChannel?.author && (
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                   <p className="text-white font-normal text-sm">
+                   <p className="text-white font-normal text-xs">
                       {activeChannel.author}
                     </p>
                 </div>
