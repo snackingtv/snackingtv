@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Home, Share2 } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -110,6 +110,51 @@ function ImprintSheetContent() {
       </div>
     </SheetContent>
   )
+}
+
+export function FavoriteChannelListSheetContent({ 
+  channels, 
+  onChannelSelect,
+  title,
+}: { 
+  channels: WithId<M3uChannel>[]; 
+  onChannelSelect: (channel: M3uChannel) => void;
+  title: string;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
+      <SheetHeader className="text-center">
+        <SheetTitle>{title}</SheetTitle>
+      </SheetHeader>
+      <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
+        {channels.length > 0 ? (
+          <ul className="space-y-1">
+            {channels.map((channel) => (
+              <li key={channel.id} className="flex items-center gap-2 rounded-lg hover:bg-accent/50 pr-2">
+                <button
+                  onClick={() => onChannelSelect(channel)}
+                  className="w-full flex items-center gap-4 p-2 text-left"
+                >
+                  <Image
+                    src={channel.logo}
+                    alt={channel.name}
+                    width={40}
+                    height={40}
+                    className="rounded-md"
+                  />
+                  <span className="font-medium flex-grow truncate">{channel.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground text-center py-4">{t('noFavorites')}</p>
+        )}
+      </div>
+    </SheetContent>
+  );
 }
 
 export function ChannelListSheetContent({ 
@@ -1566,8 +1611,8 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           
           <div className="absolute bottom-20 left-4 right-4 space-y-3 pb-2">
             <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              <h3 className="font-bold text-lg">{video.author}</h3>
-              <p className="text-base">{video.title}</p>
+              
+              
             </div>
           </div>
         </div>

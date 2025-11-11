@@ -1,9 +1,9 @@
 'use client';
 
-import { Home, PlusCircle, Tv2, Folder, User as UserIcon } from 'lucide-react';
+import { PlusCircle, Tv2, Folder, User as UserIcon, Star } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { AddChannelSheetContent, ChannelListSheetContent, AuthSheetContent } from './video-card';
+import { AddChannelSheetContent, ChannelListSheetContent, FavoriteChannelListSheetContent, AuthSheetContent } from './video-card';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { User } from 'firebase/auth';
@@ -28,6 +28,7 @@ export function BottomNavigation({
     isUserLoading,
 }: BottomNavigationProps) {
   const { t } = useTranslation();
+  const favoriteChannels = addedChannels.filter(c => favoriteChannelUrls.includes(c.url));
 
   const navItems = [
     {
@@ -35,6 +36,12 @@ export function BottomNavigation({
       icon: Tv2,
       action: null,
       sheetContent: <ChannelListSheetContent channels={addedChannels} onChannelSelect={onChannelSelect} favoriteChannelUrls={favoriteChannelUrls} title={t('channels')} />,
+    },
+    {
+      label: t('favorites'),
+      icon: Star,
+      action: null,
+      sheetContent: <FavoriteChannelListSheetContent channels={favoriteChannels} onChannelSelect={onChannelSelect} title={t('favorites')} />,
     },
     {
       label: t('addChannel'),
