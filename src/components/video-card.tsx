@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2 } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -1207,6 +1207,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
@@ -1322,20 +1323,31 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
       videoElement.removeAttribute('src');
       videoElement.load();
       setIsPlaying(false);
+      setIsBuffering(false);
     };
 
     if (sourceUrl) {
+      setIsBuffering(true);
       const isHls = sourceUrl.includes('.m3u');
       if (isHls && Hls.isSupported()) {
         if (hlsRef.current) {
           hlsRef.current.destroy();
         }
-        const hls = new Hls();
+        const hls = new Hls({
+          // You can add HLS.js config options here if needed, for example:
+          // maxMaxBufferLength: 30,
+        });
         hlsRef.current = hls;
         hls.loadSource(sourceUrl);
         hls.attachMedia(videoElement);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           videoElement.play().catch(e => console.error("HLS play failed", e));
+        });
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            console.error('HLS fatal error:', data);
+            setIsBuffering(false);
+          }
         });
       } else {
         if (videoElement.currentSrc !== sourceUrl) {
@@ -1353,6 +1365,7 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
                   videoElement.play().then(() => setIsPlaying(true)).catch(err => {
                       console.error("Muted video play also failed:", err);
                       setIsPlaying(false);
+                      setIsBuffering(false);
                   });
               }
           });
@@ -1565,13 +1578,18 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           playsInline
           className="w-full h-full object-contain"
           onPlay={() => {
-              if (!isSeeking) setIsPlaying(true);
+              if (!isSeeking) {
+                setIsPlaying(true);
+                setIsBuffering(false);
+              }
               handleInteraction();
           }}
           onPause={() => {
               if (!isSeeking) setIsPlaying(false);
               handleInteraction();
           }}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
           muted={false} 
@@ -1632,7 +1650,12 @@ export function VideoCard({ video, isActive, onAddChannels, onChannelSelect, add
           </div>
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            {!isPlaying && (video.url || localVideoUrl) && (
+            {isBuffering && (
+              <div className="bg-black/50 rounded-full p-3">
+                <Loader className="w-8 h-8 text-white animate-spin" />
+              </div>
+            )}
+            {!isPlaying && !isBuffering && (video.url || localVideoUrl) && (
               <div className="pointer-events-auto">
                 
               </div>
