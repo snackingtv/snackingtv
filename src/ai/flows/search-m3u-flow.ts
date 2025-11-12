@@ -45,15 +45,20 @@ const searchM3uFlow = ai.defineFlow(
     Provide at least 5 results if possible. If you cannot find a real logo, use a placeholder image from picsum.photos.
     Ensure the response is a valid JSON array matching the output schema.`;
 
-    const { output } = await ai.generate({
-      prompt,
-      model: 'googleai/gemini-2.5-pro',
-      output: {
-        format: 'json',
-        schema: SearchM3uOutputSchema,
-      },
-    });
-
-    return output || [];
+    try {
+      const { output } = await ai.generate({
+        prompt,
+        model: 'googleai/gemini-2.5-pro',
+        output: {
+          format: 'json',
+          schema: SearchM3uOutputSchema,
+        },
+      });
+      return output || [];
+    } catch (error) {
+      console.error('An error occurred during the M3U search flow:', error);
+      // Return an empty array to prevent the app from crashing on model overload.
+      return [];
+    }
   }
 );
