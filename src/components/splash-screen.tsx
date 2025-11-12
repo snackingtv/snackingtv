@@ -19,7 +19,7 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
   return (
     <div
       className={cn(
-        'absolute inset-0 z-50 flex items-center justify-center bg-black splash-animation'
+        'absolute inset-0 z-50 flex items-center justify-center bg-background splash-animation'
       )}
     >
       <h1 className="text-5xl font-fredoka text-white splash-text-animation rainbow-text-shadow">
