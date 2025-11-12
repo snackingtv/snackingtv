@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
@@ -1227,7 +1228,7 @@ export function SettingsSheetContent({
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build 1.0.14
+          Build ❤️ 1.0.20
         </div>
       </div>
     </SheetContent>
@@ -1832,3 +1833,4 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
