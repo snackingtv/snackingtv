@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { cn } from '@/lib/utils';
 
 
 export default function Home() {
@@ -277,137 +278,139 @@ export default function Home() {
       {showSplash ? (
         <SplashScreen onAnimationEnd={() => setShowSplash(false)} />
       ) : (
-        <TooltipProvider>
-           <input
-            type="file"
-            ref={localVideoInputRef}
-            onChange={handleFileChange}
-            accept="video/*"
-            className="hidden"
-          />
-          <h1 className="sr-only">SnackingTV - A vertical video feed</h1>
-
-          {isShareDialogVisible && sharedChannel && (
-            <AlertDialog open onOpenChange={setIsShareDialogVisible}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('importSharedChannelTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('importSharedChannelDescription', { channelName: sharedChannel.name })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel onClick={() => setIsShareDialogVisible(false)}>{t('cancel')}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleConfirmShare}>{t('add')}</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-
-          {showClock && (
-            <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-bold text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              {currentTime}
-            </div>
-          )}
-
-          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <Search size={28} className="drop-shadow-lg"/>
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('searchChannels')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <SearchSheetContent onSearch={setSearchTerm} searchTerm={searchTerm} />
-              </Sheet>
-              
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <Settings size={28} className="drop-shadow-lg"/>
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('settings')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <SettingsSheetContent
-                  showClock={showClock}
-                  onToggleClock={handleToggleClock}
-                  showCaptions={showCaptions}
-                  onToggleCaptions={handleToggleCaptions}
-                  quality={videoQuality}
-                  onQualityChange={handleQualityChange}
-                  qualityLevels={qualityLevels}
-                  bufferSize={bufferSize}
-                  onBufferSizeChange={handleBufferSizeChange}
-                />
-              </Sheet>
-          </div>
-
-          <VideoFeed 
-            feedItems={filteredFeedItems}
-            onChannelSelect={handleChannelSelect} 
-            activeChannel={activeChannel}
-            onProgressUpdate={setProgress}
-            onDurationChange={setDuration}
-            activeVideoRef={activeVideoRef}
-            localVideoItem={localVideoItem}
-            favoriteChannels={favoriteChannels}
-            onToggleFavorite={handleToggleFavorite}
-            onActiveIndexChange={handleActiveIndexChange}
-            showCaptions={showCaptions}
-            videoQuality={videoQuality}
-            onQualityLevelsChange={setQualityLevels}
-            bufferSize={bufferSize}
-          />
-
-          {(activeChannel || localVideoItem) && (
-            <div className="absolute bottom-[5rem] left-4 z-30 flex items-center gap-2 pointer-events-none">
-              <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                <p className="text-white font-normal text-[10px]">
-                  {localVideoItem?.title || activeChannel?.title}
-                </p>
-              </div>
-              {activeChannel?.author && (
-                <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                   <p className="text-white font-normal text-[10px]">
-                      {activeChannel.author}
-                    </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div 
-            data-progress-bar
-            className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
-            onClick={handleProgressClick}
-          >
-            <Progress
-              value={progress}
-              className="h-full group-hover:h-2.5 transition-all duration-200"
+        <div className="h-full w-full app-fade-in">
+          <TooltipProvider>
+            <input
+              type="file"
+              ref={localVideoInputRef}
+              onChange={handleFileChange}
+              accept="video/*"
+              className="hidden"
             />
-          </div>
-          <BottomNavigation 
-            onChannelSelect={handleChannelSelect}
-            addedChannels={userChannels || []}
-            favoriteChannelUrls={favoriteChannels}
-            onLocalVideoSelect={handleLocalVideoSelect}
-            user={user}
-            isUserLoading={isUserLoading}
-            onToggleFavorite={handleToggleFavorite}
-          />
-        </TooltipProvider>
+            <h1 className="sr-only">SnackingTV - A vertical video feed</h1>
+
+            {isShareDialogVisible && sharedChannel && (
+              <AlertDialog open onOpenChange={setIsShareDialogVisible}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('importSharedChannelTitle')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('importSharedChannelDescription', { channelName: sharedChannel.name })}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setIsShareDialogVisible(false)}>{t('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmShare}>{t('add')}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
+            {showClock && (
+              <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-bold text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                {currentTime}
+              </div>
+            )}
+
+            <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                <Sheet>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                          <Search size={28} className="drop-shadow-lg"/>
+                        </Button>
+                      </SheetTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('searchChannels')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <SearchSheetContent onSearch={setSearchTerm} searchTerm={searchTerm} />
+                </Sheet>
+                
+                <Sheet>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                          <Settings size={28} className="drop-shadow-lg"/>
+                        </Button>
+                      </SheetTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('settings')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <SettingsSheetContent
+                    showClock={showClock}
+                    onToggleClock={handleToggleClock}
+                    showCaptions={showCaptions}
+                    onToggleCaptions={handleToggleCaptions}
+                    quality={videoQuality}
+                    onQualityChange={handleQualityChange}
+                    qualityLevels={qualityLevels}
+                    bufferSize={bufferSize}
+                    onBufferSizeChange={handleBufferSizeChange}
+                  />
+                </Sheet>
+            </div>
+
+            <VideoFeed 
+              feedItems={filteredFeedItems}
+              onChannelSelect={handleChannelSelect} 
+              activeChannel={activeChannel}
+              onProgressUpdate={setProgress}
+              onDurationChange={setDuration}
+              activeVideoRef={activeVideoRef}
+              localVideoItem={localVideoItem}
+              favoriteChannels={favoriteChannels}
+              onToggleFavorite={handleToggleFavorite}
+              onActiveIndexChange={handleActiveIndexChange}
+              showCaptions={showCaptions}
+              videoQuality={videoQuality}
+              onQualityLevelsChange={setQualityLevels}
+              bufferSize={bufferSize}
+            />
+
+            {(activeChannel || localVideoItem) && (
+              <div className="absolute bottom-[5rem] left-4 z-30 flex items-center gap-2 pointer-events-none">
+                <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
+                  <p className="text-white font-normal text-[10px]">
+                    {localVideoItem?.title || activeChannel?.title}
+                  </p>
+                </div>
+                {activeChannel?.author && (
+                  <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
+                    <p className="text-white font-normal text-[10px]">
+                        {activeChannel.author}
+                      </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div 
+              data-progress-bar
+              className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
+              onClick={handleProgressClick}
+            >
+              <Progress
+                value={progress}
+                className="h-full group-hover:h-2.5 transition-all duration-200"
+              />
+            </div>
+            <BottomNavigation 
+              onChannelSelect={handleChannelSelect}
+              addedChannels={userChannels || []}
+              favoriteChannelUrls={favoriteChannels}
+              onLocalVideoSelect={handleLocalVideoSelect}
+              user={user}
+              isUserLoading={isUserLoading}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          </TooltipProvider>
+        </div>
       )}
     </main>
   );
