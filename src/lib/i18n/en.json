@@ -144,5 +144,6 @@
   "buffer_high": "High (10s)",
   "buffer_auto": "Automatic",
   "bufferSizeChangedTitle": "Buffer Size Changed",
-  "bufferSizeChangedDescription": "The buffer size has been set to {size}."
+  "bufferSizeChangedDescription": "The buffer size has been set to {size}.",
+  "bugReport": "Report a bug"
 }

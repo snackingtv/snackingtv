@@ -144,5 +144,6 @@
   "buffer_high": "Hoch (10s)",
   "buffer_auto": "Automatisch",
   "bufferSizeChangedTitle": "Puffergröße geändert",
-  "bufferSizeChangedDescription": "Die Puffergröße wurde auf {size} eingestellt."
+  "bufferSizeChangedDescription": "Die Puffergröße wurde auf {size} eingestellt.",
+  "bugReport": "Fehler melden"
 }

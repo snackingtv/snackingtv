@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -1205,6 +1205,12 @@ export function SettingsSheetContent({
             </div>
           </li>
           <li>
+            <a href="mailto:snackingtv.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+              <span className='flex items-center gap-2'><MessageSquareWarning className="h-5 w-5 text-muted-foreground" /> {t('bugReport')}</span>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </a>
+          </li>
+          <li>
             <Sheet>
               <SheetTrigger asChild>
                 <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
@@ -1833,4 +1839,5 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
 
