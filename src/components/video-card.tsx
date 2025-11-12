@@ -600,14 +600,13 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     }
   };
 
-  const handleLanguageSearch = async (lang: string) => {
-    if (!lang || searchCooldown > 0) return;
-    setSearchLanguage(lang);
+  const handleLanguageSearch = async () => {
+    if (!searchLanguage || searchCooldown > 0) return;
     setIsSearching(true);
     setSearchResults([]);
     setSearchCooldown(30);
     try {
-      const results = await searchM3u({ language: lang });
+      const results = await searchM3u({ language: searchLanguage });
       setSearchResults(results);
       if (results.length === 0) {
         toast({ title: t('noResultsFound') });
@@ -735,18 +734,23 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         </TabsContent>
         <TabsContent value="search">
           <div className="p-4 space-y-4">
-            <Select onValueChange={handleLanguageSearch} disabled={isSearching || !user || searchCooldown > 0}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={searchCooldown > 0 ? t('searchCooldown', { seconds: searchCooldown }) : t('selectLanguage')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">{t('english')}</SelectItem>
-                <SelectItem value="de">{t('german')}</SelectItem>
-                <SelectItem value="es">Español</SelectItem>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="it">Italiano</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select onValueChange={setSearchLanguage} disabled={isSearching || !user || searchCooldown > 0}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t('selectLanguage')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{t('english')}</SelectItem>
+                  <SelectItem value="de">{t('german')}</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user || searchCooldown > 0}>
+                {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : (searchCooldown > 0 ? t('searchCooldown', { seconds: searchCooldown }) : t('search'))}
+              </Button>
+            </div>
 
             {isSearching && (
                <div className="flex items-center justify-center p-4">
@@ -2055,4 +2059,5 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
 
