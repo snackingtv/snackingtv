@@ -22,7 +22,7 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
         'absolute inset-0 z-50 flex items-center justify-center bg-background splash-animation'
       )}
     >
-      <h1 className="text-4xl font-fredoka splash-text-animation gemini-text-gradient">
+      <h1 className="text-3xl font-fredoka splash-text-animation gemini-text-gradient">
         SnackingTV
       </h1>
     </div>
