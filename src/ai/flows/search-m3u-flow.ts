@@ -47,7 +47,7 @@ const searchM3uFlow = ai.defineFlow(
 
     const { output } = await ai.generate({
       prompt,
-      model: 'googleai/gemini-2.5-flash',
+      model: 'googleai/gemini-2.5-pro',
       output: {
         format: 'json',
         schema: SearchM3uOutputSchema,
