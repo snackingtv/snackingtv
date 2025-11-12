@@ -147,5 +147,12 @@
   "bufferSizeChangedDescription": "The buffer size has been set to {size}.",
   "bugReport": "Report a bug",
   "epg": "Program Guide",
-  "noEpgData": "No program information available."
+  "noEpgData": "No program information available.",
+  "webSearch": "Web Search",
+  "search": "Search",
+  "searching": "Searching...",
+  "selectLanguage": "Select language",
+  "searchQueryRequired": "Search query is required",
+  "noResultsFound": "No results found",
+  "searchFailed": "Search failed"
 }

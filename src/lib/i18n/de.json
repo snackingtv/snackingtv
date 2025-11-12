@@ -147,5 +147,12 @@
   "bufferSizeChangedDescription": "Die Puffergröße wurde auf {size} eingestellt.",
   "bugReport": "Fehler melden",
   "epg": "Programmführer",
-  "noEpgData": "Keine Programminformationen verfügbar."
+  "noEpgData": "Keine Programminformationen verfügbar.",
+  "webSearch": "Websuche",
+  "search": "Suchen",
+  "searching": "Sucht...",
+  "selectLanguage": "Sprache auswählen",
+  "searchQueryRequired": "Suchanfrage erforderlich",
+  "noResultsFound": "Keine Ergebnisse gefunden",
+  "searchFailed": "Suche fehlgeschlagen"
 }

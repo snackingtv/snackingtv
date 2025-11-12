@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
@@ -16,6 +17,7 @@ import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredentia
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
+import { searchM3u, SearchM3uOutput } from '@/ai/flows/search-m3u-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -316,6 +318,14 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [verifiedChannels, setVerifiedChannels] = useState<M3uChannel[]>([]);
   const onlineChannelsRef = useRef<M3uChannel[]>([]);
   const [selectedVerifiedChannels, setSelectedVerifiedChannels] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState('add');
+
+  // Web Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLanguage, setSearchLanguage] = useState('en');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
+  const [selectedSearchResults, setSelectedSearchResults] = useState<Set<string>>(new Set());
 
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
     if (!firestore || !user) {
@@ -332,12 +342,10 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
 
     const userChannelsRef = collection(firestore, 'user_channels');
     
-    // 1. Fetch existing channel URLs for the user
     const q = query(userChannelsRef, where('userId', '==', user.uid));
     const querySnapshot = await getDocs(q);
     const existingUrls = new Set(querySnapshot.docs.map(doc => doc.data().url));
 
-    // 2. Filter out channels that already exist
     const newChannelsToAdd = channelsToSave.filter(channel => !existingUrls.has(channel.url));
 
     const channelsThatExist = channelsToSave.length - newChannelsToAdd.length;
@@ -359,7 +367,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         return 0;
     }
 
-    // 3. Add only the new channels
     for (const channel of newChannelsToAdd) {
         addDocumentNonBlocking(userChannelsRef, {
             ...channel,
@@ -582,6 +589,66 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery) {
+      toast({ variant: 'destructive', title: t('searchQueryRequired') });
+      return;
+    }
+    setIsSearching(true);
+    setSearchResults([]);
+    setSelectedSearchResults(new Set());
+    try {
+      const results = await searchM3u({ query: searchQuery, language: searchLanguage });
+      setSearchResults(results);
+      if (results.length === 0) {
+        toast({ title: t('noResultsFound') });
+      }
+    } catch (error) {
+      console.error("Web search failed:", error);
+      toast({ variant: 'destructive', title: t('searchFailed') });
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleToggleSelectSearchResult = (channelUrl: string) => {
+    setSelectedSearchResults(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(channelUrl)) {
+        newSelection.delete(channelUrl);
+      } else {
+        newSelection.add(channelUrl);
+      }
+      return newSelection;
+    });
+  };
+
+  const handleSaveSelectedSearchResults = async () => {
+    setIsLoading(true);
+    const channelsToSave = searchResults.filter(channel => 
+        selectedSearchResults.has(channel.url)
+    );
+    const addedCount = await handleSaveChannels(channelsToSave);
+
+    if (addedCount > 0) {
+       toast({
+        title: t('channelAddedTitle'),
+        description: t('channelAddedDescription', { count: addedCount }),
+      });
+    }
+    setIsLoading(false);
+    setSearchResults([]);
+    setSelectedSearchResults(new Set());
+  };
+
+  const handleSelectAllSearchResults = () => {
+    if (selectedSearchResults.size === searchResults.length) {
+      setSelectedSearchResults(new Set());
+    } else {
+      setSelectedSearchResults(new Set(searchResults.map(c => c.url)));
+    }
+  };
+
   if (verifiedChannels.length > 0) {
     return (
       <SheetContent side="bottom" className="h-[75vh] flex flex-col rounded-t-lg mx-2 mb-2">
@@ -620,73 +687,130 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       <SheetHeader>
         <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
       </SheetHeader>
-      <div className="p-4 space-y-4">
-        {isVerifying ? (
-           <div className="space-y-4 text-center">
-            <p className="font-medium">{t('checkingChannelsTitle')}</p>
-            <Progress value={verificationProgress} />
-            <div className="flex justify-around text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Wifi className="h-4 w-4 text-green-500" />
-                <span>{t('online', { count: onlineCount })}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <WifiOff className="h-4 w-4 text-red-500" />
-                <span>{t('offline', { count: offlineCount })}</span>
-              </div>
-              <span>{t('total', { count: totalCount })}</span>
-            </div>
-            <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
-            <Button onClick={handleCancelVerification} variant="outline" className="w-full">
-              {t('cancelVerification')}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-2">
-              <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
-              <div className="flex gap-2">
-                <Input
-                  id="channel-link"
-                  placeholder="https://.../playlist.m3u"
-                  value={channelLink}
-                  onChange={(e) => setChannelLink(e.target.value)}
-                  disabled={!user || isDisabled}
-                  className="flex-grow"
-                />
-                <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
-                  {isLoading ? t('loading') : t('add')}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="add">{t('add')}</TabsTrigger>
+          <TabsTrigger value="search">{t('webSearch')}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="add">
+          <div className="p-4 space-y-4">
+            {isVerifying ? (
+              <div className="space-y-4 text-center">
+                <p className="font-medium">{t('checkingChannelsTitle')}</p>
+                <Progress value={verificationProgress} />
+                <div className="flex justify-around text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Wifi className="h-4 w-4 text-green-500" />
+                    <span>{t('online', { count: onlineCount })}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <WifiOff className="h-4 w-4 text-red-500" />
+                    <span>{t('offline', { count: offlineCount })}</span>
+                  </div>
+                  <span>{t('total', { count: totalCount })}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
+                <Button onClick={handleCancelVerification} variant="outline" className="w-full">
+                  {t('cancelVerification')}
                 </Button>
               </div>
-            </div>
-            
-            <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
-            </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="channel-link"
+                      placeholder="https://.../playlist.m3u"
+                      value={channelLink}
+                      onChange={(e) => setChannelLink(e.target.value)}
+                      disabled={!user || isDisabled}
+                      className="flex-grow"
+                    />
+                    <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
+                      {isLoading ? t('loading') : t('add')}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="relative">
+                  <Separator />
+                  <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
+                </div>
 
-            <div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".m3u,.m3u8"
-                className="hidden"
-                disabled={!user || isDisabled}
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".m3u,.m3u8"
+                    className="hidden"
+                    disabled={!user || isDisabled}
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    className="w-full"
+                    disabled={!user || isDisabled}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {t('uploadFile')}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="search">
+          <div className="p-4 space-y-4">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder={t('searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                disabled={isSearching || !user}
               />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-                className="w-full"
-                disabled={!user || isDisabled}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                {t('uploadFile')}
-              </Button>
+              <Select value={searchLanguage} onValueChange={setSearchLanguage} disabled={isSearching || !user}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder={t('selectLanguage')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">{t('english')}</SelectItem>
+                  <SelectItem value="de">{t('german')}</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </>
-        )}
-      </div>
+            <Button onClick={handleSearch} disabled={isSearching || !user || !searchQuery} className="w-full">
+              {isSearching && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              {isSearching ? t('searching') : t('search')}
+            </Button>
+            
+            {searchResults.length > 0 && (
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Checkbox id="select-all-search" onCheckedChange={handleSelectAllSearchResults} checked={selectedSearchResults.size > 0 && selectedSearchResults.size === searchResults.length} />
+                  <label htmlFor="select-all-search" className='text-sm font-medium'>{t('selectAll')}</label>
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-1">
+                  {searchResults.map((channel) => (
+                    <div key={channel.url} onClick={() => handleToggleSelectSearchResult(channel.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
+                      <Checkbox checked={selectedSearchResults.has(channel.url)} />
+                      <Image src={channel.logo} alt={channel.name} width={40} height={40} className="rounded-md" />
+                      <span className="font-medium flex-grow truncate">{channel.name}</span>
+                    </div>
+                  ))}
+                </div>
+                 <Button onClick={handleSaveSelectedSearchResults} disabled={isLoading || selectedSearchResults.size === 0} className="w-full mt-4">
+                    {isLoading ? t('loading') : t('addSelected', { count: selectedSearchResults.size })}
+                </Button>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </SheetContent>
   );
 }
