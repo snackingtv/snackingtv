@@ -154,5 +154,6 @@
   "selectLanguage": "Sprache auswählen",
   "searchQueryRequired": "Suchanfrage erforderlich",
   "noResultsFound": "Keine Ergebnisse gefunden",
-  "searchFailed": "Suche fehlgeschlagen"
+  "searchFailed": "Suche fehlgeschlagen",
+  "searchCooldown": "Bitte warten... ({seconds}s)"
 }

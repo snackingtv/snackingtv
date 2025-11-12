@@ -154,5 +154,6 @@
   "selectLanguage": "Select language",
   "searchQueryRequired": "Search query is required",
   "noResultsFound": "No results found",
-  "searchFailed": "Search failed"
+  "searchFailed": "Search failed",
+  "searchCooldown": "Please wait... ({seconds}s)"
 }

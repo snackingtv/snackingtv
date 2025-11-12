@@ -324,6 +324,17 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [searchLanguage, setSearchLanguage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
+  const [searchCooldown, setSearchCooldown] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (searchCooldown > 0) {
+      timer = setInterval(() => {
+        setSearchCooldown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [searchCooldown]);
 
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
     if (!firestore || !user) {
@@ -590,10 +601,11 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   };
 
   const handleLanguageSearch = async (lang: string) => {
-    if (!lang) return;
+    if (!lang || searchCooldown > 0) return;
     setSearchLanguage(lang);
     setIsSearching(true);
     setSearchResults([]);
+    setSearchCooldown(30);
     try {
       const results = await searchM3u({ language: lang });
       setSearchResults(results);
@@ -723,9 +735,9 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         </TabsContent>
         <TabsContent value="search">
           <div className="p-4 space-y-4">
-            <Select onValueChange={handleLanguageSearch} disabled={isSearching || !user}>
+            <Select onValueChange={handleLanguageSearch} disabled={isSearching || !user || searchCooldown > 0}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder={t('selectLanguage')} />
+                <SelectValue placeholder={searchCooldown > 0 ? t('searchCooldown', { seconds: searchCooldown }) : t('selectLanguage')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="en">{t('english')}</SelectItem>
@@ -2043,3 +2055,4 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
