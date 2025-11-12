@@ -137,7 +137,7 @@ export function FavoriteChannelListSheetContent({
   const { t } = useTranslation();
 
   return (
-    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg">
       <SheetHeader className="text-center">
         <SheetTitle>{title}</SheetTitle>
       </SheetHeader>
@@ -264,7 +264,7 @@ export function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg">
       <SheetHeader className="text-center">
         <div className="relative flex justify-between items-center">
           {channels.length > 0 ? (
@@ -622,7 +622,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
 
   if (verifiedChannels.length > 0) {
     return (
-      <SheetContent side="bottom" className="h-[75vh] flex flex-col rounded-t-lg mx-2 mb-2">
+      <SheetContent side="bottom" className="h-[75vh] flex flex-col rounded-t-lg">
         <SheetHeader>
           <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
         </SheetHeader>
@@ -654,7 +654,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-auto rounded-t-lg">
       <SheetHeader>
         <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
       </SheetHeader>
@@ -732,7 +732,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             )}
           </div>
         </TabsContent>
-        <TabsContent value="search">
+        <TabsContent value="search" className="h-[45vh] flex flex-col">
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-2">
               <Select onValueChange={setSearchLanguage} disabled={isSearching || !user || searchCooldown > 0}>
@@ -740,11 +740,18 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                   <SelectValue placeholder={t('selectLanguage')} />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="arabic">{t('arabic')}</SelectItem>
+                  <SelectItem value="chinese">{t('chinese')}</SelectItem>
                   <SelectItem value="en">{t('english')}</SelectItem>
+                  <SelectItem value="french">{t('french')}</SelectItem>
                   <SelectItem value="de">{t('german')}</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="it">Italiano</SelectItem>
+                  <SelectItem value="hindi">{t('hindi')}</SelectItem>
+                  <SelectItem value="italian">{t('italian')}</SelectItem>
+                  <SelectItem value="japanese">{t('japanese')}</SelectItem>
+                  <SelectItem value="korean">{t('korean')}</SelectItem>
+                  <SelectItem value="portuguese">{t('portuguese')}</SelectItem>
+                  <SelectItem value="russian">{t('russian')}</SelectItem>
+                  <SelectItem value="es">{t('spanish')}</SelectItem>
                 </SelectContent>
               </Select>
               <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user || searchCooldown > 0}>
@@ -757,20 +764,20 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                   <Loader className="h-6 w-6 animate-spin" />
                </div>
             )}
-            
+          </div>
+          
+          <div className="flex-grow overflow-y-auto px-4">
             {searchResults.length > 0 && (
-              <div className="border-t pt-4 mt-4">
-                <div className="max-h-60 overflow-y-auto space-y-1">
-                  {searchResults.map((playlist) => (
-                    <div key={playlist.url} onClick={() => handleAddFromUrl(playlist.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
-                      <Link className="h-5 w-5 text-muted-foreground" />
-                      <div className="flex-grow">
-                        <p className="font-medium truncate">{playlist.name}</p>
-                        <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
-                      </div>
+              <div className="border-t pt-4 mt-4 space-y-1">
+                {searchResults.map((playlist) => (
+                  <div key={playlist.url} onClick={() => handleAddFromUrl(playlist.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
+                    <Link className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-grow">
+                      <p className="font-medium truncate">{playlist.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -939,7 +946,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 
   if (isUserLoading) {
     return (
-      <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
+      <SheetContent side="bottom" className="rounded-t-lg">
         <SheetHeader>
           <SheetTitle className="text-center">{t('loading')}</SheetTitle>
         </SheetHeader>
@@ -952,7 +959,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
   
   if (user) {
     return (
-      <SheetContent side="bottom" className="h-auto overflow-y-auto rounded-t-lg mx-2 mb-2">
+      <SheetContent side="bottom" className="h-auto overflow-y-auto rounded-t-lg">
         <SheetHeader>
           <SheetTitle className="text-center">{user.isAnonymous ? t('guest') : t('myProfile')}</SheetTitle>
         </SheetHeader>
@@ -1056,7 +1063,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 
 
   return (
-     <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
+     <SheetContent side="bottom" className="rounded-t-lg">
        <SheetHeader>
           <SheetTitle className="text-center">
             {activeTab === 'login' ? t('login') : t('register')}
@@ -1225,11 +1232,11 @@ export function SettingsSheetContent({
   const { t, language, setLanguage } = useTranslation();
   
   return (
-    <SheetContent side="top" className="rounded-b-lg mx-2 mt-2">
+    <SheetContent side="top" className="rounded-b-lg mt-2">
       <SheetHeader>
         <SheetTitle className="text-center">{t('settings')}</SheetTitle>
       </SheetHeader>
-      <div className="p-4 flex flex-col h-full">
+      <div className="p-4 flex flex-col h-full overflow-y-auto">
         <ul className="space-y-4 flex-grow">
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
@@ -1349,7 +1356,7 @@ export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: 
   }, [searchTerm]);
 
   return (
-    <SheetContent side="top" className="h-auto rounded-b-lg mx-2 mt-2">
+    <SheetContent side="top" className="h-auto rounded-b-lg mt-2">
       <SheetHeader>
         <SheetTitle className="text-center">{t('searchChannels')}</SheetTitle>
       </SheetHeader>
@@ -1460,7 +1467,7 @@ export function EpgSheetContent({ video }: { video: Video }) {
   const upcomingPrograms = epgData?.filter(p => new Date(p.start).getTime() > now);
 
   return (
-    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg flex flex-col">
       <SheetHeader className="text-center pb-2">
         <SheetTitle>{t('epg')} - {video.title}</SheetTitle>
       </SheetHeader>
@@ -2059,5 +2066,6 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
 
 

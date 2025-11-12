@@ -156,5 +156,15 @@
   "searchQueryRequired": "Suchanfrage erforderlich",
   "noResultsFound": "Keine Ergebnisse gefunden",
   "searchFailed": "Suche fehlgeschlagen",
-  "searchCooldown": "Bitte warten... ({seconds}s)"
+  "searchCooldown": "Bitte warten... ({seconds}s)",
+  "spanish": "Spanisch",
+  "french": "Französisch",
+  "italian": "Italienisch",
+  "portuguese": "Portugiesisch",
+  "russian": "Russisch",
+  "arabic": "Arabisch",
+  "chinese": "Chinesisch",
+  "japanese": "Japanisch",
+  "korean": "Koreanisch",
+  "hindi": "Hindi"
 }

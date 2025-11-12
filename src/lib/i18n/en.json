@@ -156,5 +156,15 @@
   "searchQueryRequired": "Search query is required",
   "noResultsFound": "No results found",
   "searchFailed": "Search failed",
-  "searchCooldown": "Please wait... ({seconds}s)"
+  "searchCooldown": "Please wait... ({seconds}s)",
+  "spanish": "Spanish",
+  "french": "French",
+  "italian": "Italian",
+  "portuguese": "Portuguese",
+  "russian": "Russian",
+  "arabic": "Arabic",
+  "chinese": "Chinese",
+  "japanese": "Japanese",
+  "korean": "Korean",
+  "hindi": "Hindi"
 }
