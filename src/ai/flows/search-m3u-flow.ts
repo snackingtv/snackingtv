@@ -37,10 +37,10 @@ const searchM3uFlow = ai.defineFlow(
     outputSchema: SearchM3uOutputSchema,
   },
   async ({ query, language }) => {
-    const prompt = `You are an expert web searcher specializing in finding public IPTV streams.
-    Find M3U/M3U8 playlists related to the query: "${query}".
+    const prompt = `You are an expert web searcher specializing in finding public IPTV streams on GitHub.
+    Search GitHub for M3U/M3U8 playlists related to the query: "${query}".
     The results should be filtered for the language: "${language}".
-    Only return publicly available and legal streams.
+    Only return publicly available and legal streams from GitHub repositories.
     For each found channel, provide its name, a direct stream URL (must end in .m3u8), a logo URL, and a relevant group/category.
     Provide at least 5 results if possible. If you cannot find a real logo, use a placeholder image from picsum.photos.
     Ensure the response is a valid JSON array matching the output schema.`;
