@@ -4,6 +4,7 @@ export interface M3uChannel {
   url: string;
   group: string;
   subtitlesUrl?: string;
+  epgUrl?: string;
 }
 
 export function parseM3u(m3uContent: string): M3uChannel[] {
@@ -49,6 +50,14 @@ export function parseM3u(m3uContent: string): M3uChannel[] {
         currentChannel.group = groupMatch[1];
       }
 
+      const epgMatch = line.match(/tvg-id="([^"]*)"/);
+      if (epgMatch) {
+        // This is a common convention, but not standard. 
+        // We'll treat the tvg-id as a potential source for an EPG url.
+        // A more robust solution would need a mapping.
+        currentChannel.epgUrl = epgMatch[1];
+      }
+
     } else if (line && !line.startsWith('#')) {
       currentChannel.url = line;
       if (currentChannel.name && currentChannel.url) {
@@ -57,6 +66,7 @@ export function parseM3u(m3uContent: string): M3uChannel[] {
           logo: currentChannel.logo || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
           url: currentChannel.url,
           group: currentChannel.group || 'Default',
+          epgUrl: currentChannel.epgUrl
         });
       }
       currentChannel = {}; // Reset after pushing

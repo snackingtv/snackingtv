@@ -145,5 +145,7 @@
   "buffer_auto": "Automatisch",
   "bufferSizeChangedTitle": "Puffergröße geändert",
   "bufferSizeChangedDescription": "Die Puffergröße wurde auf {size} eingestellt.",
-  "bugReport": "Fehler melden"
+  "bugReport": "Fehler melden",
+  "epg": "Programmführer",
+  "noEpgData": "Keine Programminformationen verfügbar."
 }

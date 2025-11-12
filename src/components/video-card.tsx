@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -1282,6 +1282,120 @@ export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: 
   );
 }
 
+const EpgProgramItem = ({ program, isCurrent }: { program: any; isCurrent: boolean }) => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (isCurrent) {
+      const updateProgress = () => {
+        const now = Date.now();
+        const start = new Date(program.start).getTime();
+        const end = new Date(program.end).getTime();
+        const duration = end - start;
+        const elapsed = now - start;
+        const calculatedProgress = Math.min(100, (elapsed / duration) * 100);
+        setProgress(calculatedProgress);
+      };
+      
+      updateProgress();
+      const intervalId = setInterval(updateProgress, 60000); // Update every minute
+      return () => clearInterval(intervalId);
+    }
+  }, [isCurrent, program.start, program.end]);
+
+  return (
+    <div className={`p-4 rounded-lg ${isCurrent ? 'bg-accent/20' : ''}`}>
+      <div className="flex justify-between items-baseline">
+        <h4 className={`font-semibold ${isCurrent ? 'text-primary' : 'text-foreground'}`}>{program.title}</h4>
+        <p className="text-xs text-muted-foreground">{new Date(program.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(program.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+      </div>
+      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{program.description}</p>
+      {isCurrent && (
+        <div className="mt-2">
+          <Progress value={progress} className="h-1" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+export function EpgSheetContent({ video }: { video: Video }) {
+  const { t } = useTranslation();
+  const [epgData, setEpgData] = useState<any[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // TODO: Implement actual EPG fetching from video.epgUrl
+    // For now, using placeholder data
+    const fetchEpgData = () => {
+      setIsLoading(true);
+      setTimeout(() => {
+        const now = new Date();
+        const placeholderData = [
+          {
+            title: 'Past Program',
+            description: 'This was on earlier.',
+            start: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+            end: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+          },
+          {
+            title: 'Current Program',
+            description: 'This is on right now. Enjoy the show!',
+            start: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
+            end: new Date(now.getTime() + 30 * 60 * 1000).toISOString(),
+          },
+          {
+            title: 'Next Program',
+            description: 'This is coming up next.',
+            start: new Date(now.getTime() + 30 * 60 * 1000).toISOString(),
+            end: new Date(now.getTime() + 90 * 60 * 1000).toISOString(),
+          },
+          {
+            title: 'Future Program',
+            description: 'This will be on later.',
+            start: new Date(now.getTime() + 90 * 60 * 1000).toISOString(),
+            end: new Date(now.getTime() + 150 * 60 * 1000).toISOString(),
+          },
+        ];
+        setEpgData(placeholderData);
+        setIsLoading(false);
+      }, 1000);
+    };
+
+    fetchEpgData();
+  }, [video]);
+  
+  const now = Date.now();
+  const currentProgram = epgData?.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+  const upcomingPrograms = epgData?.filter(p => new Date(p.start).getTime() > now);
+
+  return (
+    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+      <SheetHeader className="text-center pb-2">
+        <SheetTitle>{t('epg')} - {video.title}</SheetTitle>
+      </SheetHeader>
+      <div className="flex-grow overflow-y-auto p-4">
+        {isLoading && <p className="text-center text-muted-foreground">{t('loading')}...</p>}
+        {!isLoading && !epgData && <p className="text-center text-muted-foreground">{t('noEpgData')}</p>}
+        {!isLoading && epgData && (
+          <div className="space-y-4">
+            {currentProgram && <EpgProgramItem program={currentProgram} isCurrent={true} />}
+            {upcomingPrograms && upcomingPrograms.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  {upcomingPrograms.map(p => <EpgProgramItem key={p.start} program={p} isCurrent={false} />)}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </SheetContent>
+  );
+}
+
 
 export function VideoCard({ 
   video, 
@@ -1782,6 +1896,23 @@ export function VideoCard({
                   <p>{t('favorites')}</p>
                 </TooltipContent>
               </Tooltip>
+              
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                          <CalendarDays size={32} className="drop-shadow-lg" />
+                      </Button>
+                    </SheetTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>{t('epg')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <EpgSheetContent video={video} />
+              </Sheet>
+
 
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1839,6 +1970,3 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
-
-
-

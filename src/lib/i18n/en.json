@@ -145,5 +145,7 @@
   "buffer_auto": "Automatic",
   "bufferSizeChangedTitle": "Buffer Size Changed",
   "bufferSizeChangedDescription": "The buffer size has been set to {size}.",
-  "bugReport": "Report a bug"
+  "bugReport": "Report a bug",
+  "epg": "Program Guide",
+  "noEpgData": "No program information available."
 }
