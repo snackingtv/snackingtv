@@ -1709,7 +1709,7 @@ export function VideoCard({
     <TooltipProvider>
       <div
         ref={containerRef}
-        className="relative w-full h-full bg-black flex items-center justify-center cursor-pointer"
+        className="relative w-full h-full bg-background flex items-center justify-center cursor-pointer"
         onClick={handleVideoClick}
         onMouseLeave={handleSeekEnd} 
         onTouchStart={handleTouchStart}
