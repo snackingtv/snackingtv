@@ -1142,6 +1142,17 @@ export function SettingsSheetContent({
       </SheetHeader>
       <div className="p-4 flex flex-col h-full">
         <ul className="space-y-4 flex-grow">
+          <li className="space-y-2">
+            <p className="text-sm font-medium">{t('language')}</p>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setLanguage('de')} variant={language === 'de' ? 'default' : 'outline'} className="flex-1">
+                {t('german')}
+              </Button>
+              <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
+                {t('english')}
+              </Button>
+            </div>
+          </li>
           <li className="flex items-center justify-between">
               <span className="text-sm font-medium">{t('showClock')}</span>
               <Switch checked={showClock} onCheckedChange={onToggleClock} />
@@ -1192,17 +1203,6 @@ export function SettingsSheetContent({
                 </Label>
               </div>
             </RadioGroup>
-          </li>
-          <li className="space-y-2">
-            <p className="text-sm font-medium">{t('language')}</p>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setLanguage('de')} variant={language === 'de' ? 'default' : 'outline'} className="flex-1">
-                {t('german')}
-              </Button>
-              <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
-                {t('english')}
-              </Button>
-            </div>
           </li>
           <li>
             <a href="mailto:snackingtv.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
@@ -1839,5 +1839,6 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
 
 
