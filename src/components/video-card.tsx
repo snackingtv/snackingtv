@@ -3,7 +3,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -324,7 +324,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [searchLanguage, setSearchLanguage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
-  const [selectedSearchResults, setSelectedSearchResults] = useState<Set<string>>(new Set());
 
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
     if (!firestore || !user) {
@@ -482,8 +481,9 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     return onlineChannels.length > 0;
   }
 
-  const handleAddFromUrl = async () => {
-    const cleanedLink = channelLink.split(' ')[0].trim();
+  const handleAddFromUrl = async (url?: string) => {
+    const link = url || channelLink;
+    const cleanedLink = link.split(' ')[0].trim();
     if (!cleanedLink || !cleanedLink.startsWith('http')) {
       toast({
         variant: 'destructive',
@@ -493,6 +493,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       return;
     }
     setIsLoading(true);
+    setSearchResults([]); // Clear search results when processing a URL
     try {
       const m3uContent = await fetchM3u({ url: cleanedLink });
       if (!m3uContent) {
@@ -593,7 +594,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     setSearchLanguage(lang);
     setIsSearching(true);
     setSearchResults([]);
-    setSelectedSearchResults(new Set());
     try {
       const results = await searchM3u({ language: lang });
       setSearchResults(results);
@@ -608,43 +608,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     }
   };
 
-  const handleToggleSelectSearchResult = (channelUrl: string) => {
-    setSelectedSearchResults(prev => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(channelUrl)) {
-        newSelection.delete(channelUrl);
-      } else {
-        newSelection.add(channelUrl);
-      }
-      return newSelection;
-    });
-  };
-
-  const handleSaveSelectedSearchResults = async () => {
-    setIsLoading(true);
-    const channelsToSave = searchResults.filter(channel => 
-        selectedSearchResults.has(channel.url)
-    );
-    const addedCount = await handleSaveChannels(channelsToSave);
-
-    if (addedCount > 0) {
-       toast({
-        title: t('channelAddedTitle'),
-        description: t('channelAddedDescription', { count: addedCount }),
-      });
-    }
-    setIsLoading(false);
-    setSearchResults([]);
-    setSelectedSearchResults(new Set());
-  };
-
-  const handleSelectAllSearchResults = () => {
-    if (selectedSearchResults.size === searchResults.length) {
-      setSelectedSearchResults(new Set());
-    } else {
-      setSelectedSearchResults(new Set(searchResults.map(c => c.url)));
-    }
-  };
 
   if (verifiedChannels.length > 0) {
     return (
@@ -724,7 +687,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                       disabled={!user || isDisabled}
                       className="flex-grow"
                     />
-                    <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
+                    <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
                       {isLoading ? t('loading') : t('add')}
                     </Button>
                   </div>
@@ -781,22 +744,17 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             
             {searchResults.length > 0 && (
               <div className="border-t pt-4 mt-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Checkbox id="select-all-search" onCheckedChange={handleSelectAllSearchResults} checked={selectedSearchResults.size > 0 && selectedSearchResults.size === searchResults.length} />
-                  <label htmlFor="select-all-search" className='text-sm font-medium'>{t('selectAll')}</label>
-                </div>
                 <div className="max-h-60 overflow-y-auto space-y-1">
-                  {searchResults.map((channel) => (
-                    <div key={channel.url} onClick={() => handleToggleSelectSearchResult(channel.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
-                      <Checkbox checked={selectedSearchResults.has(channel.url)} />
-                      <Image src={channel.logo} alt={channel.name} width={40} height={40} className="rounded-md" />
-                      <span className="font-medium flex-grow truncate">{channel.name}</span>
+                  {searchResults.map((playlist) => (
+                    <div key={playlist.url} onClick={() => handleAddFromUrl(playlist.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
+                      <Link className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-grow">
+                        <p className="font-medium truncate">{playlist.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-                 <Button onClick={handleSaveSelectedSearchResults} disabled={isLoading || selectedSearchResults.size === 0} className="w-full mt-4">
-                    {isLoading ? t('loading') : t('addSelected', { count: selectedSearchResults.size })}
-                </Button>
               </div>
             )}
           </div>
