@@ -11,7 +11,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SearchM3uInputSchema = z.object({
-  query: z.string().describe('The search query for M3U playlists.'),
   language: z.string().describe('The language to filter the search results.'),
 });
 export type SearchM3uInput = z.infer<typeof SearchM3uInputSchema>;
@@ -36,10 +35,9 @@ const searchM3uFlow = ai.defineFlow(
     inputSchema: SearchM3uInputSchema,
     outputSchema: SearchM3uOutputSchema,
   },
-  async ({ query, language }) => {
+  async ({ language }) => {
     const prompt = `You are an expert web searcher specializing in finding public IPTV streams on GitHub.
-    Search GitHub for M3U/M3U8 playlists related to the query: "${query}".
-    The results should be filtered for the language: "${language}".
+    Search GitHub for M3U/M3U8 playlists for channels in the language: "${language}".
     Only return publicly available and legal streams from GitHub repositories.
     For each found channel, provide its name, a direct stream URL (must end in .m3u8), a logo URL, and a relevant group/category.
     Provide at least 5 results if possible. If you cannot find a real logo, use a placeholder image from picsum.photos.

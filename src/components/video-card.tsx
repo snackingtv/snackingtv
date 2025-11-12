@@ -321,8 +321,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [activeTab, setActiveTab] = useState('add');
 
   // Web Search State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchLanguage, setSearchLanguage] = useState('en');
+  const [searchLanguage, setSearchLanguage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
   const [selectedSearchResults, setSelectedSearchResults] = useState<Set<string>>(new Set());
@@ -589,16 +588,14 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery) {
-      toast({ variant: 'destructive', title: t('searchQueryRequired') });
-      return;
-    }
+  const handleLanguageSearch = async (lang: string) => {
+    if (!lang) return;
+    setSearchLanguage(lang);
     setIsSearching(true);
     setSearchResults([]);
     setSelectedSearchResults(new Set());
     try {
-      const results = await searchM3u({ query: searchQuery, language: searchLanguage });
+      const results = await searchM3u({ language: lang });
       setSearchResults(results);
       if (results.length === 0) {
         toast({ title: t('noResultsFound') });
@@ -763,30 +760,24 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         </TabsContent>
         <TabsContent value="search">
           <div className="p-4 space-y-4">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                placeholder={t('searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                disabled={isSearching || !user}
-              />
-              <Select value={searchLanguage} onValueChange={setSearchLanguage} disabled={isSearching || !user}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder={t('selectLanguage')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="en">{t('english')}</SelectItem>
-                  <SelectItem value="de">{t('german')}</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="it">Italiano</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleSearch} disabled={isSearching || !user || !searchQuery} className="w-full">
-              {isSearching && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              {isSearching ? t('searching') : t('search')}
-            </Button>
+            <Select onValueChange={handleLanguageSearch} disabled={isSearching || !user}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t('selectLanguage')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">{t('english')}</SelectItem>
+                <SelectItem value="de">{t('german')}</SelectItem>
+                <SelectItem value="es">Español</SelectItem>
+                <SelectItem value="fr">Français</SelectItem>
+                <SelectItem value="it">Italiano</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {isSearching && (
+               <div className="flex items-center justify-center p-4">
+                  <Loader className="h-6 w-6 animate-spin" />
+               </div>
+            )}
             
             {searchResults.length > 0 && (
               <div className="border-t pt-4 mt-4">
