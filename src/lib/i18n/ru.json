@@ -165,5 +165,13 @@
   "chinese": "Китайский",
   "japanese": "Японский",
   "korean": "Корейский",
-  "hindi": "Хинди"
+  "hindi": "Хинди",
+  "clearCache": "Очистить кэш",
+  "clearCacheConfirmTitle": "Очистить кэш?",
+  "clearCacheConfirmDescription": "Это навсегда удалит все локальные данные, такие как избранное и настройки. Продолжить?",
+  "clearCacheConfirmAction": "Очистить и перезагрузить",
+  "cacheClearedTitle": "Кэш очищен",
+  "cacheClearedDescription": "Кэш приложения успешно очищен.",
+  "cacheClearErrorTitle": "Ошибка очистки кэша",
+  "cacheClearErrorDescription": "Не удалось очистить кэш. Пожалуйста, попробуйте еще раз."
 }

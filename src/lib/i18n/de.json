@@ -166,5 +166,13 @@
   "chinese": "Chinesisch",
   "japanese": "Japanisch",
   "korean": "Koreanisch",
-  "hindi": "Hindi"
+  "hindi": "Hindi",
+  "clearCache": "Cache leeren",
+  "clearCacheConfirmTitle": "Cache leeren?",
+  "clearCacheConfirmDescription": "Dadurch werden alle lokalen Daten wie Favoriten und Einstellungen dauerhaft gelöscht. Fortfahren?",
+  "clearCacheConfirmAction": "Leeren & neu laden",
+  "cacheClearedTitle": "Cache geleert",
+  "cacheClearedDescription": "Der App-Cache wurde erfolgreich geleert.",
+  "cacheClearErrorTitle": "Fehler beim Leeren des Caches",
+  "cacheClearErrorDescription": "Der Cache konnte nicht geleert werden. Bitte versuchen Sie es erneut."
 }

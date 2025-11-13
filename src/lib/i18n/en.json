@@ -166,5 +166,13 @@
   "chinese": "Chinese",
   "japanese": "Japanese",
   "korean": "Korean",
-  "hindi": "Hindi"
+  "hindi": "Hindi",
+  "clearCache": "Clear Cache",
+  "clearCacheConfirmTitle": "Clear cache?",
+  "clearCacheConfirmDescription": "This will permanently delete all local data like favorites and settings. Continue?",
+  "clearCacheConfirmAction": "Clear & Reload",
+  "cacheClearedTitle": "Cache Cleared",
+  "cacheClearedDescription": "The application cache has been cleared successfully.",
+  "cacheClearErrorTitle": "Cache Clear Error",
+  "cacheClearErrorDescription": "Could not clear the cache. Please try again."
 }

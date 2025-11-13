@@ -35,6 +35,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import ReactPlayer from 'react-player';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface VideoCardProps {
   video: Video;
@@ -1258,112 +1268,158 @@ export function SettingsSheetContent({
 }) {
   const { user, isUserLoading } = useUser();
   const { t, language, setLanguage } = useTranslation();
+  const { toast } = useToast();
+  const [isClearCacheDialogOpen, setIsClearCacheDialogOpen] = useState(false);
+
+  const handleClearCache = () => {
+    try {
+      localStorage.clear();
+      toast({
+        title: t('cacheClearedTitle'),
+        description: t('cacheClearedDescription'),
+      });
+      // Use a short delay to allow the toast to be seen before reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: t('cacheClearErrorTitle'),
+        description: t('cacheClearErrorDescription'),
+      });
+    }
+    setIsClearCacheDialogOpen(false);
+  };
   
   return (
-    <SheetContent side="top" className="rounded-b-lg mt-2">
-      <SheetHeader>
-        <SheetTitle className="text-center">{t('settings')}</SheetTitle>
-      </SheetHeader>
-      <div className="p-4 flex flex-col h-full overflow-y-auto">
-        <ul className="space-y-4 flex-grow">
-          <li className="space-y-2">
-            <p className="text-sm font-medium">{t('language')}</p>
-            <Select onValueChange={(value) => setLanguage(value as 'de' | 'en' | 'ru')} value={language}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('language')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="de">{t('german')}</SelectItem>
-                <SelectItem value="en">{t('english')}</SelectItem>
-                <SelectItem value="ru">{t('russian')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </li>
-          <li className="flex items-center justify-between">
-              <span className="text-sm font-medium">{t('showClock')}</span>
-              <Switch checked={showClock} onCheckedChange={onToggleClock} />
-          </li>
-          <li className="flex items-center justify-between">
-              <span className="text-sm font-medium">{t('subtitles')}</span>
-              <Switch checked={showCaptions} onCheckedChange={onToggleCaptions} />
-          </li>
-          <li className="space-y-2">
-            <p className="text-sm font-medium">{t('quality')}</p>
-            <Select onValueChange={onQualityChange} value={quality}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={t('quality')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="auto">{t('auto')}</SelectItem>
-                {qualityLevels.map((q) => (
-                  <SelectItem key={q.level} value={String(q.level)}>{q.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </li>
-           <li className="space-y-2">
-            <p className="text-sm font-medium">{t('bufferSize')}</p>
-            <RadioGroup value={bufferSize} onValueChange={onBufferSizeChange} className="grid grid-cols-2 gap-2">
-              <div>
-                <RadioGroupItem value="2" id="buffer-low" className="peer sr-only" />
-                <Label htmlFor="buffer-low" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                  {t('buffer_low')}
-                </Label>
-              </div>
-               <div>
-                <RadioGroupItem value="5" id="buffer-medium" className="peer sr-only" />
-                <Label htmlFor="buffer-medium" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                  {t('buffer_medium')}
-                </Label>
-              </div>
-               <div>
-                <RadioGroupItem value="10" id="buffer-high" className="peer sr-only" />
-                <Label htmlFor="buffer-high" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                  {t('buffer_high')}
-                </Label>
-              </div>
-               <div>
-                <RadioGroupItem value="auto" id="buffer-auto" className="peer sr-only" />
-                <Label htmlFor="buffer-auto" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                  {t('buffer_auto')}
-                </Label>
-              </div>
-            </RadioGroup>
-          </li>
-          <li>
-            <a href="mailto:snackingtv.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-              <span className='flex items-center gap-2'><MessageSquareWarning className="h-5 w-5 text-muted-foreground" /> {t('bugReport')}</span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </a>
-          </li>
-          <li>
-            <Sheet>
-              <SheetTrigger asChild>
-                <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                  <span>{t('privacyPolicy')}</span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </SheetTrigger>
-              <PrivacyPolicySheetContent />
-            </Sheet>
-          </li>
-          <li>
-            <Sheet>
-              <SheetTrigger asChild>
-                <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                  <span>{t('imprint')}</span>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </SheetTrigger>
-              <ImprintSheetContent />
-            </Sheet>
-          </li>
-        </ul>
-        <div className="text-center text-xs text-muted-foreground pt-4">
-          Build ❤️ 1.0.55
+    <>
+      <SheetContent side="top" className="rounded-b-lg mt-2">
+        <SheetHeader>
+          <SheetTitle className="text-center">{t('settings')}</SheetTitle>
+        </SheetHeader>
+        <div className="p-4 flex flex-col h-full overflow-y-auto">
+          <ul className="space-y-4 flex-grow">
+            <li className="space-y-2">
+              <p className="text-sm font-medium">{t('language')}</p>
+              <Select onValueChange={(value) => setLanguage(value as 'de' | 'en' | 'ru')} value={language}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('language')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="de">{t('german')}</SelectItem>
+                  <SelectItem value="en">{t('english')}</SelectItem>
+                  <SelectItem value="ru">{t('russian')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </li>
+            <li className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t('showClock')}</span>
+                <Switch checked={showClock} onCheckedChange={onToggleClock} />
+            </li>
+            <li className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t('subtitles')}</span>
+                <Switch checked={showCaptions} onCheckedChange={onToggleCaptions} />
+            </li>
+            <li className="space-y-2">
+              <p className="text-sm font-medium">{t('quality')}</p>
+              <Select onValueChange={onQualityChange} value={quality}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t('quality')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">{t('auto')}</SelectItem>
+                  {qualityLevels.map((q) => (
+                    <SelectItem key={q.level} value={String(q.level)}>{q.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </li>
+             <li className="space-y-2">
+              <p className="text-sm font-medium">{t('bufferSize')}</p>
+              <RadioGroup value={bufferSize} onValueChange={onBufferSizeChange} className="grid grid-cols-2 gap-2">
+                <div>
+                  <RadioGroupItem value="2" id="buffer-low" className="peer sr-only" />
+                  <Label htmlFor="buffer-low" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    {t('buffer_low')}
+                  </Label>
+                </div>
+                 <div>
+                  <RadioGroupItem value="5" id="buffer-medium" className="peer sr-only" />
+                  <Label htmlFor="buffer-medium" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    {t('buffer_medium')}
+                  </Label>
+                </div>
+                 <div>
+                  <RadioGroupItem value="10" id="buffer-high" className="peer sr-only" />
+                  <Label htmlFor="buffer-high" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    {t('buffer_high')}
+                  </Label>
+                </div>
+                 <div>
+                  <RadioGroupItem value="auto" id="buffer-auto" className="peer sr-only" />
+                  <Label htmlFor="buffer-auto" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                    {t('buffer_auto')}
+                  </Label>
+                </div>
+              </RadioGroup>
+            </li>
+            <li>
+              <button onClick={() => setIsClearCacheDialogOpen(true)} className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-destructive/10 w-full text-destructive">
+                <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
+              </button>
+            </li>
+            <li>
+              <a href="mailto:snackingtv.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                <span className='flex items-center gap-2'><MessageSquareWarning className="h-5 w-5 text-muted-foreground" /> {t('bugReport')}</span>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </a>
+            </li>
+            <li>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                    <span>{t('privacyPolicy')}</span>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </SheetTrigger>
+                <PrivacyPolicySheetContent />
+              </Sheet>
+            </li>
+            <li>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                    <span>{t('imprint')}</span>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                </SheetTrigger>
+                <ImprintSheetContent />
+              </Sheet>
+            </li>
+          </ul>
+          <div className="text-center text-xs text-muted-foreground pt-4">
+            Build ❤️ 1.0.56
+          </div>
         </div>
-      </div>
-    </SheetContent>
+      </SheetContent>
+      <AlertDialog open={isClearCacheDialogOpen} onOpenChange={setIsClearCacheDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('clearCacheConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('clearCacheConfirmDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsClearCacheDialogOpen(false)}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearCache} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {t('clearCacheConfirmAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
