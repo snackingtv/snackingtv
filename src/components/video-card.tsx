@@ -145,7 +145,7 @@ export function FavoriteChannelListSheetContent({
   const { t } = useTranslation();
 
   return (
-    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader className="text-center">
         <SheetTitle>{title}</SheetTitle>
       </SheetHeader>
@@ -272,7 +272,7 @@ export function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader className="text-center">
         <div className="relative flex justify-between items-center">
           {channels.length > 0 ? (
@@ -681,16 +681,16 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className={`${activeTab === 'search' ? 'h-[75vh]' : 'h-auto'} rounded-t-lg mx-2 mb-2 flex flex-col`}>
       <SheetHeader>
         <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
       </SheetHeader>
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-grow flex flex-col">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="add">{t('add')}</TabsTrigger>
           <TabsTrigger value="search">{t('webSearch')}</TabsTrigger>
         </TabsList>
-        <TabsContent value="add">
+        <TabsContent value="add" className="flex-grow">
           <div className="p-4 space-y-4">
             {isVerifying ? (
               <div className="space-y-4 text-center">
@@ -759,7 +759,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             )}
           </div>
         </TabsContent>
-        <TabsContent value="search" className="h-[45vh] flex flex-col">
+        <TabsContent value="search" className="flex-grow flex flex-col h-full">
           <div className="p-4 space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('model')}</label>
@@ -1401,7 +1401,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.64
+            Build ❤️ 1.0.65
           </div>
         </div>
       </SheetContent>
@@ -1555,7 +1555,7 @@ export function EpgSheetContent({ video }: { video: Video }) {
   const upcomingPrograms = epgData?.filter(p => new Date(p.start).getTime() > now);
 
   return (
-    <SheetContent side="bottom" className="h-[60vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+    <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader className="text-center pb-2">
         <SheetTitle>{t('epg')} - {video.title}</SheetTitle>
       </SheetHeader>
@@ -1810,7 +1810,7 @@ export function VideoCard({
                         srcLang: 'de',
                         default: true,
                         label: 'Deutsch',
-                    }] : []
+                    }] : [],
                 },
                 youtube: {
                     playerVars: {
