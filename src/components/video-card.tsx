@@ -1548,9 +1548,14 @@ export function VideoCard({
     const channelData: M3uChannel = {
       name: video.title,
       logo: (addedChannels.find(c => c.url === video.url)?.logo) || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
-      url: video.url,
+      url: typeof video.url === 'string' ? video.url : '', // Ensure url is a string
       group: video.author || 'Shared'
     };
+    
+    if (!channelData.url) {
+        toast({ variant: 'destructive', title: 'Cannot share local file' });
+        return;
+    }
 
     const encodedData = btoa(JSON.stringify(channelData));
     const shareLink = `${window.location.origin}${window.location.pathname}?channel=${encodedData}`;
@@ -1700,11 +1705,11 @@ export function VideoCard({
     if (sourceUrl) {
       cleanup();
       setIsBuffering(true);
-      const isHlsStream = sourceUrl.includes('.m3u8') || sourceUrl.includes('.m3u');
+      const isHlsStream = typeof sourceUrl === 'string' && (sourceUrl.includes('.m3u8') || sourceUrl.includes('.m3u'));
       
       if (isHlsStream && Hls.isSupported()) {
         setupHls(sourceUrl);
-      } else {
+      } else if (typeof sourceUrl === 'string') {
          if (videoElement.currentSrc !== sourceUrl) {
             videoElement.src = sourceUrl;
             videoElement.load();
@@ -1984,7 +1989,7 @@ export function VideoCard({
           <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onToggleFavorite(video.url); }}>
+                  <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
                       <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
                   </Button>
                 </TooltipTrigger>
@@ -2066,6 +2071,7 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
 
 
 
