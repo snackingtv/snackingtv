@@ -1294,12 +1294,12 @@ export function SettingsSheetContent({
   
   return (
     <>
-      <SheetContent side="bottom" className="h-auto max-h-[80vh] mx-2 mb-2">
+      <SheetContent side="bottom" className="h-auto max-h-[80vh] flex flex-col mx-2 mb-2">
         <SheetHeader>
           <SheetTitle className="text-center">{t('settings')}</SheetTitle>
         </SheetHeader>
-        <div className="p-4 flex flex-col h-full overflow-y-auto">
-          <ul className="space-y-4 flex-grow">
+        <div className="flex-grow overflow-y-auto p-4">
+          <ul className="space-y-4">
             <li className="space-y-2">
               <p className="text-sm font-medium">{t('language')}</p>
               <Select onValueChange={(value) => setLanguage(value as 'de' | 'en' | 'ru')} value={language}>
@@ -1399,7 +1399,7 @@ export function SettingsSheetContent({
             </li>
           </ul>
           <div className="text-center text-xs text-muted-foreground pt-4">
-            Build ❤️ 1.0.60
+            Build ❤️ 1.0.61
           </div>
         </div>
       </SheetContent>
