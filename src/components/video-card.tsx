@@ -1294,7 +1294,7 @@ export function SettingsSheetContent({
   
   return (
     <>
-      <SheetContent side="top" className="rounded-b-lg mt-2 h-[80vh]">
+      <SheetContent side="bottom" className="h-auto max-h-[80vh]">
         <SheetHeader>
           <SheetTitle className="text-center">{t('settings')}</SheetTitle>
         </SheetHeader>
@@ -1399,7 +1399,7 @@ export function SettingsSheetContent({
             </li>
           </ul>
           <div className="text-center text-xs text-muted-foreground pt-4">
-            Build ❤️ 1.0.57
+            Build ❤️ 1.0.59
           </div>
         </div>
       </SheetContent>
