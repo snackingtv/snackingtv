@@ -1268,17 +1268,16 @@ export function SettingsSheetContent({
         <ul className="space-y-4 flex-grow">
           <li className="space-y-2">
             <p className="text-sm font-medium">{t('language')}</p>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setLanguage('de')} variant={language === 'de' ? 'default' : 'outline'} className="flex-1">
-                {t('german')}
-              </Button>
-              <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
-                {t('english')}
-              </Button>
-               <Button onClick={() => setLanguage('ru')} variant={language === 'ru' ? 'default' : 'outline'} className="flex-1">
-                {t('russian')}
-              </Button>
-            </div>
+            <Select onValueChange={(value) => setLanguage(value as 'de' | 'en' | 'ru')} value={language}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('language')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="de">{t('german')}</SelectItem>
+                <SelectItem value="en">{t('english')}</SelectItem>
+                <SelectItem value="ru">{t('russian')}</SelectItem>
+              </SelectContent>
+            </Select>
           </li>
           <li className="flex items-center justify-between">
               <span className="text-sm font-medium">{t('showClock')}</span>
