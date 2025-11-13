@@ -91,7 +91,7 @@ function PrivacyPolicySheetContent() {
           <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_3')}</h2>
           <p>{t('privacyPolicyP4')}</p>
 
-          <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
+          <h2 className-="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
           <p>{t('privacyPolicyP5')}</p>
           <p>{t('privacyPolicyP6')}</p>
           <p>{t('privacyPolicyP7')}</p>
@@ -330,6 +330,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
 
   // Web Search State
   const [searchLanguage, setSearchLanguage] = useState('');
+  const [searchModel, setSearchModel] = useState('googleai/gemma-2b-it');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
 
@@ -632,7 +633,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     setIsSearching(true);
     setSearchResults([]);
     try {
-      const results = await searchM3u({ language: searchLanguage });
+      const results = await searchM3u({ language: searchLanguage, model: searchModel });
       setSearchResults(results);
       if (results.length === 0) {
         toast({ title: t('noResultsFound') });
@@ -760,6 +761,19 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         </TabsContent>
         <TabsContent value="search" className="h-[45vh] flex flex-col">
           <div className="p-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t('model')}</label>
+              <Select onValueChange={setSearchModel} defaultValue={searchModel} disabled={isSearching || !user}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('selectModel')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="googleai/gemma-2b-it">Gemma 2B</SelectItem>
+                  <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+                  <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center gap-2">
               <Select onValueChange={setSearchLanguage} disabled={isSearching || !user}>
                 <SelectTrigger className="w-full">
@@ -1387,7 +1401,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.63
+            Build ❤️ 1.0.64
           </div>
         </div>
       </SheetContent>

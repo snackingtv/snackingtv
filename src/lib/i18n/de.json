@@ -174,5 +174,7 @@
   "cacheClearedTitle": "Cache geleert",
   "cacheClearedDescription": "Der App-Cache wurde erfolgreich geleert.",
   "cacheClearErrorTitle": "Fehler beim Leeren des Caches",
-  "cacheClearErrorDescription": "Der Cache konnte nicht geleert werden. Bitte versuchen Sie es erneut."
+  "cacheClearErrorDescription": "Der Cache konnte nicht geleert werden. Bitte versuchen Sie es erneut.",
+  "model": "Modell",
+  "selectModel": "Modell auswählen"
 }

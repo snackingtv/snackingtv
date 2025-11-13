@@ -173,5 +173,7 @@
   "cacheClearedTitle": "Кэш очищен",
   "cacheClearedDescription": "Кэш приложения успешно очищен.",
   "cacheClearErrorTitle": "Ошибка очистки кэша",
-  "cacheClearErrorDescription": "Не удалось очистить кэш. Пожалуйста, попробуйте еще раз."
+  "cacheClearErrorDescription": "Не удалось очистить кэш. Пожалуйста, попробуйте еще раз.",
+  "model": "Модель",
+  "selectModel": "Выберите модель"
 }

@@ -12,6 +12,7 @@ import { z } from 'genkit';
 
 const SearchM3uInputSchema = z.object({
   language: z.string().describe('The language to filter the search results.'),
+  model: z.string().optional().describe('The AI model to use for the search.'),
 });
 export type SearchM3uInput = z.infer<typeof SearchM3uInputSchema>;
 
@@ -33,7 +34,7 @@ const searchM3uFlow = ai.defineFlow(
     inputSchema: SearchM3uInputSchema,
     outputSchema: SearchM3uOutputSchema,
   },
-  async ({ language }) => {
+  async ({ language, model }) => {
     const prompt = `You are an expert web searcher specializing in finding public IPTV streams on GitHub.
     Search GitHub for M3U playlist files for channels in the language: "${language}".
     Only return publicly available and legal streams from GitHub repositories.
@@ -44,7 +45,7 @@ const searchM3uFlow = ai.defineFlow(
     try {
       const { output } = await ai.generate({
         prompt,
-        model: 'googleai/gemma-2b-it',
+        model: model || 'googleai/gemma-2b-it',
         output: {
           format: 'json',
           schema: SearchM3uOutputSchema,

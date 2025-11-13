@@ -174,5 +174,7 @@
   "cacheClearedTitle": "Cache Cleared",
   "cacheClearedDescription": "The application cache has been cleared successfully.",
   "cacheClearErrorTitle": "Cache Clear Error",
-  "cacheClearErrorDescription": "Could not clear the cache. Please try again."
+  "cacheClearErrorDescription": "Could not clear the cache. Please try again.",
+  "model": "Model",
+  "selectModel": "Select Model"
 }
