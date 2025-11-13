@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,35 @@ interface Channel {
   name: string;
   logo: string;
   url: string; // Add url for the channel
+}
+
+function TermsOfServiceSheetContent() {
+    const { t } = useTranslation();
+    return (
+        <SheetContent side="bottom" className="h-3/4">
+            <SheetHeader>
+                <SheetTitle>{t('termsOfServiceTitle')}</SheetTitle>
+            </SheetHeader>
+            <div className="p-4 overflow-y-auto h-full">
+                <div className="space-y-4">
+                    <h2 className="text-2xl font-semibold">{t('termsOfServiceH2_1')}</h2>
+                    <p>{t('termsOfServiceP1')}</p>
+
+                    <h2 className="text-2xl font-semibold">{t('termsOfServiceH2_2')}</h2>
+                    <p>{t('termsOfServiceP2')}</p>
+
+                    <h2 className="text-2xl font-semibold">{t('termsOfServiceH2_3')}</h2>
+                    <p>{t('termsOfServiceP3')}</p>
+
+                    <h2 className="text-2xl font-semibold">{t('termsOfServiceH2_4')}</h2>
+                    <p>{t('termsOfServiceP4')}</p>
+                    
+                    <h2 className="text-2xl font-semibold">{t('termsOfServiceH2_5')}</h2>
+                    <p>{t('termsOfServiceP5')}</p>
+                </div>
+            </div>
+        </SheetContent>
+    );
 }
 
 function PrivacyPolicySheetContent() {
@@ -1374,6 +1403,17 @@ export function SettingsSheetContent({
             </li>
             <li>
               <Sheet>
+                  <SheetTrigger asChild>
+                      <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+                          <span className='flex items-center gap-2'><FileText className="h-5 w-5 text-muted-foreground" /> {t('termsOfService')}</span>
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                      </button>
+                  </SheetTrigger>
+                  <TermsOfServiceSheetContent />
+              </Sheet>
+            </li>
+            <li>
+              <Sheet>
                 <SheetTrigger asChild>
                   <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
                     <span>{t('privacyPolicy')}</span>
@@ -1401,7 +1441,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.66
+            Build ❤️ 1.0.67
           </div>
         </div>
       </SheetContent>
@@ -1899,3 +1939,5 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
+    
