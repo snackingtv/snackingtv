@@ -685,7 +685,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       <SheetHeader>
         <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
       </SheetHeader>
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-grow flex flex-col">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-grow flex flex-col min-h-0">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="add">{t('add')}</TabsTrigger>
           <TabsTrigger value="search">{t('webSearch')}</TabsTrigger>
@@ -759,7 +759,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             )}
           </div>
         </TabsContent>
-        <TabsContent value="search" className="flex-grow flex flex-col h-full">
+        <TabsContent value="search" className="flex-grow flex flex-col min-h-0">
           <div className="p-4 space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">{t('model')}</label>
@@ -806,7 +806,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             )}
           </div>
           
-          <div className="flex-grow overflow-y-auto px-4">
+          <div className="flex-grow overflow-y-auto px-4 min-h-0">
             {searchResults.length > 0 && (
               <div className="border-t pt-4 mt-4 space-y-1">
                 {searchResults.map((playlist) => (
@@ -1401,7 +1401,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.65
+            Build ❤️ 1.0.66
           </div>
         </div>
       </SheetContent>
