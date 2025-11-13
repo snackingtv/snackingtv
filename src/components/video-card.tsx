@@ -1365,11 +1365,6 @@ export function SettingsSheetContent({
               </RadioGroup>
             </li>
             <li>
-              <button onClick={() => setIsClearCacheDialogOpen(true)} className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-destructive/10 w-full text-destructive">
-                <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
-              </button>
-            </li>
-            <li>
               <a href="mailto:snackingtv.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
                 <span className='flex items-center gap-2'><MessageSquareWarning className="h-5 w-5 text-muted-foreground" /> {t('bugReport')}</span>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -1398,8 +1393,13 @@ export function SettingsSheetContent({
               </Sheet>
             </li>
           </ul>
-          <div className="text-center text-xs text-muted-foreground pt-4">
-            Build ❤️ 1.0.61
+        </div>
+        <div className="p-4 flex flex-col items-center gap-4">
+          <button onClick={() => setIsClearCacheDialogOpen(true)} className="flex items-center justify-center p-3 rounded-lg hover:bg-destructive/10 w-full text-destructive">
+            <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
+          </button>
+          <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.62
           </div>
         </div>
       </SheetContent>
