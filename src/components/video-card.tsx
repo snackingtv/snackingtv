@@ -332,17 +332,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [searchLanguage, setSearchLanguage] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
-  const [searchCooldown, setSearchCooldown] = useState(0);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (searchCooldown > 0) {
-      timer = setInterval(() => {
-        setSearchCooldown(prev => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [searchCooldown]);
 
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
     if (!firestore || !user) {
@@ -639,10 +628,9 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   };
 
   const handleLanguageSearch = async () => {
-    if (!searchLanguage || searchCooldown > 0) return;
+    if (!searchLanguage || !user) return;
     setIsSearching(true);
     setSearchResults([]);
-    setSearchCooldown(30);
     try {
       const results = await searchM3u({ language: searchLanguage });
       setSearchResults(results);
@@ -773,7 +761,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         <TabsContent value="search" className="h-[45vh] flex flex-col">
           <div className="p-4 space-y-4">
             <div className="flex items-center gap-2">
-              <Select onValueChange={setSearchLanguage} disabled={isSearching || !user || searchCooldown > 0}>
+              <Select onValueChange={setSearchLanguage} disabled={isSearching || !user}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t('selectLanguage')} />
                 </SelectTrigger>
@@ -792,8 +780,8 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                   <SelectItem value="es">{t('spanish')}</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user || searchCooldown > 0}>
-                {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : (searchCooldown > 0 ? t('searchCooldown', { seconds: searchCooldown }) : t('search'))}
+              <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user}>
+                {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : t('search')}
               </Button>
             </div>
 
@@ -1294,7 +1282,7 @@ export function SettingsSheetContent({
   
   return (
     <>
-      <SheetContent side="bottom" className="h-auto max-h-[80vh] flex flex-col mx-2 mb-2">
+      <SheetContent side="bottom" className="h-auto max-h-[80vh] flex flex-col rounded-t-lg mx-2 mb-2">
         <SheetHeader>
           <SheetTitle className="text-center">{t('settings')}</SheetTitle>
         </SheetHeader>
@@ -1399,7 +1387,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.62
+            Build ❤️ 1.0.63
           </div>
         </div>
       </SheetContent>
