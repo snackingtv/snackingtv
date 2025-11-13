@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
@@ -36,7 +34,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-
+import ReactPlayer from 'react-player';
 
 interface VideoCardProps {
   video: Video;
@@ -494,8 +492,16 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
 
   const handleAddFromUrl = async (url?: string) => {
     const link = url || channelLink;
+    if (!link) {
+        toast({
+            variant: 'destructive',
+            title: t('invalidLinkTitle'),
+            description: t('invalidLinkDescription'),
+        });
+        return;
+    }
     const cleanedLink = link.split(' ')[0].trim();
-    if (!cleanedLink || !cleanedLink.startsWith('http')) {
+    if (!cleanedLink || (!cleanedLink.startsWith('http') && !ReactPlayer.canPlay(cleanedLink))) {
       toast({
         variant: 'destructive',
         title: t('invalidLinkTitle'),
@@ -505,6 +511,28 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     }
     setIsLoading(true);
     setSearchResults([]); // Clear search results when processing a URL
+    
+    // If it's a direct playable link (YouTube, Twitch), add it directly
+    if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
+        const newChannel: M3uChannel = {
+            name: cleanedLink,
+            logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
+            url: cleanedLink,
+            group: 'Direct Link'
+        };
+        const addedCount = await handleSaveChannels([newChannel]);
+         if (addedCount > 0) {
+            toast({
+                title: t('channelAddedTitle'),
+                description: t('channelAddedDescription', { count: addedCount }),
+            });
+            setChannelLink('');
+        }
+        setIsLoading(false);
+        return;
+    }
+    
+    // If it's an M3U link, process it
     try {
       const m3uContent = await fetchM3u({ url: cleanedLink });
       if (!m3uContent) {
@@ -1511,8 +1539,7 @@ export function VideoCard({
   bufferSize,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
+  const playerRef = useRef<ReactPlayer>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -1532,14 +1559,6 @@ export function VideoCard({
   const [isFullScreen, setIsFullScreen] = useState(false);
   
   const firestore = useFirestore();
-  const userChannelsQuery = useMemoFirebase(
-    () =>
-      user && firestore
-        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
-        : null,
-    [user, firestore]
-  );
-  const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
   const { toast } = useToast();
   
   const handleShare = async () => {
@@ -1602,14 +1621,7 @@ export function VideoCard({
   };
 
   useEffect(() => {
-    if (isActive) {
-      activeVideoRef.current = videoRef.current;
-    }
-  }, [isActive, activeVideoRef]);
-
-  useEffect(() => {
     if (isActive && localVideoItem) {
-        // We assume localVideoItem.url is a File object from the input
         const url = URL.createObjectURL(localVideoItem.url as any);
         setLocalVideoUrl(url);
 
@@ -1619,155 +1631,19 @@ export function VideoCard({
         };
     }
   }, [isActive, localVideoItem]);
+  
+  const sourceUrl = localVideoUrl || (isActive ? video.url : undefined);
+  const isYoutubeOrTwitch = typeof sourceUrl === 'string' && (sourceUrl.includes('youtube.com') || sourceUrl.includes('twitch.tv'));
 
-
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
-
-    const sourceUrl = localVideoUrl || (isActive ? video.url : null);
-
-    const setupHls = (url: string) => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-      }
-      
-      const bufferInSeconds = bufferSize === 'auto' ? 30 : parseInt(bufferSize, 10);
-      const hlsConfig: Partial<Hls.Config> = {
-        // The maximum buffer length in seconds. If buffer length is greater than this value,
-        // a buffer flush operation is triggered.
-        maxBufferLength: bufferInSeconds,
-        // The maximum buffer length in seconds, representing the maximum duration of media that can be buffered.
-        maxMaxBufferLength: bufferInSeconds,
-      };
-
-      const hls = new Hls(hlsConfig);
-      hlsRef.current = hls;
-      hls.loadSource(url);
-      hls.attachMedia(videoElement);
-
-      hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-        setIsBuffering(false);
-        videoElement.play().catch(e => {
-          if (e.name !== 'AbortError') console.error("HLS play failed", e);
-        });
-
-        const levels = hls.levels.map((level, index) => ({
-          label: level.height ? `${level.height}p` : `Level ${index}`,
-          level: index
-        }));
-        onQualityLevelsChange(levels);
-
-        const qualityLevel = parseInt(videoQuality);
-        if (videoQuality === 'auto') {
-          hls.currentLevel = -1; // Auto quality
-        } else if (!isNaN(qualityLevel) && qualityLevel >= 0 && qualityLevel < hls.levels.length) {
-          hls.currentLevel = qualityLevel;
-        }
-      });
-
-       hls.on(Hls.Events.ERROR, (event, data) => {
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              console.error('HLS fatal network error, trying to recover:', data);
-              hls.startLoad();
-              break;
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              console.error('HLS fatal media error, trying to recover:', data);
-              hls.recoverMediaError();
-              break;
-            default:
-              console.error('HLS fatal error, cannot recover:', data);
-              hls.destroy();
-              setIsBuffering(false);
-              break;
-          }
-        }
-      });
-    };
-    
-    // Cleanup function
-    const cleanup = () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-      if (videoElement) {
-        videoElement.removeAttribute('src');
-        videoElement.load();
-      }
-      setIsPlaying(false);
-      setIsBuffering(false);
-      onQualityLevelsChange([]);
-    };
-
-    if (sourceUrl) {
-      cleanup();
-      setIsBuffering(true);
-      const isHlsStream = typeof sourceUrl === 'string' && (sourceUrl.includes('.m3u8') || sourceUrl.includes('.m3u'));
-      
-      if (isHlsStream && Hls.isSupported()) {
-        setupHls(sourceUrl);
-      } else if (typeof sourceUrl === 'string') {
-         if (videoElement.currentSrc !== sourceUrl) {
-            videoElement.src = sourceUrl;
-            videoElement.load();
-        }
-      }
-
-      const playPromise = videoElement.play();
-      if (playPromise !== undefined) {
-          playPromise.then(() => setIsPlaying(true)).catch((error) => {
-              if (error.name !== 'AbortError') {
-                  console.error("Video play failed:", error);
-                  videoElement.muted = true;
-                  videoElement.play().then(() => setIsPlaying(true)).catch(err => {
-                      console.error("Muted video play also failed:", err);
-                      setIsPlaying(false);
-                      setIsBuffering(false);
-                  });
-              }
-          });
-      }
-    } else {
-      cleanup();
-    }
-    
-    return cleanup;
-}, [isActive, video.url, localVideoUrl, videoQuality, onQualityLevelsChange, bufferSize]);
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const splash = document.getElementById('splash-screen');
-    if (splash && splash.contains(e.target as Node)) {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        }
-        return; 
-    }
-
-    if (isSeeking) return;
-
     const target = e.target as HTMLElement;
-    if (target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[data-progress-bar]')) {
+    if (target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[data-progress-bar]') || isYoutubeOrTwitch) {
       return;
     }
 
-    if (videoRef.current && (video.url || localVideoUrl)) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            if (error.name !== 'AbortError') {
-              console.error("Manual play failed:", error);
-            }
-          });
-        }
-      }
-      setIsPlaying(!isPlaying);
+    if (playerRef.current) {
+       setIsPlaying(prev => !prev);
     }
   };
 
@@ -1782,126 +1658,26 @@ export function VideoCard({
   }, []);
 
   useEffect(() => {
-    const videoElement = videoRef.current;
-    videoElement?.addEventListener('mousemove', handleInteraction);
+    const videoContainer = containerRef.current;
+    videoContainer?.addEventListener('mousemove', handleInteraction);
     return () => {
-      videoElement?.removeEventListener('mousemove', handleInteraction);
+      videoContainer?.removeEventListener('mousemove', handleInteraction);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
   }, [handleInteraction]);
   
-  // --- Swipe to seek Handlers ---
-  const initialSeekX = useRef(0);
-  const rewindInterval = useRef<NodeJS.Timeout | null>(null);
-
-  const handleSeekStart = (clientX: number) => {
-    const videoEl = videoRef.current;
-    if (!videoEl || videoEl.duration === Infinity || !videoEl.src) return;
-
-    setIsSeeking(true);
-    const wasPlaying = !videoEl.paused;
-    setWasPlayingBeforeSeek(wasPlaying);
-    if(wasPlaying) {
-      const playPromise = videoEl.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            if(e.name !== 'AbortError') console.error(e)
-          });
-        }
-    }
-    initialSeekX.current = clientX;
+  const handleTimeUpdate = (state: { played: number, playedSeconds: number, loaded: number, loadedSeconds: number }) => {
+    onProgressUpdate(state.played * 100);
   };
 
-  const handleSeekMove = (clientX: number) => {
-    if (!isSeeking || !videoRef.current) return;
-  
-    const videoEl = videoRef.current;
-    const swipeDelta = clientX - initialSeekX.current;
-    
-    const speedRatio = Math.min(Math.abs(swipeDelta) / (videoEl.clientWidth / 2), 1);
-    let speed;
-    if (speedRatio < 0.25) speed = 2;
-    else if (speedRatio < 0.5) speed = 4;
-    else if (speedRatio < 0.75) speed = 8;
-    else speed = 16;
-    
-    if (rewindInterval.current) clearInterval(rewindInterval.current);
-  
-    if (swipeDelta > 10) { // Fast-forward
-      setSeekSpeed(speed);
-      videoEl.playbackRate = speed;
-    } else if (swipeDelta < -10) { // Rewind
-      setSeekSpeed(-speed);
-      if(!videoEl.paused) videoEl.pause();
-      const rewindAmount = 0.1 * (speed / 2);
-      rewindInterval.current = setInterval(() => {
-        videoEl.currentTime = Math.max(0, videoEl.currentTime - rewindAmount);
-      }, 100);
-    } else {
-      setSeekSpeed(0);
-      videoEl.playbackRate = 1;
-    }
-  };
-
-  const handleSeekEnd = () => {
-    if (!isSeeking) return;
-
-    if (rewindInterval.current) clearInterval(rewindInterval.current);
-    rewindInterval.current = null;
-    
-    const videoEl = videoRef.current;
-    if (videoEl) {
-        videoEl.playbackRate = 1;
-        if(wasPlayingBeforeSeek && videoEl.paused) {
-            const playPromise = videoEl.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(e => { if (e.name !== 'AbortError') console.error(e) });
-            }
-        } else if (!wasPlayingBeforeSeek && !videoEl.paused) {
-           videoEl.pause();
-        }
-    }
-    setIsSeeking(false);
-    setSeekSpeed(0);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    handleSeekStart(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    handleSeekMove(e.touches[0].clientX);
+  const handleDuration = (duration: number) => {
+    onDurationChange(duration);
   };
   
-  const handleMouseDown = (e: React.MouseEvent) => {
-    handleSeekStart(e.clientX);
-  };
-  
-  const handleMouseMove = (e: React.MouseEvent) => {
-    handleSeekMove(e.clientX);
-  };
-  
-  const handleTimeUpdate = () => {
-    if (videoRef.current && !isNaN(videoRef.current.duration)) {
-      onProgressUpdate((videoRef.current.currentTime / videoRef.current.duration) * 100);
-    }
-  };
-
-  const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      onDurationChange(videoRef.current.duration);
-    }
-  };
-
-  const handleVideoProgress = () => {
-    const video = videoRef.current;
-    if (!video || !video.duration || video.buffered.length === 0) return;
-
-    const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-    const percentage = (bufferedEnd / video.duration) * 100;
-    setBufferedPercent(percentage);
+  const handleProgress = (state: { loaded: number, loadedSeconds: number, played: number, playedSeconds: number }) => {
+      setBufferedPercent(state.loaded * 100);
   };
 
   // Fullscreen logic
@@ -1926,6 +1702,15 @@ export function VideoCard({
     document.addEventListener('fullscreenchange', handleFullScreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
   }, []);
+  
+  useEffect(() => {
+      if (isActive) {
+          setIsPlaying(true);
+      } else {
+          setIsPlaying(false);
+      }
+  }, [isActive]);
+
 
   return (
     <TooltipProvider>
@@ -1933,60 +1718,56 @@ export function VideoCard({
         ref={containerRef}
         className="relative w-full h-full bg-background flex items-center justify-center cursor-pointer"
         onClick={handleVideoClick}
-        onMouseLeave={handleSeekEnd} 
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleSeekEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleSeekEnd}
       >
-        <video
-          ref={videoRef}
-          loop
-          playsInline
-          className="w-full h-full object-contain"
-          onPlay={() => {
-              if (!isSeeking) {
-                setIsPlaying(true);
-                setIsBuffering(false);
-              }
-              handleInteraction();
-          }}
-          onPause={() => {
-              if (!isSeeking) setIsPlaying(false);
-              handleInteraction();
-          }}
-          onWaiting={() => setIsBuffering(true)}
-          onPlaying={() => setIsBuffering(false)}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onProgress={handleVideoProgress}
-          muted={false} 
-        >
-         {showCaptions && video.subtitlesUrl && (
-            <track
-              label="Deutsch"
-              kind="subtitles"
-              srcLang="de"
-              src={video.subtitlesUrl}
-              default={showCaptions}
-            />
-          )}
-        </video>
-        {isSeeking && seekSpeed !== 0 && (
-            <div className="absolute bottom-24 right-6 p-2 bg-black/50 text-white rounded-md font-mono text-lg" style={{textShadow: '1px 1px 2px black'}}>
-                {seekSpeed > 0 ? `FWD ${seekSpeed}x` : `REW ${Math.abs(seekSpeed)}x`}
-            </div>
-        )}
-
+        <ReactPlayer
+            ref={playerRef}
+            url={sourceUrl}
+            playing={isPlaying}
+            loop={!isYoutubeOrTwitch}
+            playsinline
+            width="100%"
+            height="100%"
+            controls={isYoutubeOrTwitch}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onBuffer={() => setIsBuffering(true)}
+            onBufferEnd={() => setIsBuffering(false)}
+            onProgress={handleProgress}
+            onDuration={handleDuration}
+            onSeek={played => onProgressUpdate(played * 100)}
+            config={{
+                file: {
+                    hlsOptions: {
+                        maxBufferLength: bufferSize === 'auto' ? 30 : parseInt(bufferSize, 10),
+                        maxMaxBufferLength: bufferSize === 'auto' ? 60 : parseInt(bufferSize, 10) * 2,
+                    },
+                    attributes: {
+                        crossOrigin: 'anonymous',
+                    },
+                    tracks: showCaptions && video.subtitlesUrl ? [{
+                        kind: 'subtitles',
+                        src: video.subtitlesUrl,
+                        srcLang: 'de',
+                        default: true,
+                        label: 'Deutsch',
+                    }] : undefined
+                },
+                youtube: {
+                    playerVars: {
+                        showinfo: 0,
+                        controls: 1,
+                    },
+                },
+            }}
+            style={{ objectFit: 'contain' }}
+        />
+        
         <div
-          className={`absolute inset-0 transition-opacity duration-300 ${
-            showControls || !isPlaying || isSeeking ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 transition-opacity duration-300 pointer-events-none ${
+            (showControls || !isPlaying) && !isYoutubeOrTwitch ? 'opacity-100' : 'opacity-0'
           }`}
         >
-
-          <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">
+          <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
@@ -2013,7 +1794,6 @@ export function VideoCard({
                 </Tooltip>
                 <EpgSheetContent video={video} />
               </Sheet>
-
 
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -2046,24 +1826,12 @@ export function VideoCard({
             </Tooltip>
           </div>
 
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center">
             {isBuffering && (
               <div className="bg-black/50 rounded-full p-3 text-white text-xs">
                 {t('loading')} {Math.floor(bufferedPercent)}%
               </div>
             )}
-            {!isPlaying && !isBuffering && (video.url || localVideoUrl) && (
-              <div className="pointer-events-auto">
-                
-              </div>
-            )}
-          </div>
-          
-          <div className="absolute bottom-20 left-4 right-4 space-y-3 pb-2">
-            <div className="text-white text-shadow-lg" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-              
-              
-            </div>
           </div>
         </div>
 
@@ -2071,8 +1839,3 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
-
-
-
-
-
