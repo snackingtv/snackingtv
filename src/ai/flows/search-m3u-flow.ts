@@ -49,6 +49,14 @@ const searchM3uFlow = ai.defineFlow(
           format: 'json',
           schema: SearchM3uOutputSchema,
         },
+        config: {
+          safetySettings: [
+            {
+              category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+              threshold: 'BLOCK_NONE',
+            },
+          ],
+        },
       });
       return output || [];
     } catch (error) {
