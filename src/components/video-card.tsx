@@ -1330,7 +1330,7 @@ export function SettingsSheetContent({
           </li>
         </ul>
         <div className="text-center text-xs text-muted-foreground pt-4">
-          Build ❤️ 1.0.20
+          Build ❤️ 1.0.55
         </div>
       </div>
     </SheetContent>
@@ -2071,6 +2071,7 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
 
 
 
