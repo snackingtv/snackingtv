@@ -188,7 +188,9 @@
   "termsOfServiceH2_4": "4. Limitations",
   "termsOfServiceP4": "In no event shall SnackingTV or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on SnackingTV's app.",
   "termsOfServiceH2_5": "5. Governing Law",
-  "termsOfServiceP5": "These terms and conditions are governed by and construed in accordance with the laws of Delaware and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location."
+  "termsOfServiceP5": "These terms and conditions are governed by and construed in accordance with the laws of Delaware and you irrevocably submit to the exclusive jurisdiction of the courts in that State or location.",
+  "tosConfirmTitle": "Accept Terms of Service?",
+  "tosConfirmDescription": "Before you can search for or add channels, you must read and accept the Terms of Service.",
+  "readTermsOfService": "Read Terms of Service",
+  "tosAcceptAndContinue": "Accept & Continue"
 }
-
-    

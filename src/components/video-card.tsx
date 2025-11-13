@@ -363,6 +363,28 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
 
+  // TOS State
+  const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
+  const [onTosAccepted, setOnTosAccepted] = useState<(() => void) | null>(null);
+
+  const checkTos = (callback: () => void) => {
+    if (localStorage.getItem('tosAccepted') === 'true') {
+      callback();
+    } else {
+      setOnTosAccepted(() => callback);
+      setIsTosDialogOpen(true);
+    }
+  };
+
+  const handleAcceptTos = () => {
+    localStorage.setItem('tosAccepted', 'true');
+    setIsTosDialogOpen(false);
+    if (onTosAccepted) {
+      onTosAccepted();
+    }
+    setOnTosAccepted(null);
+  };
+
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
     if (!firestore || !user) {
         toast({
@@ -519,67 +541,72 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     return onlineChannels.length > 0;
   }
 
-  const handleAddFromUrl = async (url?: string) => {
-    const link = url || channelLink;
-    if (!link) {
+  const handleAddFromUrl = (url?: string) => {
+    checkTos(() => {
+      const link = url || channelLink;
+      if (!link) {
+          toast({
+              variant: 'destructive',
+              title: t('invalidLinkTitle'),
+              description: t('invalidLinkDescription'),
+          });
+          return;
+      }
+      const cleanedLink = link.split(' ')[0].trim();
+      if (!cleanedLink || (!cleanedLink.startsWith('http') && !ReactPlayer.canPlay(cleanedLink))) {
         toast({
-            variant: 'destructive',
-            title: t('invalidLinkTitle'),
-            description: t('invalidLinkDescription'),
+          variant: 'destructive',
+          title: t('invalidLinkTitle'),
+          description: t('invalidLinkDescription'),
         });
         return;
-    }
-    const cleanedLink = link.split(' ')[0].trim();
-    if (!cleanedLink || (!cleanedLink.startsWith('http') && !ReactPlayer.canPlay(cleanedLink))) {
-      toast({
-        variant: 'destructive',
-        title: t('invalidLinkTitle'),
-        description: t('invalidLinkDescription'),
-      });
-      return;
-    }
-    setIsLoading(true);
-    setSearchResults([]); // Clear search results when processing a URL
-    
-    // If it's a direct playable link (YouTube, Twitch), add it directly
-    if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
-        const newChannel: M3uChannel = {
-            name: cleanedLink,
-            logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
-            url: cleanedLink,
-            group: 'Direct Link'
-        };
-        const addedCount = await handleSaveChannels([newChannel]);
-         if (addedCount > 0) {
-            toast({
-                title: t('channelAddedTitle'),
-                description: t('channelAddedDescription', { count: addedCount }),
-            });
+      }
+      setIsLoading(true);
+      setSearchResults([]); // Clear search results when processing a URL
+      
+      // If it's a direct playable link (YouTube, Twitch), add it directly
+      if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
+          const newChannel: M3uChannel = {
+              name: cleanedLink,
+              logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
+              url: cleanedLink,
+              group: 'Direct Link'
+          };
+          handleSaveChannels([newChannel]).then(addedCount => {
+            if (addedCount > 0) {
+                toast({
+                    title: t('channelAddedTitle'),
+                    description: t('channelAddedDescription', { count: addedCount }),
+                });
+                setChannelLink('');
+            }
+          });
+          setIsLoading(false);
+          return;
+      }
+      
+      // If it's an M3U link, process it
+      (async () => {
+        try {
+          const m3uContent = await fetchM3u({ url: cleanedLink });
+          if (!m3uContent) {
+            throw new Error("Could not fetch M3U content.");
+          }
+          if (await processM3uContent(m3uContent, 'URL')) {
             setChannelLink('');
+          }
+        } catch (error) {
+          console.error("Failed to add channel from URL:", error);
+          toast({
+            variant: 'destructive',
+            title: t('channelAddErrorTitle'),
+            description: t('channelAddErrorDescription'),
+          });
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
-        return;
-    }
-    
-    // If it's an M3U link, process it
-    try {
-      const m3uContent = await fetchM3u({ url: cleanedLink });
-      if (!m3uContent) {
-        throw new Error("Could not fetch M3U content.");
-      }
-      if (await processM3uContent(m3uContent, 'URL')) {
-        setChannelLink('');
-      }
-    } catch (error) {
-      console.error("Failed to add channel from URL:", error);
-      toast({
-        variant: 'destructive',
-        title: t('channelAddErrorTitle'),
-        description: t('channelAddErrorDescription'),
-      });
-    } finally {
-      setIsLoading(false);
-    }
+      })();
+    });
   };
   
   const handleSaveSelectedChannels = async () => {
@@ -601,25 +628,27 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    checkTos(() => {
+        const file = event.target.files?.[0];
+        if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const content = e.target?.result as string;
-      if (content) {
-        await processM3uContent(content, 'file');
-      }
-    };
-    reader.onerror = () => {
-      toast({
-        variant: 'destructive',
-        title: t('fileReadErrorTitle'),
-        description: t('fileReadErrorDescription'),
-      });
-    }
-    reader.readAsText(file);
-    event.target.value = '';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const content = e.target?.result as string;
+          if (content) {
+            await processM3uContent(content, 'file');
+          }
+        };
+        reader.onerror = () => {
+          toast({
+            variant: 'destructive',
+            title: t('fileReadErrorTitle'),
+            description: t('fileReadErrorDescription'),
+          });
+        }
+        reader.readAsText(file);
+        event.target.value = '';
+    });
   }
 
   const handleCancelVerification = async () => {
@@ -657,22 +686,26 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     }
   };
 
-  const handleLanguageSearch = async () => {
-    if (!searchLanguage || !user) return;
-    setIsSearching(true);
-    setSearchResults([]);
-    try {
-      const results = await searchM3u({ language: searchLanguage, model: searchModel });
-      setSearchResults(results);
-      if (results.length === 0) {
-        toast({ title: t('noResultsFound') });
-      }
-    } catch (error) {
-      console.error("Web search failed:", error);
-      toast({ variant: 'destructive', title: t('searchFailed') });
-    } finally {
-      setIsSearching(false);
-    }
+  const handleLanguageSearch = () => {
+    checkTos(() => {
+        if (!searchLanguage || !user) return;
+        setIsSearching(true);
+        setSearchResults([]);
+        (async () => {
+            try {
+              const results = await searchM3u({ language: searchLanguage, model: searchModel });
+              setSearchResults(results);
+              if (results.length === 0) {
+                toast({ title: t('noResultsFound') });
+              }
+            } catch (error) {
+              console.error("Web search failed:", error);
+              toast({ variant: 'destructive', title: t('searchFailed') });
+            } finally {
+              setIsSearching(false);
+            }
+        })();
+    });
   };
 
 
@@ -710,149 +743,172 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const isDisabled = isUserLoading || isLoading;
 
   return (
-    <SheetContent side="bottom" className={`${activeTab === 'search' ? 'h-[75vh]' : 'h-auto'} rounded-t-lg mx-2 mb-2 flex flex-col`}>
-      <SheetHeader>
-        <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
-      </SheetHeader>
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-grow flex flex-col min-h-0">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="add">{t('add')}</TabsTrigger>
-          <TabsTrigger value="search">{t('webSearch')}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="add" className="flex-grow">
-          <div className="p-4 space-y-4">
-            {isVerifying ? (
-              <div className="space-y-4 text-center">
-                <p className="font-medium">{t('checkingChannelsTitle')}</p>
-                <Progress value={verificationProgress} />
-                <div className="flex justify-around text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Wifi className="h-4 w-4 text-green-500" />
-                    <span>{t('online', { count: onlineCount })}</span>
+    <>
+      <SheetContent side="bottom" className={`${activeTab === 'search' ? 'h-[75vh]' : 'h-auto'} rounded-t-lg mx-2 mb-2 flex flex-col`}>
+        <SheetHeader>
+          <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
+        </SheetHeader>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-grow flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="add">{t('add')}</TabsTrigger>
+            <TabsTrigger value="search">{t('webSearch')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="add" className="flex-grow">
+            <div className="p-4 space-y-4">
+              {isVerifying ? (
+                <div className="space-y-4 text-center">
+                  <p className="font-medium">{t('checkingChannelsTitle')}</p>
+                  <Progress value={verificationProgress} />
+                  <div className="flex justify-around text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Wifi className="h-4 w-4 text-green-500" />
+                      <span>{t('online', { count: onlineCount })}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <WifiOff className="h-4 w-4 text-red-500" />
+                      <span>{t('offline', { count: offlineCount })}</span>
+                    </div>
+                    <span>{t('total', { count: totalCount })}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <WifiOff className="h-4 w-4 text-red-500" />
-                    <span>{t('offline', { count: offlineCount })}</span>
-                  </div>
-                  <span>{t('total', { count: totalCount })}</span>
-                </div>
-                <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
-                <Button onClick={handleCancelVerification} variant="outline" className="w-full">
-                  {t('cancelVerification')}
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="channel-link"
-                      placeholder="https://.../playlist.m3u"
-                      value={channelLink}
-                      onChange={(e) => setChannelLink(e.target.value)}
-                      disabled={!user || isDisabled}
-                      className="flex-grow"
-                    />
-                    <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
-                      {isLoading ? t('loading') : t('add')}
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="relative">
-                  <Separator />
-                  <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
-                </div>
-
-                <div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".m3u,.m3u8"
-                    className="hidden"
-                    disabled={!user || isDisabled}
-                  />
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    variant="outline"
-                    className="w-full"
-                    disabled={!user || isDisabled}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    {t('uploadFile')}
+                  <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
+                  <Button onClick={handleCancelVerification} variant="outline" className="w-full">
+                    {t('cancelVerification')}
                   </Button>
                 </div>
-              </>
-            )}
-          </div>
-        </TabsContent>
-        <TabsContent value="search" className="flex-grow flex flex-col min-h-0">
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('model')}</label>
-              <Select onValueChange={setSearchModel} defaultValue={searchModel} disabled={isSearching || !user}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('selectModel')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="googleai/gemma-2b-it">Gemma 2B</SelectItem>
-                  <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                  <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select onValueChange={setSearchLanguage} disabled={isSearching || !user}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t('selectLanguage')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="arabic">{t('arabic')}</SelectItem>
-                  <SelectItem value="chinese">{t('chinese')}</SelectItem>
-                  <SelectItem value="en">{t('english')}</SelectItem>
-                  <SelectItem value="french">{t('french')}</SelectItem>
-                  <SelectItem value="de">{t('german')}</SelectItem>
-                  <SelectItem value="hindi">{t('hindi')}</SelectItem>
-                  <SelectItem value="italian">{t('italian')}</SelectItem>
-                  <SelectItem value="japanese">{t('japanese')}</SelectItem>
-                  <SelectItem value="korean">{t('korean')}</SelectItem>
-                  <SelectItem value="portuguese">{t('portuguese')}</SelectItem>
-                  <SelectItem value="russian">{t('russian')}</SelectItem>
-                  <SelectItem value="es">{t('spanish')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user}>
-                {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : t('search')}
-              </Button>
-            </div>
-
-            {isSearching && (
-               <div className="flex items-center justify-center p-4">
-                  <Loader className="h-6 w-6 animate-spin" />
-               </div>
-            )}
-          </div>
-          
-          <div className="flex-grow overflow-y-auto px-4 min-h-0">
-            {searchResults.length > 0 && (
-              <div className="border-t pt-4 mt-4 space-y-1">
-                {searchResults.map((playlist) => (
-                  <div key={playlist.url} onClick={() => handleAddFromUrl(playlist.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
-                    <Link className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-grow">
-                      <p className="font-medium truncate">{playlist.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="channel-link"
+                        placeholder="https://.../playlist.m3u"
+                        value={channelLink}
+                        onChange={(e) => setChannelLink(e.target.value)}
+                        disabled={!user || isDisabled}
+                        className="flex-grow"
+                      />
+                      <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
+                        {isLoading ? t('loading') : t('add')}
+                      </Button>
                     </div>
                   </div>
-                ))}
+                  
+                  <div className="relative">
+                    <Separator />
+                    <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
+                  </div>
+
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept=".m3u,.m3u8"
+                      className="hidden"
+                      disabled={!user || isDisabled}
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      variant="outline"
+                      className="w-full"
+                      disabled={!user || isDisabled}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      {t('uploadFile')}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </TabsContent>
+          <TabsContent value="search" className="flex-grow flex flex-col min-h-0">
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('model')}</label>
+                <Select onValueChange={setSearchModel} defaultValue={searchModel} disabled={isSearching || !user}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('selectModel')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="googleai/gemma-2b-it">Gemma 2B</SelectItem>
+                    <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
+                    <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </SheetContent>
+              <div className="flex items-center gap-2">
+                <Select onValueChange={setSearchLanguage} disabled={isSearching || !user}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t('selectLanguage')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="arabic">{t('arabic')}</SelectItem>
+                    <SelectItem value="chinese">{t('chinese')}</SelectItem>
+                    <SelectItem value="en">{t('english')}</SelectItem>
+                    <SelectItem value="french">{t('french')}</SelectItem>
+                    <SelectItem value="de">{t('german')}</SelectItem>
+                    <SelectItem value="hindi">{t('hindi')}</SelectItem>
+                    <SelectItem value="italian">{t('italian')}</SelectItem>
+                    <SelectItem value="japanese">{t('japanese')}</SelectItem>
+                    <SelectItem value="korean">{t('korean')}</SelectItem>
+                    <SelectItem value="portuguese">{t('portuguese')}</SelectItem>
+                    <SelectItem value="russian">{t('russian')}</SelectItem>
+                    <SelectItem value="es">{t('spanish')}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user}>
+                  {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : t('search')}
+                </Button>
+              </div>
+
+              {isSearching && (
+                 <div className="flex items-center justify-center p-4">
+                    <Loader className="h-6 w-6 animate-spin" />
+                 </div>
+              )}
+            </div>
+            
+            <div className="flex-grow overflow-y-auto px-4 min-h-0">
+              {searchResults.length > 0 && (
+                <div className="border-t pt-4 mt-4 space-y-1">
+                  {searchResults.map((playlist) => (
+                    <div key={playlist.url} onClick={() => handleAddFromUrl(playlist.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
+                      <Link className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-grow">
+                        <p className="font-medium truncate">{playlist.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </SheetContent>
+
+      <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('tosConfirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('tosConfirmDescription')}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="link" className="p-0 h-auto ml-1">{t('readTermsOfService')}</Button>
+                </SheetTrigger>
+                <TermsOfServiceSheetContent />
+              </Sheet>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsTosDialogOpen(false)}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleAcceptTos}>{t('tosAcceptAndContinue')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -1416,7 +1472,7 @@ export function SettingsSheetContent({
               <Sheet>
                 <SheetTrigger asChild>
                   <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                    <span>{t('privacyPolicy')}</span>
+                    <span className='flex items-center gap-2'><ShieldCheck className="h-5 w-5 text-muted-foreground" /> {t('privacyPolicy')}</span>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </button>
                 </SheetTrigger>
@@ -1427,7 +1483,7 @@ export function SettingsSheetContent({
               <Sheet>
                 <SheetTrigger asChild>
                   <button className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
-                    <span>{t('imprint')}</span>
+                    <span className='flex items-center gap-2'><Info className="h-5 w-5 text-muted-foreground" /> {t('imprint')}</span>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </button>
                 </SheetTrigger>
@@ -1441,7 +1497,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.67
+            Build ❤️ 1.0.68
           </div>
         </div>
       </SheetContent>

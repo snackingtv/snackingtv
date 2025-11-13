@@ -188,7 +188,9 @@
   "termsOfServiceH2_4": "4. Beschränkungen",
   "termsOfServiceP4": "In keinem Fall haften SnackingTV oder seine Lieferanten für Schäden (einschließlich, aber nicht beschränkt auf Schäden durch Datenverlust oder Gewinnverlust oder aufgrund von Betriebsunterbrechungen), die sich aus der Nutzung oder der Unmöglichkeit der Nutzung der Materialien in der SnackingTV-App ergeben.",
   "termsOfServiceH2_5": "5. Geltendes Recht",
-  "termsOfServiceP5": "Diese Bedingungen unterliegen den Gesetzen von Delaware und werden in Übereinstimmung mit diesen ausgelegt, und Sie unterwerfen sich unwiderruflich der ausschließlichen Zuständigkeit der Gerichte in diesem Staat oder an diesem Ort."
+  "termsOfServiceP5": "Diese Bedingungen unterliegen den Gesetzen von Delaware und werden in Übereinstimmung mit diesen ausgelegt, und Sie unterwerfen sich unwiderruflich der ausschließlichen Zuständigkeit der Gerichte in diesem Staat oder an diesem Ort.",
+  "tosConfirmTitle": "Nutzungsbedingungen akzeptieren?",
+  "tosConfirmDescription": "Bevor Sie Kanäle suchen oder hinzufügen können, müssen Sie die Nutzungsbedingungen lesen und akzeptieren.",
+  "readTermsOfService": "Nutzungsbedingungen lesen",
+  "tosAcceptAndContinue": "Akzeptieren & Fortfahren"
 }
-
-    
