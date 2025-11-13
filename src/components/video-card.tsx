@@ -1275,6 +1275,9 @@ export function SettingsSheetContent({
               <Button onClick={() => setLanguage('en')} variant={language === 'en' ? 'default' : 'outline'} className="flex-1">
                 {t('english')}
               </Button>
+               <Button onClick={() => setLanguage('ru')} variant={language === 'ru' ? 'default' : 'outline'} className="flex-1">
+                {t('russian')}
+              </Button>
             </div>
           </li>
           <li className="flex items-center justify-between">

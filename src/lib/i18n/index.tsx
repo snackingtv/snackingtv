@@ -3,10 +3,11 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import en from './en.json';
 import de from './de.json';
+import ru from './ru.json';
 
-const translations = { en, de };
+const translations = { en, de, ru };
 
-type Language = 'en' | 'de';
+type Language = 'en' | 'de' | 'ru';
 
 interface I18nContextType {
   language: Language;
