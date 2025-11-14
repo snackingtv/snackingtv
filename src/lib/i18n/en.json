@@ -154,7 +154,7 @@
   "searching": "Searching...",
   "selectLanguage": "Select language",
   "searchQueryRequired": "Search query is required",
-  "noResultsFound": "No results found",
+  "noResultsFound": "No results found.",
   "searchResults": "Search Results ({count})",
   "searchFailed": "Search failed",
   "searchCooldown": "Please wait... ({seconds}s)",
@@ -193,5 +193,8 @@
   "tosConfirmTitle": "Accept Terms of Service?",
   "tosConfirmDescription": "Before you can search for or add channels, you must read and accept the Terms of Service.",
   "readTermsOfService": "Read Terms of Service",
-  "tosAcceptAndContinue": "Accept & Continue"
+  "tosAcceptAndContinue": "Accept & Continue",
+  "confirmAddTitle": "Confirm Add",
+  "confirmAddDescription": "Do you want to process and add the channels from the selected source?",
+  "noResultsHint": "Try using a different AI model or try again multiple times."
 }

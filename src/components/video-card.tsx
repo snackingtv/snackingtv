@@ -351,39 +351,68 @@ function SearchResultsSheetContent({
   onSelect: (url: string) => void;
 }) {
   const { t } = useTranslation();
+  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const handleSelect = (url: string) => {
+    setSelectedUrl(url);
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirm = () => {
+    if (selectedUrl) {
+      onSelect(selectedUrl);
+    }
+    setIsConfirmOpen(false);
+    setSelectedUrl(null);
+    onOpenChange(false);
+  };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2 flex flex-col">
-        <SheetHeader>
-          <SheetTitle className="text-center">{t('searchResults', { count: results.length })}</SheetTitle>
-        </SheetHeader>
-        <div className="flex-grow overflow-y-auto px-4 min-h-0">
-          {results.length > 0 ? (
-            <div className="pt-4 space-y-1">
-              {results.map((playlist) => (
-                <div
-                  key={playlist.url}
-                  onClick={() => {
-                    onSelect(playlist.url);
-                    onOpenChange(false);
-                  }}
-                  className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50"
-                >
-                  <Link className="h-5 w-5 text-muted-foreground" />
-                  <div className="flex-grow">
-                    <p className="font-medium truncate">{playlist.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+          <SheetHeader>
+            <SheetTitle className="text-center">{t('searchResults', { count: results.length })}</SheetTitle>
+          </SheetHeader>
+          <div className="flex-grow overflow-y-auto px-4 min-h-0">
+            {results.length > 0 ? (
+              <div className="pt-4 space-y-1">
+                {results.map((playlist) => (
+                  <div
+                    key={playlist.url}
+                    onClick={() => handleSelect(playlist.url)}
+                    className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50"
+                  >
+                    <Link className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-grow">
+                      <p className="font-medium truncate">{playlist.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">{t('noResultsFound')}</p>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">{t('noResultsFound')}</p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmAddTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirmAddDescription')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsConfirmOpen(false)}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm}>{t('add')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -412,6 +441,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
   const [isResultsSheetOpen, setIsResultsSheetOpen] = useState(false);
+  const [searchAttempted, setSearchAttempted] = useState(false);
 
   // TOS State
   const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
@@ -613,6 +643,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       }
       setIsLoading(true);
       setSearchResults([]); // Clear search results when processing a URL
+      setSearchAttempted(false);
       
       // If it's a direct playable link (YouTube, Twitch), add it directly
       if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
@@ -747,6 +778,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         if (!searchLanguage || !user) return;
         setIsSearching(true);
         setSearchResults([]);
+        setSearchAttempted(true);
         (async () => {
             try {
               const results = await searchM3u({ language: searchLanguage, model: searchModel });
@@ -896,7 +928,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Select onValueChange={setSearchLanguage} disabled={isSearching || !user}>
+                <Select onValueChange={(value) => { setSearchLanguage(value); setSearchAttempted(false); setSearchResults([]); }} disabled={isSearching || !user}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={t('selectLanguage')} />
                   </SelectTrigger>
@@ -924,6 +956,13 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                  <div className="flex items-center justify-center p-4">
                     <Loader className="h-6 w-6 animate-spin" />
                  </div>
+              )}
+
+              {!isSearching && searchAttempted && searchResults.length === 0 && (
+                <div className="text-center text-muted-foreground p-4 space-y-2 border rounded-lg bg-muted/50">
+                  <p>{t('noResultsFound')}</p>
+                  <p className="text-xs">{t('noResultsHint')}</p>
+                </div>
               )}
             </div>
             

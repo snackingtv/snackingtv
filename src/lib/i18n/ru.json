@@ -154,7 +154,7 @@
   "searching": "Поиск...",
   "selectLanguage": "Выберите язык",
   "searchQueryRequired": "Требуется поисковый запрос",
-  "noResultsFound": "Ничего не найдено",
+  "noResultsFound": "Ничего не найдено.",
   "searchResults": "Результаты поиска ({count})",
   "searchFailed": "Поиск не удался",
   "searchCooldown": "Пожалуйста, подождите... ({seconds}с)",
@@ -193,5 +193,8 @@
   "tosConfirmTitle": "Принять Условия использования?",
   "tosConfirmDescription": "Прежде чем вы сможете искать или добавлять каналы, вы должны прочитать и принять Условия использования.",
   "readTermsOfService": "Прочитать Условия использования",
-  "tosAcceptAndContinue": "Принять и продолжить"
+  "tosAcceptAndContinue": "Принять и продолжить",
+  "confirmAddTitle": "Подтвердить добавление",
+  "confirmAddDescription": "Вы хотите обработать и добавить каналы из выбранного источника?",
+  "noResultsHint": "Попробуйте использовать другую модель ИИ или повторите попытку несколько раз."
 }

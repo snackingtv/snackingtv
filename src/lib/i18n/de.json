@@ -154,7 +154,7 @@
   "searching": "Sucht...",
   "selectLanguage": "Sprache auswählen",
   "searchQueryRequired": "Suchanfrage erforderlich",
-  "noResultsFound": "Keine Ergebnisse gefunden",
+  "noResultsFound": "Keine Ergebnisse gefunden.",
   "searchResults": "Suchergebnisse ({count})",
   "searchFailed": "Suche fehlgeschlagen",
   "searchCooldown": "Bitte warten... ({seconds}s)",
@@ -193,5 +193,8 @@
   "tosConfirmTitle": "Nutzungsbedingungen akzeptieren?",
   "tosConfirmDescription": "Bevor Sie Kanäle suchen oder hinzufügen können, müssen Sie die Nutzungsbedingungen lesen und akzeptieren.",
   "readTermsOfService": "Nutzungsbedingungen lesen",
-  "tosAcceptAndContinue": "Akzeptieren & Fortfahren"
+  "tosAcceptAndContinue": "Akzeptieren & Fortfahren",
+  "confirmAddTitle": "Hinzufügen bestätigen",
+  "confirmAddDescription": "Möchten Sie die Kanäle aus der ausgewählten Quelle verarbeiten und hinzufügen?",
+  "noResultsHint": "Versuchen Sie, ein anderes KI-Modell zu verwenden, oder versuchen Sie es mehrmals."
 }
