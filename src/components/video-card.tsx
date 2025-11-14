@@ -15,7 +15,6 @@ import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredentia
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
-import { searchM3u, SearchM3uOutput } from '@/ai/flows/search-m3u-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -339,85 +338,7 @@ export function ChannelListSheetContent({
   );
 }
 
-function SearchResultsSheetContent({
-  open,
-  onOpenChange,
-  results,
-  onSelect,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  results: SearchM3uOutput;
-  onSelect: (url: string) => void;
-}) {
-  const { t } = useTranslation();
-  const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-
-  const handleSelect = (url: string) => {
-    setSelectedUrl(url);
-    setIsConfirmOpen(true);
-  };
-
-  const handleConfirm = () => {
-    if (selectedUrl) {
-      onSelect(selectedUrl);
-    }
-    setIsConfirmOpen(false);
-    setSelectedUrl(null);
-    onOpenChange(false);
-  };
-
-  return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
-          <SheetHeader>
-            <SheetTitle className="text-center">{t('searchResults', { count: results.length })}</SheetTitle>
-          </SheetHeader>
-          <div className="flex-grow overflow-y-auto px-4 min-h-0">
-            {results.length > 0 ? (
-              <div className="pt-4 space-y-1">
-                {results.map((playlist) => (
-                  <div
-                    key={playlist.url}
-                    onClick={() => handleSelect(playlist.url)}
-                    className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50"
-                  >
-                    <Link className="h-5 w-5 text-muted-foreground" />
-                    <div className="flex-grow">
-                      <p className="font-medium truncate">{playlist.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">{t('noResultsFound')}</p>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('confirmAddTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('confirmAddDescription')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsConfirmOpen(false)}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>{t('add')}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-}
-
-
-export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
+export function AddChannelSheetContent({ user, isUserLoading }: { user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -441,16 +362,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [showManualSelection, setShowManualSelection] = useState(false);
   const channelsPerPage = 8;
   
-  const [activeTab, setActiveTab] = useState('add');
-
-  // Web Search State
-  const [searchLanguage, setSearchLanguage] = useState('');
-  const [searchModel, setSearchModel] = useState('googleai/gemini-2.5-flash');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
-  const [isResultsSheetOpen, setIsResultsSheetOpen] = useState(false);
-  const [searchAttempted, setSearchAttempted] = useState(false);
-
   // TOS State
   const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
   const [onTosAccepted, setOnTosAccepted] = useState<(() => void) | null>(null);
@@ -662,8 +573,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         return;
       }
       setIsLoading(true);
-      setSearchResults([]); 
-      setSearchAttempted(false);
       
       if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
           const newChannel: M3uChannel = {
@@ -742,30 +651,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     setIsLoading(false);
   };
   
-  const handleLanguageSearch = () => {
-    checkTos(() => {
-        if (!searchLanguage || !user) return;
-        setIsSearching(true);
-        setSearchResults([]);
-        setSearchAttempted(true);
-        (async () => {
-            try {
-              const results = await searchM3u({ language: searchLanguage, model: searchModel });
-              setSearchResults(results);
-              if (results.length > 0) {
-                setIsResultsSheetOpen(true);
-              } else {
-                toast({ title: t('noResultsFound') });
-              }
-            } catch (error) {
-              console.error("Web search failed:", error);
-              toast({ variant: 'destructive', title: t('searchFailed') });
-            } finally {
-              setIsSearching(false);
-            }
-        })();
-    });
-  };
 
   const handleManualChannelToggle = (channelUrl: string) => {
     setSelectedManualChannels(prev => {
@@ -883,119 +768,53 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
 
   return (
     <>
-      <SheetContent side="bottom" className={`${activeTab === 'search' ? 'h-[90vh]' : 'h-auto'} rounded-t-lg mx-2 mb-2 flex flex-col`}>
+      <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
         <SheetHeader>
           <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
         </SheetHeader>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full flex-grow flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="add">{t('add')}</TabsTrigger>
-            <TabsTrigger value="search">{t('webSearch')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="add" className="flex-grow">
-            <div className="p-4 space-y-4">
-                <>
-                  <div className="space-y-2">
-                    <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="channel-link"
-                        placeholder="https://.../playlist.m3u"
-                        value={channelLink}
-                        onChange={(e) => setChannelLink(e.target.value)}
-                        disabled={!user || isDisabled}
-                        className="flex-grow"
-                      />
-                      <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
-                        {isLoading ? <Loader className="animate-spin" /> : t('add')}
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="relative">
-                    <Separator />
-                    <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
-                  </div>
-
-                  <div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      accept=".m3u,.m3u8"
-                      className="hidden"
-                      disabled={!user || isDisabled}
-                    />
-                    <Button
-                      onClick={() => fileInputRef.current?.click()}
-                      variant="outline"
-                      className="w-full"
-                      disabled={!user || isDisabled}
-                    >
-                      {isLoading ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
-                      {t('uploadFile')}
-                    </Button>
-                  </div>
-                </>
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
+            <div className="flex gap-2">
+              <Input
+                id="channel-link"
+                placeholder="https://.../playlist.m3u"
+                value={channelLink}
+                onChange={(e) => setChannelLink(e.target.value)}
+                disabled={!user || isDisabled}
+                className="flex-grow"
+              />
+              <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
+                {isLoading ? <Loader className="animate-spin" /> : t('add')}
+              </Button>
             </div>
-          </TabsContent>
-          <TabsContent value="search" className="flex-grow flex flex-col min-h-0">
-            <div className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t('model')}</label>
-                <Select onValueChange={setSearchModel} defaultValue={searchModel} disabled={isSearching || !user}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectModel')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="googleai/gemma-2b-it">Gemma 2B</SelectItem>
-                    <SelectItem value="googleai/gemma-7b-it">Gemma 7B</SelectItem>
-                    <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
-                    <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select onValueChange={(value) => { setSearchLanguage(value); setSearchAttempted(false); setSearchResults([]); }} disabled={isSearching || !user}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t('selectLanguage')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="arabic">{t('arabic')}</SelectItem>
-                    <SelectItem value="chinese">{t('chinese')}</SelectItem>
-                    <SelectItem value="en">{t('english')}</SelectItem>
-                    <SelectItem value="french">{t('french')}</SelectItem>
-                    <SelectItem value="de">{t('german')}</SelectItem>
-                    <SelectItem value="hindi">{t('hindi')}</SelectItem>
-                    <SelectItem value="italian">{t('italian')}</SelectItem>
-                    <SelectItem value="japanese">{t('japanese')}</SelectItem>
-                    <SelectItem value="korean">{t('korean')}</SelectItem>
-                    <SelectItem value="portuguese">{t('portuguese')}</SelectItem>
-                    <SelectItem value="russian">{t('russian')}</SelectItem>
-                    <SelectItem value="es">{t('spanish')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user}>
-                  {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                </Button>
-              </div>
+          </div>
+          
+          <div className="relative">
+            <Separator />
+            <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
+          </div>
 
-              {isSearching && (
-                 <div className="flex items-center justify-center p-4">
-                    <Loader className="h-6 w-6 animate-spin" />
-                 </div>
-              )}
-
-              {!isSearching && searchAttempted && searchResults.length === 0 && (
-                <div className="text-center text-muted-foreground p-4 space-y-2 border rounded-lg bg-muted/50">
-                  <p>{t('noResultsFound')}</p>
-                  <p className="text-xs">{t('noResultsHint')}</p>
-                </div>
-              )}
-            </div>
-            
-          </TabsContent>
-        </Tabs>
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".m3u,.m3u8"
+              className="hidden"
+              disabled={!user || isDisabled}
+            />
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              className="w-full"
+              disabled={!user || isDisabled}
+            >
+              {isLoading ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
+              {t('uploadFile')}
+            </Button>
+          </div>
+        </div>
       </SheetContent>
       
       <AlertDialog open={isProcessingModeDialogOpen} onOpenChange={setIsProcessingModeDialogOpen}>
@@ -1012,13 +831,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <SearchResultsSheetContent
-        open={isResultsSheetOpen}
-        onOpenChange={setIsResultsSheetOpen}
-        results={searchResults}
-        onSelect={handleAddFromUrl}
-      />
 
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
         <AlertDialogContent>
@@ -2129,4 +1941,5 @@ export function VideoCard({
 }
 
     
+
 
