@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, List, ListChecks } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -353,14 +353,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef(false);
   const onlineChannelsRef = useRef<M3uChannel[]>([]);
-
-  const [allParsedChannels, setAllParsedChannels] = useState<M3uChannel[]>([]);
-  const [isProcessingModeDialogOpen, setIsProcessingModeDialogOpen] = useState(false);
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedManualChannels, setSelectedManualChannels] = useState<Set<string>>(new Set());
-  const [showManualSelection, setShowManualSelection] = useState(false);
-  const channelsPerPage = 8;
   
   // TOS State
   const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
@@ -507,10 +499,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       });
     }
     
-    setShowManualSelection(false);
-    setAllParsedChannels([]);
-    setSelectedManualChannels(new Set());
-    setCurrentPage(1);
     setIsLoading(false);
   };
   
@@ -539,19 +527,9 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       return;
     }
     
-    setAllParsedChannels(parsedChannels);
-    setIsProcessingModeDialogOpen(true);
+    verifyChannels(parsedChannels);
   };
   
-  const handleStartVerification = (mode: 'auto' | 'manual') => {
-    setIsProcessingModeDialogOpen(false);
-    if (mode === 'auto') {
-      verifyChannels(allParsedChannels);
-    } else {
-      setShowManualSelection(true);
-    }
-  };
-
   const handleAddFromUrl = (url?: string) => {
     checkTos(() => {
       const link = url || channelLink;
@@ -651,91 +629,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
     setIsLoading(false);
   };
   
-
-  const handleManualChannelToggle = (channelUrl: string) => {
-    setSelectedManualChannels(prev => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(channelUrl)) {
-        newSelection.delete(channelUrl);
-      } else {
-        newSelection.add(channelUrl);
-      }
-      return newSelection;
-    });
-  };
-  
-  const handleProcessManualSelection = () => {
-    const channelsToVerify = allParsedChannels.filter(c => selectedManualChannels.has(c.url));
-    verifyChannels(channelsToVerify);
-  };
-  
-  const renderManualSelectionContent = () => {
-    const totalPages = Math.ceil(allParsedChannels.length / channelsPerPage);
-    const startIndex = (currentPage - 1) * channelsPerPage;
-    const endIndex = startIndex + channelsPerPage;
-    const currentChannels = allParsedChannels.slice(startIndex, endIndex);
-
-    const handleSelectPage = () => {
-      const pageUrls = new Set(currentChannels.map(c => c.url));
-      const allSelectedOnPage = currentChannels.every(c => selectedManualChannels.has(c.url));
-  
-      if (allSelectedOnPage) {
-        setSelectedManualChannels(prev => new Set([...prev].filter(url => !pageUrls.has(url))));
-      } else {
-        setSelectedManualChannels(prev => new Set([...prev, ...pageUrls]));
-      }
-    };
-    
-    return (
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-border">
-          <div className="flex justify-between items-center mb-4">
-             <Button variant="ghost" onClick={() => setShowManualSelection(false)}>{t('cancel')}</Button>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                  <ChevronRight className="h-4 w-4 transform rotate-180" />
-                </Button>
-                <span className="text-sm font-medium">{currentPage} / {totalPages}</span>
-                <Button variant="outline" size="icon" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            <Button onClick={handleProcessManualSelection} disabled={selectedManualChannels.size === 0}>
-                {t('processSelection', { count: selectedManualChannels.size })}
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="select-all-page"
-              onCheckedChange={handleSelectPage}
-              checked={currentChannels.length > 0 && currentChannels.every(c => selectedManualChannels.has(c.url))}
-            />
-            <label htmlFor="select-all-page" className="text-sm font-medium">{t('selectAllOnPage')}</label>
-          </div>
-        </div>
-        <div className="flex-grow overflow-y-auto p-4">
-          <ul className="space-y-1">
-            {currentChannels.map(channel => (
-              <li key={channel.url} onClick={() => handleManualChannelToggle(channel.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
-                <Checkbox checked={selectedManualChannels.has(channel.url)} />
-                <Image src={channel.logo} alt={channel.name} width={40} height={40} className="rounded-md" />
-                <span className="font-medium flex-grow truncate">{channel.name}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-    );
-  };
-  
-  if (showManualSelection) {
-     return (
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 p-0 flex flex-col">
-        {renderManualSelectionContent()}
-      </SheetContent>
-     );
-  }
-
   if (isVerifying) {
     return (
       <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
@@ -817,21 +710,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
         </div>
       </SheetContent>
       
-      <AlertDialog open={isProcessingModeDialogOpen} onOpenChange={setIsProcessingModeDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('processingModeTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('processingModeDescription', { count: allParsedChannels.length })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
-            <Button onClick={() => handleStartVerification('auto')}>{t('processAll')}</Button>
-            <Button onClick={() => handleStartVerification('manual')}>{t('processManual')}</Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1247,8 +1125,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                             {t('acceptPrivacyLabel')} {' '}
                             <Sheet>
                               <SheetTrigger asChild>
-                                <button className="text-primary underline">{t('privacyPolicy')}</button>
-                              </SheetTrigger>
+                                <button className="text-primary underline">{t('privacyPolicy')}</button>                              </SheetTrigger>
                               <PrivacyPolicySheetContent />
                             </Sheet>
                           </FormLabel>
@@ -1941,5 +1818,6 @@ export function VideoCard({
 }
 
     
+
 
 
