@@ -45,8 +45,8 @@ const usePreload = (emblaApi: EmblaCarouselType | undefined, feedItems: Video[])
       const prevIndex = (currentIndex - i + scrollSnapList.length) % scrollSnapList.length;
       const nextIndex = (currentIndex + i) % scrollSnapList.length;
       
-      if (feedItems[prevIndex]?.url) urlsToPreload.add(feedItems[prevIndex].url);
-      if (feedItems[nextIndex]?.url) urlsToPreload.add(feedItems[nextIndex].url);
+      if (feedItems[prevIndex]?.url) urlsToPreload.add(feedItems[prevIndex].url as string);
+      if (feedItems[nextIndex]?.url) urlsToPreload.add(feedItems[nextIndex].url as string);
     }
     
     setPreloadUrls(Array.from(urlsToPreload));
@@ -138,9 +138,9 @@ export function VideoFeed({
 
   const placeholderVideo: Video = {
     id: 'placeholder',
-    url: '',
-    title: '',
-    author: '',
+    url: 'https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4',
+    title: 'Keine Sender verfügbar',
+    author: 'SnackingTV',
     avatarId: 'iptv_placeholder'
   };
 
@@ -171,7 +171,7 @@ export function VideoFeed({
                   onAddChannels={() => {}}
                   onChannelSelect={onChannelSelect}
                   addedChannels={[]}
-                  isFavorite={favoriteChannels.includes(video.url)}
+                  isFavorite={favoriteChannels.includes(video.url as string)}
                   onToggleFavorite={onToggleFavorite}
                   onProgressUpdate={onProgressUpdate}
                   onDurationChange={onDurationChange}
