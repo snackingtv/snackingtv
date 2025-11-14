@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, List, ListChecks } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -75,7 +75,7 @@ interface Channel {
 function TermsOfServiceSheetContent() {
     const { t } = useTranslation();
     return (
-        <SheetContent side="bottom" className="h-3/4">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
             <SheetHeader>
                 <SheetTitle>{t('termsOfServiceTitle')}</SheetTitle>
             </SheetHeader>
@@ -104,7 +104,7 @@ function TermsOfServiceSheetContent() {
 function PrivacyPolicySheetContent() {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="h-3/4">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader>
         <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
@@ -133,7 +133,7 @@ function PrivacyPolicySheetContent() {
 function ImprintSheetContent() {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="h-3/4">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader>
         <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
@@ -174,7 +174,7 @@ export function FavoriteChannelListSheetContent({
   const { t } = useTranslation();
 
   return (
-    <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader className="text-center">
         <SheetTitle>{title}</SheetTitle>
       </SheetHeader>
@@ -301,7 +301,7 @@ export function ChannelListSheetContent({
   };
 
   return (
-    <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
       <SheetHeader className="text-center">
         <div className="relative flex justify-between items-center">
           {channels.length > 0 ? (
@@ -371,7 +371,7 @@ function SearchResultsSheetContent({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
           <SheetHeader>
             <SheetTitle className="text-center">{t('searchResults', { count: results.length })}</SheetTitle>
           </SheetHeader>
@@ -423,21 +423,29 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const firestore = useFirestore();
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationProgress, setVerificationProgress] = useState(0);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationProgress, setVerificationProgress] = useState(0);
   const [onlineCount, setOnlineCount] = useState(0);
   const [offlineCount, setOfflineCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isCancelledRef = useRef(false);
-  const [verifiedChannels, setVerifiedChannels] = useState<M3uChannel[]>([]);
   const onlineChannelsRef = useRef<M3uChannel[]>([]);
-  const [selectedVerifiedChannels, setSelectedVerifiedChannels] = useState<Set<string>>(new Set());
+
+  const [allParsedChannels, setAllParsedChannels] = useState<M3uChannel[]>([]);
+  const [isProcessingModeDialogOpen, setIsProcessingModeDialogOpen] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedManualChannels, setSelectedManualChannels] = useState<Set<string>>(new Set());
+  const [showManualSelection, setShowManualSelection] = useState(false);
+  const channelsPerPage = 8;
+  
   const [activeTab, setActiveTab] = useState('add');
 
   // Web Search State
   const [searchLanguage, setSearchLanguage] = useState('');
-  const [searchModel, setSearchModel] = useState('googleai/gemma-2b-it');
+  const [searchModel, setSearchModel] = useState('googleai/gemini-2.5-flash');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
   const [isResultsSheetOpen, setIsResultsSheetOpen] = useState(false);
@@ -463,6 +471,16 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       onTosAccepted();
     }
     setOnTosAccepted(null);
+  };
+  
+  const resetVerificationState = () => {
+    setIsVerifying(false);
+    setVerificationProgress(0);
+    setOnlineCount(0);
+    setOfflineCount(0);
+    setTotalCount(0);
+    onlineChannelsRef.current = [];
+    isCancelledRef.current = false;
   };
 
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
@@ -496,7 +514,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     
     if (newChannelsToAdd.length === 0) {
         if (channelsThatExist === 0) {
-            toast({
+             toast({
                 variant: 'destructive',
                 title: t('noNewChannelsTitle'),
                 description: t('noNewChannelsDescription'),
@@ -515,60 +533,24 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
 
     return newChannelsToAdd.length;
   };
-  
-  const processM3uContent = async (content: string, source: string) => {
-    isCancelledRef.current = false;
-    setVerifiedChannels([]);
-    setSelectedVerifiedChannels(new Set());
-    setIsLoading(true);
-    setIsVerifying(true);
-    setVerificationProgress(0);
-    setOnlineCount(0);
-    setOfflineCount(0);
-    setTotalCount(0);
-    onlineChannelsRef.current = [];
 
-    let parsedChannels: M3uChannel[] = [];
-    try {
-      parsedChannels = parseM3u(content);
-      if (parsedChannels.length === 0) {
-        toast({
-          variant: 'destructive',
-          title: t('noChannelsFoundTitle'),
-          description: t('noChannelsFoundDescription'),
-        });
-        setIsLoading(false);
-        setIsVerifying(false);
-        return false;
-      }
-    } catch (error) {
-       console.error(`Failed to parse M3U from ${source}:`, error);
-      toast({
-        variant: 'destructive',
-        title: t('channelAddErrorTitle'),
-        description: t('channelAddErrorDescription'),
-      });
-      setIsLoading(false);
-      setIsVerifying(false);
-      return false;
-    }
-      
-    setTotalCount(parsedChannels.length);
+  const verifyChannels = async (channels: M3uChannel[]) => {
+    resetVerificationState();
+    setIsVerifying(true);
+    setTotalCount(channels.length);
     
     toast({
       title: t('checkingChannelsTitle'),
-      description: t('checkingChannelsDescription', { count: parsedChannels.length }),
+      description: t('checkingChannelsDescription', { count: channels.length }),
     });
     
     let checkedCount = 0;
-    const onlineChannels: M3uChannel[] = [];
-
-    for (const channel of parsedChannels) {
+    
+    for (const channel of channels) {
       if (isCancelledRef.current) break; 
       try {
         const result = await checkChannelStatus({ url: channel.url });
         if (result.online) {
-          onlineChannels.push(channel);
           onlineChannelsRef.current.push(channel);
           setOnlineCount(c => c + 1);
         } else {
@@ -579,38 +561,34 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       } finally {
         if (!isCancelledRef.current) {
           checkedCount++;
-          setVerificationProgress(Math.round((checkedCount / parsedChannels.length) * 100));
+          setVerificationProgress(Math.round((checkedCount / channels.length) * 100));
         }
       }
     }
     
     setIsVerifying(false);
-    setIsLoading(false);
 
     if (isCancelledRef.current) {
        toast({
           title: t('verificationCancelledTitle'),
           description: t('verificationCancelledDescription'),
       });
-      if (onlineChannelsRef.current.length > 0) {
-          const addedCount = await handleSaveChannels(onlineChannelsRef.current);
-          if (addedCount > 0) {
-             toast({
-              title: t('channelAddedTitle'),
-              description: t('channelAddedDescription', { count: addedCount }),
-            });
-          }
-      }
-      return false;
-    } 
-    
-    if (onlineChannels.length > 0) {
-      setVerifiedChannels(onlineChannels);
+    } else {
        toast({
         title: t('verificationCompleteTitle'),
-        description: t('verificationCompleteDescription', { count: onlineChannels.length }),
+        description: t('verificationCompleteDescription', { count: onlineChannelsRef.current.length }),
       });
-    } else {
+    }
+    
+    if (onlineChannelsRef.current.length > 0) {
+      const addedCount = await handleSaveChannels(onlineChannelsRef.current);
+      if (addedCount > 0) {
+         toast({
+          title: t('channelAddedTitle'),
+          description: t('channelAddedDescription', { count: addedCount }),
+        });
+      }
+    } else if (!isCancelledRef.current) {
        toast({
         variant: 'destructive',
         title: t('noOnlineChannelsTitle'),
@@ -618,8 +596,50 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
       });
     }
     
-    return onlineChannels.length > 0;
-  }
+    setShowManualSelection(false);
+    setAllParsedChannels([]);
+    setSelectedManualChannels(new Set());
+    setCurrentPage(1);
+    setIsLoading(false);
+  };
+  
+  const processM3uContent = async (content: string, source: string) => {
+    setIsLoading(true);
+    let parsedChannels: M3uChannel[] = [];
+    try {
+      parsedChannels = parseM3u(content);
+      if (parsedChannels.length === 0) {
+        toast({
+          variant: 'destructive',
+          title: t('noChannelsFoundTitle'),
+          description: t('noChannelsFoundDescription'),
+        });
+        setIsLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error(`Failed to parse M3U from ${source}:`, error);
+      toast({
+        variant: 'destructive',
+        title: t('channelAddErrorTitle'),
+        description: t('channelAddErrorDescription'),
+      });
+      setIsLoading(false);
+      return;
+    }
+    
+    setAllParsedChannels(parsedChannels);
+    setIsProcessingModeDialogOpen(true);
+  };
+  
+  const handleStartVerification = (mode: 'auto' | 'manual') => {
+    setIsProcessingModeDialogOpen(false);
+    if (mode === 'auto') {
+      verifyChannels(allParsedChannels);
+    } else {
+      setShowManualSelection(true);
+    }
+  };
 
   const handleAddFromUrl = (url?: string) => {
     checkTos(() => {
@@ -642,10 +662,9 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         return;
       }
       setIsLoading(true);
-      setSearchResults([]); // Clear search results when processing a URL
+      setSearchResults([]); 
       setSearchAttempted(false);
       
-      // If it's a direct playable link (YouTube, Twitch), add it directly
       if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
           const newChannel: M3uChannel = {
               name: cleanedLink,
@@ -666,7 +685,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
           return;
       }
       
-      // If it's an M3U link, process it
       (async () => {
         try {
           const m3uContent = await fetchM3u({ url: cleanedLink });
@@ -679,9 +697,8 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             setIsLoading(false);
             return;
           }
-          if (await processM3uContent(m3uContent, 'URL')) {
-            setChannelLink('');
-          }
+          await processM3uContent(m3uContent, 'URL');
+          setChannelLink('');
         } catch (error) {
           console.error("Failed to add channel from URL:", error);
           toast({
@@ -689,29 +706,10 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             title: t('channelAddErrorTitle'),
             description: t('channelAddErrorDescription'),
           });
-        } finally {
           setIsLoading(false);
         }
       })();
     });
-  };
-  
-  const handleSaveSelectedChannels = async () => {
-    setIsLoading(true);
-    const channelsToSave = verifiedChannels.filter(channel => 
-        selectedVerifiedChannels.has(channel.url)
-    );
-    const addedCount = await handleSaveChannels(channelsToSave);
-
-    if (addedCount > 0) {
-       toast({
-        title: t('channelAddedTitle'),
-        description: t('channelAddedDescription', { count: addedCount }),
-      });
-    }
-    setIsLoading(false);
-    setVerifiedChannels([]);
-    setSelectedVerifiedChannels(new Set());
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -738,41 +736,12 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     });
   }
 
-  const handleCancelVerification = async () => {
+  const handleCancelVerification = () => {
     isCancelledRef.current = true;
     setIsVerifying(false);
-    
-    if (onlineChannelsRef.current.length > 0) {
-      const addedCount = await handleSaveChannels(onlineChannelsRef.current);
-      if (addedCount > 0) {
-        toast({
-          title: t('channelAddedTitle'),
-          description: t('channelAddedDescription', { count: addedCount }),
-        });
-      }
-    }
+    setIsLoading(false);
   };
   
-  const handleToggleSelectVerified = (channelUrl: string) => {
-    setSelectedVerifiedChannels(prev => {
-      const newSelection = new Set(prev);
-      if (newSelection.has(channelUrl)) {
-        newSelection.delete(channelUrl);
-      } else {
-        newSelection.add(channelUrl);
-      }
-      return newSelection;
-    });
-  };
-
-  const handleSelectAllVerified = () => {
-    if (selectedVerifiedChannels.size === verifiedChannels.length) {
-      setSelectedVerifiedChannels(new Set());
-    } else {
-      setSelectedVerifiedChannels(new Set(verifiedChannels.map(c => c.url)));
-    }
-  };
-
   const handleLanguageSearch = () => {
     checkTos(() => {
         if (!searchLanguage || !user) return;
@@ -798,43 +767,123 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
     });
   };
 
+  const handleManualChannelToggle = (channelUrl: string) => {
+    setSelectedManualChannels(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(channelUrl)) {
+        newSelection.delete(channelUrl);
+      } else {
+        newSelection.add(channelUrl);
+      }
+      return newSelection;
+    });
+  };
+  
+  const handleProcessManualSelection = () => {
+    const channelsToVerify = allParsedChannels.filter(c => selectedManualChannels.has(c.url));
+    verifyChannels(channelsToVerify);
+  };
+  
+  const renderManualSelectionContent = () => {
+    const totalPages = Math.ceil(allParsedChannels.length / channelsPerPage);
+    const startIndex = (currentPage - 1) * channelsPerPage;
+    const endIndex = startIndex + channelsPerPage;
+    const currentChannels = allParsedChannels.slice(startIndex, endIndex);
 
-  if (verifiedChannels.length > 0) {
+    const handleSelectPage = () => {
+      const pageUrls = new Set(currentChannels.map(c => c.url));
+      const allSelectedOnPage = currentChannels.every(c => selectedManualChannels.has(c.url));
+  
+      if (allSelectedOnPage) {
+        setSelectedManualChannels(prev => new Set([...prev].filter(url => !pageUrls.has(url))));
+      } else {
+        setSelectedManualChannels(prev => new Set([...prev, ...pageUrls]));
+      }
+    };
+    
     return (
-      <SheetContent side="bottom" className="h-[75vh] flex flex-col rounded-t-lg mx-2 mb-2">
-        <SheetHeader>
-          <SheetTitle>{t('foundOnlineChannelsTitle', { count: verifiedChannels.length })}</SheetTitle>
-        </SheetHeader>
-        <div className="flex-grow overflow-y-auto p-4 space-y-2">
-           <div className="flex items-center gap-2 sticky top-0 bg-background py-2 z-10">
-              <Checkbox id="select-all-verified" onCheckedChange={handleSelectAllVerified} checked={selectedVerifiedChannels.size > 0 && selectedVerifiedChannels.size === verifiedChannels.length} />
-              <label htmlFor="select-all-verified" className='text-sm font-medium'>{t('selectAll')}</label>
-            </div>
-            <ul className="space-y-1">
-            {verifiedChannels.map((channel) => (
-              <li key={channel.url} onClick={() => handleToggleSelectVerified(channel.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
-                 <Checkbox checked={selectedVerifiedChannels.has(channel.url)} />
+      <div className="h-full flex flex-col">
+        <div className="p-4 border-b border-border">
+          <div className="flex justify-between items-center mb-4">
+             <Button variant="ghost" onClick={() => setShowManualSelection(false)}>{t('cancel')}</Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <ChevronRight className="h-4 w-4 transform rotate-180" />
+                </Button>
+                <span className="text-sm font-medium">{currentPage} / {totalPages}</span>
+                <Button variant="outline" size="icon" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            <Button onClick={handleProcessManualSelection} disabled={selectedManualChannels.size === 0}>
+                {t('processSelection', { count: selectedManualChannels.size })}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="select-all-page"
+              onCheckedChange={handleSelectPage}
+              checked={currentChannels.length > 0 && currentChannels.every(c => selectedManualChannels.has(c.url))}
+            />
+            <label htmlFor="select-all-page" className="text-sm font-medium">{t('selectAllOnPage')}</label>
+          </div>
+        </div>
+        <div className="flex-grow overflow-y-auto p-4">
+          <ul className="space-y-1">
+            {currentChannels.map(channel => (
+              <li key={channel.url} onClick={() => handleManualChannelToggle(channel.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
+                <Checkbox checked={selectedManualChannels.has(channel.url)} />
                 <Image src={channel.logo} alt={channel.name} width={40} height={40} className="rounded-md" />
                 <span className="font-medium flex-grow truncate">{channel.name}</span>
               </li>
             ))}
           </ul>
         </div>
-        <div className="border-t p-4 flex justify-between items-center">
-            <Button variant="ghost" onClick={() => setVerifiedChannels([])}>{t('cancel')}</Button>
-            <Button onClick={handleSaveSelectedChannels} disabled={isLoading || selectedVerifiedChannels.size === 0}>
-                {isLoading ? t('loading') : t('addSelected', { count: selectedVerifiedChannels.size })}
+      </div>
+    );
+  };
+  
+  if (showManualSelection) {
+     return (
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 p-0 flex flex-col">
+        {renderManualSelectionContent()}
+      </SheetContent>
+     );
+  }
+
+  if (isVerifying) {
+    return (
+      <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+        <SheetHeader>
+          <SheetTitle className="text-center">{t('checkingChannelsTitle')}</SheetTitle>
+        </SheetHeader>
+        <div className="p-4 space-y-4 text-center">
+            <Progress value={verificationProgress} />
+            <div className="flex justify-around text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Wifi className="h-4 w-4 text-green-500" />
+                <span>{t('online', { count: onlineCount })}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <WifiOff className="h-4 w-4 text-red-500" />
+                <span>{t('offline', { count: offlineCount })}</span>
+              </div>
+              <span>{t('total', { count: totalCount })}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
+            <Button onClick={handleCancelVerification} variant="outline" className="w-full">
+              {t('cancelVerification')}
             </Button>
         </div>
       </SheetContent>
     );
   }
-  
+
   const isDisabled = isUserLoading || isLoading;
 
   return (
     <>
-      <SheetContent side="bottom" className={`${activeTab === 'search' ? 'h-[75vh]' : 'h-auto'} rounded-t-lg mx-2 mb-2 flex flex-col`}>
+      <SheetContent side="bottom" className={`${activeTab === 'search' ? 'h-[90vh]' : 'h-auto'} rounded-t-lg mx-2 mb-2 flex flex-col`}>
         <SheetHeader>
           <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
         </SheetHeader>
@@ -845,27 +894,6 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
           </TabsList>
           <TabsContent value="add" className="flex-grow">
             <div className="p-4 space-y-4">
-              {isVerifying ? (
-                <div className="space-y-4 text-center">
-                  <p className="font-medium">{t('checkingChannelsTitle')}</p>
-                  <Progress value={verificationProgress} />
-                  <div className="flex justify-around text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Wifi className="h-4 w-4 text-green-500" />
-                      <span>{t('online', { count: onlineCount })}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <WifiOff className="h-4 w-4 text-red-500" />
-                      <span>{t('offline', { count: offlineCount })}</span>
-                    </div>
-                    <span>{t('total', { count: totalCount })}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
-                  <Button onClick={handleCancelVerification} variant="outline" className="w-full">
-                    {t('cancelVerification')}
-                  </Button>
-                </div>
-              ) : (
                 <>
                   <div className="space-y-2">
                     <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
@@ -879,7 +907,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                         className="flex-grow"
                       />
                       <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
-                        {isLoading ? t('loading') : t('add')}
+                        {isLoading ? <Loader className="animate-spin" /> : t('add')}
                       </Button>
                     </div>
                   </div>
@@ -904,12 +932,11 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                       className="w-full"
                       disabled={!user || isDisabled}
                     >
-                      <Upload className="mr-2 h-4 w-4" />
+                      {isLoading ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
                       {t('uploadFile')}
                     </Button>
                   </div>
                 </>
-              )}
             </div>
           </TabsContent>
           <TabsContent value="search" className="flex-grow flex flex-col min-h-0">
@@ -949,7 +976,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                   </SelectContent>
                 </Select>
                 <Button onClick={handleLanguageSearch} disabled={!searchLanguage || isSearching || !user}>
-                  {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : t('search')}
+                  {isSearching ? <Loader className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 </Button>
               </div>
 
@@ -970,6 +997,21 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
           </TabsContent>
         </Tabs>
       </SheetContent>
+      
+      <AlertDialog open={isProcessingModeDialogOpen} onOpenChange={setIsProcessingModeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('processingModeTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('processingModeDescription', { count: allParsedChannels.length })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <Button onClick={() => handleStartVerification('auto')}>{t('processAll')}</Button>
+            <Button onClick={() => handleStartVerification('manual')}>{t('processManual')}</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <SearchResultsSheetContent
         open={isResultsSheetOpen}
@@ -1471,7 +1513,7 @@ export function SettingsSheetContent({
   
   return (
     <>
-      <SheetContent side="bottom" className="h-auto max-h-[80vh] flex flex-col rounded-t-lg mx-2 mb-2">
+      <SheetContent side="bottom" className="h-auto max-h-[90vh] flex flex-col rounded-t-lg mx-2 mb-2">
         <SheetHeader>
           <SheetTitle className="text-center">{t('settings')}</SheetTitle>
         </SheetHeader>
@@ -1741,7 +1783,7 @@ export function EpgSheetContent({ video }: { video: Video }) {
   const upcomingPrograms = epgData?.filter(p => new Date(p.start).getTime() > now);
 
   return (
-    <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader className="text-center pb-2">
         <SheetTitle>{t('epg')} - {video.title}</SheetTitle>
       </SheetHeader>
@@ -2087,3 +2129,4 @@ export function VideoCard({
 }
 
     
+

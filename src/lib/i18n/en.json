@@ -196,5 +196,11 @@
   "tosAcceptAndContinue": "Accept & Continue",
   "confirmAddTitle": "Confirm Add",
   "confirmAddDescription": "Do you want to process and add the channels from the selected source?",
-  "noResultsHint": "Try using a different AI model or try again multiple times."
+  "noResultsHint": "Try using a different AI model or try again multiple times.",
+  "processingModeTitle": "Processing Mode",
+  "processingModeDescription": "Found {count} channels. How would you like to proceed?",
+  "processAll": "Automatically check all",
+  "processManual": "Select manually",
+  "selectAllOnPage": "Select all on this page",
+  "processSelection": "Process Selection ({count})"
 }
