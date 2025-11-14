@@ -7,15 +7,16 @@ import { getFirestore } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
+  // If a Firebase app is already initialized, reuse it.
   if (getApps().length) {
     return getSdks(getApp());
   }
-
-  let firebaseApp;
-  // In a non-production environment, we always initialize with the config object.
-  // In production, App Hosting provides automatic configuration, but the config object is a safe fallback.
-  firebaseApp = initializeApp(firebaseConfig);
-
+  
+  // Otherwise, initialize a new app with the provided config.
+  // This is the robust way to ensure initialization works across all environments
+  // (local dev, Vercel build, Firebase hosting, etc.).
+  const firebaseApp = initializeApp(firebaseConfig);
+  
   return getSdks(firebaseApp);
 }
 
