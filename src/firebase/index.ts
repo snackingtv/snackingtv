@@ -12,19 +12,9 @@ export function initializeFirebase() {
   }
 
   let firebaseApp;
-  // When not in a production environment, we can't rely on App Hosting's automatic configuration.
-  // Therefore, we initialize directly with the provided config object.
-  if (process.env.NODE_ENV !== 'production') {
-    firebaseApp = initializeApp(firebaseConfig);
-  } else {
-    // In production, we attempt the automatic initialization first, which is required for App Hosting.
-    try {
-      firebaseApp = initializeApp();
-    } catch (e) {
-      console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-  }
+  // In a non-production environment, we always initialize with the config object.
+  // In production, App Hosting provides automatic configuration, but the config object is a safe fallback.
+  firebaseApp = initializeApp(firebaseConfig);
 
   return getSdks(firebaseApp);
 }
