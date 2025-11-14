@@ -542,7 +542,11 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
           return;
       }
       const cleanedLink = link.split(' ')[0].trim();
-      if (!cleanedLink || (!cleanedLink.startsWith('http') && !ReactPlayer.canPlay(cleanedLink))) {
+      
+      const isM3u = cleanedLink.endsWith('.m3u') || cleanedLink.endsWith('.m3u8');
+      const canPlay = ReactPlayer.canPlay(cleanedLink);
+
+      if (!cleanedLink || (!cleanedLink.startsWith('http') && !canPlay && !isM3u)) {
         toast({
           variant: 'destructive',
           title: t('invalidLinkTitle'),
@@ -552,7 +556,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       }
       setIsLoading(true);
       
-      if (ReactPlayer.canPlay(cleanedLink) && !cleanedLink.endsWith('.m3u') && !cleanedLink.endsWith('.m3u8')) {
+      if (canPlay && !isM3u) {
           const newChannel: M3uChannel = {
               name: cleanedLink,
               logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
@@ -1827,6 +1831,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
