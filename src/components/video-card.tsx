@@ -531,75 +531,56 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
   };
   
   const handleAddFromUrl = (url?: string) => {
-    checkTos(() => {
+    checkTos(async () => {
       const link = url || channelLink;
       if (!link) {
-          toast({
-              variant: 'destructive',
-              title: t('invalidLinkTitle'),
-              description: t('invalidLinkDescription'),
-          });
-          return;
-      }
-      const cleanedLink = link.split(' ')[0].trim();
-      
-      const isM3u = cleanedLink.endsWith('.m3u') || cleanedLink.endsWith('.m3u8');
-      const canPlay = ReactPlayer.canPlay(cleanedLink);
-
-      if (!cleanedLink || (!cleanedLink.startsWith('http') && !canPlay && !isM3u)) {
-        toast({
-          variant: 'destructive',
-          title: t('invalidLinkTitle'),
-          description: t('invalidLinkDescription'),
-        });
+        toast({ variant: 'destructive', title: t('invalidLinkTitle'), description: t('invalidLinkDescription') });
         return;
       }
+  
+      const cleanedLink = link.split(' ')[0].trim();
+      const isM3u = cleanedLink.endsWith('.m3u') || cleanedLink.endsWith('.m3u8');
+      const isPlayableDirectly = ReactPlayer.canPlay(cleanedLink);
+  
+      if (!cleanedLink.startsWith('http')) {
+        toast({ variant: 'destructive', title: t('invalidLinkTitle'), description: t('invalidLinkDescription') });
+        return;
+      }
+  
       setIsLoading(true);
-      
-      if (canPlay && !isM3u) {
-          const newChannel: M3uChannel = {
-              name: cleanedLink,
-              logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
-              url: cleanedLink,
-              group: 'Direct Link'
-          };
-          handleSaveChannels([newChannel]).then(addedCount => {
-            if (addedCount > 0) {
-                toast({
-                    title: t('channelAddedTitle'),
-                    description: t('channelAddedDescription', { count: addedCount }),
-                });
-                setChannelLink('');
-            }
-          });
+  
+      // If it's not a playlist file, treat it as a direct playable link.
+      if (isPlayableDirectly && !isM3u) {
+        const newChannel: M3uChannel = {
+          name: cleanedLink,
+          logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
+          url: cleanedLink,
+          group: 'Direct Link'
+        };
+        const addedCount = await handleSaveChannels([newChannel]);
+        if (addedCount > 0) {
+          toast({ title: t('channelAddedTitle'), description: t('channelAddedDescription', { count: addedCount }) });
+          setChannelLink('');
+        }
+        setIsLoading(false);
+        return;
+      }
+  
+      // Otherwise, assume it's a playlist URL (M3U/M3U8)
+      try {
+        const m3uContent = await fetchM3u({ url: cleanedLink });
+        if (!m3uContent) {
+          toast({ variant: 'destructive', title: t('channelAddErrorTitle'), description: t('channelAddErrorDescription') });
           setIsLoading(false);
           return;
-      }
-      
-      (async () => {
-        try {
-          const m3uContent = await fetchM3u({ url: cleanedLink });
-          if (!m3uContent) {
-            toast({
-              variant: 'destructive',
-              title: t('channelAddErrorTitle'),
-              description: t('channelAddErrorDescription'),
-            });
-            setIsLoading(false);
-            return;
-          }
-          await processM3uContent(m3uContent, 'URL');
-          setChannelLink('');
-        } catch (error) {
-          console.error("Failed to add channel from URL:", error);
-          toast({
-            variant: 'destructive',
-            title: t('channelAddErrorTitle'),
-            description: t('channelAddErrorDescription'),
-          });
-          setIsLoading(false);
         }
-      })();
+        await processM3uContent(m3uContent, 'URL');
+        setChannelLink('');
+      } catch (error) {
+        console.error("Failed to add channel from URL:", error);
+        toast({ variant: 'destructive', title: t('channelAddErrorTitle'), description: t('channelAddErrorDescription') });
+        setIsLoading(false);
+      }
     });
   };
 
@@ -1831,6 +1812,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
