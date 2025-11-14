@@ -40,6 +40,33 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // This is to allow playing videos from external sources
+    config.module.rules.push({
+      test: /\.(mp4|webm)$/,
+      use: {
+        loader: 'file-loader',
+        options: {
+          publicPath: '/_next',
+          name: 'static/media/[name].[hash].[ext]',
+        },
+      },
+    });
+
+    // Add rule for Pixabay CDN
+    config.module.rules.push({
+      test: /cdn\.pixabay\.com/,
+      use: {
+        loader: 'file-loader',
+        options: {
+          publicPath: '/_next/static/media/',
+          name: '[name].[ext]',
+        },
+      },
+    });
+
+    return config;
+  },
 };
 
 export default nextConfig;

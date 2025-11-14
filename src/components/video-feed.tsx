@@ -138,7 +138,7 @@ export function VideoFeed({
 
   const placeholderVideo: Video = {
     id: 'placeholder',
-    url: 'https://videos.pexels.com/video-files/3209828/3209828-hd_1920_1080_25fps.mp4',
+    url: 'https://cdn.pixabay.com/video/2023/09/16/178065-865626298_large.mp4',
     title: 'Keine Sender verfügbar',
     author: 'SnackingTV',
     avatarId: 'iptv_placeholder'
