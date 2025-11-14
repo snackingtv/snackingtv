@@ -202,6 +202,8 @@
   "processAll": "Автоматически проверить все",
   "processManual": "Выбрать вручную",
   "selectAllOnPage": "Выбрать все на этой странице",
-  "processSelection": "Обработать выбор ({count})"
+  "processSelection": "Обработать выбор ({count})",
+  "plutoTv": "Добавить PlutoTV"
 }
+
 

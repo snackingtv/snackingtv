@@ -527,7 +527,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       return;
     }
     
-    verifyChannels(parsedChannels);
+    await verifyChannels(parsedChannels);
   };
   
   const handleAddFromUrl = (url?: string) => {
@@ -688,7 +688,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
             <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
           </div>
 
-          <div>
+          <div className='flex flex-col space-y-2'>
             <input
               type="file"
               ref={fileInputRef}
@@ -703,8 +703,17 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
               className="w-full"
               disabled={!user || isDisabled}
             >
-              {isLoading ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isLoading && !isVerifying ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
               {t('uploadFile')}
+            </Button>
+            <Button
+              onClick={() => handleAddFromUrl('https://i.mjh.nz/PlutoTV/all.m3u8')}
+              variant="outline"
+              className="w-full"
+              disabled={!user || isDisabled}
+            >
+              {isLoading && !isVerifying ? <Loader className="animate-spin mr-2" /> : <Tv2 className="mr-2 h-4 w-4" />}
+              {t('plutoTv')}
             </Button>
           </div>
         </div>
@@ -1818,6 +1827,7 @@ export function VideoCard({
 }
 
     
+
 
 
 

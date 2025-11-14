@@ -202,6 +202,8 @@
   "processAll": "Alle automatisch prüfen",
   "processManual": "Manuell auswählen",
   "selectAllOnPage": "Alle auf dieser Seite auswählen",
-  "processSelection": "Auswahl verarbeiten ({count})"
+  "processSelection": "Auswahl verarbeiten ({count})",
+  "plutoTv": "PlutoTV hinzufügen"
 }
+
 
