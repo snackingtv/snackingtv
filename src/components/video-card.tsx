@@ -590,7 +590,13 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
         try {
           const m3uContent = await fetchM3u({ url: cleanedLink });
           if (!m3uContent) {
-            throw new Error("Could not fetch M3U content.");
+            toast({
+              variant: 'destructive',
+              title: t('channelAddErrorTitle'),
+              description: t('channelAddErrorDescription'),
+            });
+            setIsLoading(false);
+            return;
           }
           if (await processM3uContent(m3uContent, 'URL')) {
             setChannelLink('');

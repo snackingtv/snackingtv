@@ -31,13 +31,16 @@ const m3uProxyFlow = ai.defineFlow(
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Instead of throwing, log the error and return an empty string
+        console.error(`HTTP error! status: ${response.status} for url: ${url}`);
+        return ''; 
       }
       const textContent = await response.text();
       return textContent;
     } catch (error) {
       console.error('Failed to fetch M3U file:', error);
-      throw new Error('Could not retrieve the M3U playlist.');
+      // Return an empty string on network errors as well
+      return '';
     }
   }
 );
