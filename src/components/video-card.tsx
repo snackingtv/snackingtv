@@ -339,6 +339,55 @@ export function ChannelListSheetContent({
   );
 }
 
+function SearchResultsSheetContent({
+  open,
+  onOpenChange,
+  results,
+  onSelect,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  results: SearchM3uOutput;
+  onSelect: (url: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom" className="h-[75vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+        <SheetHeader>
+          <SheetTitle className="text-center">{t('searchResults', { count: results.length })}</SheetTitle>
+        </SheetHeader>
+        <div className="flex-grow overflow-y-auto px-4 min-h-0">
+          {results.length > 0 ? (
+            <div className="pt-4 space-y-1">
+              {results.map((playlist) => (
+                <div
+                  key={playlist.url}
+                  onClick={() => {
+                    onSelect(playlist.url);
+                    onOpenChange(false);
+                  }}
+                  className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50"
+                >
+                  <Link className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-grow">
+                    <p className="font-medium truncate">{playlist.name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-8">{t('noResultsFound')}</p>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+
 export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { onAddChannel?: (channels: M3uChannel[]) => void, user: User | null, isUserLoading: boolean }) {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -362,6 +411,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
   const [searchModel, setSearchModel] = useState('googleai/gemma-2b-it');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchM3uOutput>([]);
+  const [isResultsSheetOpen, setIsResultsSheetOpen] = useState(false);
 
   // TOS State
   const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
@@ -701,7 +751,9 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
             try {
               const results = await searchM3u({ language: searchLanguage, model: searchModel });
               setSearchResults(results);
-              if (results.length === 0) {
+              if (results.length > 0) {
+                setIsResultsSheetOpen(true);
+              } else {
                 toast({ title: t('noResultsFound') });
               }
             } catch (error) {
@@ -875,24 +927,16 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
               )}
             </div>
             
-            <div className="flex-grow overflow-y-auto px-4 min-h-0">
-              {searchResults.length > 0 && (
-                <div className="border-t pt-4 mt-4 space-y-1">
-                  {searchResults.map((playlist) => (
-                    <div key={playlist.url} onClick={() => handleAddFromUrl(playlist.url)} className="flex items-center gap-4 p-2 rounded-lg cursor-pointer hover:bg-accent/50">
-                      <Link className="h-5 w-5 text-muted-foreground" />
-                      <div className="flex-grow">
-                        <p className="font-medium truncate">{playlist.name}</p>
-                        <p className="text-sm text-muted-foreground truncate">{playlist.url}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </TabsContent>
         </Tabs>
       </SheetContent>
+
+      <SearchResultsSheetContent
+        open={isResultsSheetOpen}
+        onOpenChange={setIsResultsSheetOpen}
+        results={searchResults}
+        onSelect={handleAddFromUrl}
+      />
 
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
         <AlertDialogContent>

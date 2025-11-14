@@ -155,6 +155,7 @@
   "selectLanguage": "Выберите язык",
   "searchQueryRequired": "Требуется поисковый запрос",
   "noResultsFound": "Ничего не найдено",
+  "searchResults": "Результаты поиска ({count})",
   "searchFailed": "Поиск не удался",
   "searchCooldown": "Пожалуйста, подождите... ({seconds}с)",
   "russian": "Русский",

@@ -155,6 +155,7 @@
   "selectLanguage": "Sprache auswählen",
   "searchQueryRequired": "Suchanfrage erforderlich",
   "noResultsFound": "Keine Ergebnisse gefunden",
+  "searchResults": "Suchergebnisse ({count})",
   "searchFailed": "Suche fehlgeschlagen",
   "searchCooldown": "Bitte warten... ({seconds}s)",
   "spanish": "Spanisch",
