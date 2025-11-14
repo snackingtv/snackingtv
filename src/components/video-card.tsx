@@ -922,6 +922,7 @@ export function AddChannelSheetContent({ onAddChannel, user, isUserLoading }: { 
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="googleai/gemma-2b-it">Gemma 2B</SelectItem>
+                    <SelectItem value="googleai/gemma-7b-it">Gemma 7B</SelectItem>
                     <SelectItem value="googleai/gemini-2.5-flash">Gemini 2.5 Flash</SelectItem>
                     <SelectItem value="googleai/gemini-pro">Gemini Pro</SelectItem>
                   </SelectContent>
