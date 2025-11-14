@@ -539,8 +539,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       }
   
       const cleanedLink = link.split(' ')[0].trim();
-      const isM3u = cleanedLink.endsWith('.m3u') || cleanedLink.endsWith('.m3u8');
-      const isPlayableDirectly = ReactPlayer.canPlay(cleanedLink);
+      const isM3u = cleanedLink.toLowerCase().endsWith('.m3u') || cleanedLink.toLowerCase().endsWith('.m3u8');
   
       if (!cleanedLink.startsWith('http')) {
         toast({ variant: 'destructive', title: t('invalidLinkTitle'), description: t('invalidLinkDescription') });
@@ -548,10 +547,9 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       }
   
       setIsLoading(true);
-  
-      // If it's not a playlist file, treat it as a direct playable link.
-      if (isPlayableDirectly && !isM3u) {
-        const newChannel: M3uChannel = {
+
+      if (!isM3u) {
+         const newChannel: M3uChannel = {
           name: cleanedLink,
           logo: `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
           url: cleanedLink,
@@ -566,7 +564,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
         return;
       }
   
-      // Otherwise, assume it's a playlist URL (M3U/M3U8)
+      // Assume it's a playlist URL (M3U/M3U8)
       try {
         const m3uContent = await fetchM3u({ url: cleanedLink });
         if (!m3uContent) {
@@ -690,15 +688,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
             >
               {isLoading && !isVerifying ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
               {t('uploadFile')}
-            </Button>
-            <Button
-              onClick={() => handleAddFromUrl('https://i.mjh.nz/PlutoTV/all.m3u8')}
-              variant="outline"
-              className="w-full"
-              disabled={!user || isDisabled}
-            >
-              {isLoading && !isVerifying ? <Loader className="animate-spin mr-2" /> : <Tv2 className="mr-2 h-4 w-4" />}
-              {t('plutoTv')}
             </Button>
           </div>
         </div>
@@ -1812,6 +1801,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
