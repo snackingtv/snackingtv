@@ -539,7 +539,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
       }
   
       const cleanedLink = link.split(' ')[0].trim();
-      const isM3u = cleanedLink.toLowerCase().endsWith('.m3u') || cleanedLink.toLowerCase().endsWith('.m3u8');
   
       if (!cleanedLink.startsWith('http')) {
         toast({ variant: 'destructive', title: t('invalidLinkTitle'), description: t('invalidLinkDescription') });
@@ -548,6 +547,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
   
       setIsLoading(true);
 
+      const isM3u = cleanedLink.toLowerCase().endsWith('.m3u') || cleanedLink.toLowerCase().endsWith('.m3u8');
       if (!isM3u) {
          const newChannel: M3uChannel = {
           name: cleanedLink,
@@ -1325,47 +1325,6 @@ export function SettingsSheetContent({
   );
 }
 
-export function SearchSheetContent({ onSearch, searchTerm }: { onSearch: (term: string) => void, searchTerm: string }) {
-  const { t } = useTranslation();
-  const [localSearch, setLocalSearch] = useState(searchTerm);
-
-  const handleSearch = () => {
-    onSearch(localSearch);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  useEffect(() => {
-    setLocalSearch(searchTerm);
-  }, [searchTerm]);
-
-  return (
-    <SheetContent side="top" className="h-auto rounded-b-lg mt-2 mx-2">
-      <SheetHeader>
-        <SheetTitle className="text-center">{t('searchChannels')}</SheetTitle>
-      </SheetHeader>
-      <div className="p-4">
-        <div className="flex w-full items-center space-x-2">
-          <Input
-            placeholder={t('searchPlaceholder')}
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-grow"
-          />
-          <Button type="submit" onClick={handleSearch}>
-            <Search className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </SheetContent>
-  );
-}
-
 const EpgProgramItem = ({ program, isCurrent }: { program: any; isCurrent: boolean }) => {
   const [progress, setProgress] = useState(0);
 
@@ -1801,6 +1760,7 @@ export function VideoCard({
 }
 
     
+
 
 
 

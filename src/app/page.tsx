@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Search, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { SearchSheetContent, SettingsSheetContent } from '@/components/video-card';
+import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
@@ -326,7 +326,7 @@ export default function Home() {
                       <p>{t('searchChannels')}</p>
                     </TooltipContent>
                   </Tooltip>
-                  <SearchSheetContent onSearch={setSearchTerm} searchTerm={searchTerm} />
+                   <ChannelListSheetContent channels={userChannels || []} onChannelSelect={handleChannelSelect} title={t('channels')} />
                 </Sheet>
                 
                 <Sheet>
