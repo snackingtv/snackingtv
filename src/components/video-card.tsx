@@ -223,6 +223,7 @@ export function ChannelListSheetContent({
   const { toast } = useToast();
   const [isManaging, setIsManaging] = useState(false);
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleToggleSelect = (channelId: string) => {
     setSelectedChannels(prev => {
@@ -236,13 +237,21 @@ export function ChannelListSheetContent({
     });
   };
   
-  const handleSelectAll = () => {
-      if(selectedChannels.size === channels.length) {
-          setSelectedChannels(new Set());
+  const handleSelectAll = (filteredChannels: WithId<M3uChannel>[]) => {
+      const allFilteredIds = filteredChannels.map(c => c.id);
+      const allSelected = allFilteredIds.every(id => selectedChannels.has(id)) && selectedChannels.size === allFilteredIds.length;
+
+      if(allSelected) {
+          setSelectedChannels(prev => {
+              const newSelection = new Set(prev);
+              allFilteredIds.forEach(id => newSelection.delete(id));
+              return newSelection;
+          });
       } else {
-          setSelectedChannels(new Set(channels.map(c => c.id)));
+          setSelectedChannels(prev => new Set([...prev, ...allFilteredIds]));
       }
   };
+
 
   const handleDeleteSelected = async () => {
     if (!firestore) return;
@@ -264,6 +273,10 @@ export function ChannelListSheetContent({
     }
   };
   
+  const filteredChannels = channels.filter(channel => 
+      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const renderChannelList = (channelList: WithId<M3uChannel>[], emptyMessage: string) => {
     return channelList.length > 0 ? (
       <ul className="space-y-1">
@@ -295,13 +308,13 @@ export function ChannelListSheetContent({
         ))}
       </ul>
     ) : (
-      <p className="text-muted-foreground text-center py-4">{emptyMessage}</p>
+      <p className="text-muted-foreground text-center py-4">{searchTerm ? t('noResultsFound') : emptyMessage}</p>
     );
   };
 
   return (
-    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
-      <SheetHeader className="text-center">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+      <SheetHeader className="text-center px-4 pt-4">
         <div className="relative flex justify-between items-center">
           {channels.length > 0 ? (
             <Button
@@ -318,15 +331,29 @@ export function ChannelListSheetContent({
           <SheetTitle className="absolute left-1/2 -translate-x-1/2">{title}</SheetTitle>
           <div className="w-24"></div>
         </div>
+        <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                placeholder={t('searchChannels')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+            />
+        </div>
       </SheetHeader>
-      <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
-         {renderChannelList(channels, t('noChannels'))}
+      <div className="flex-grow overflow-y-auto p-4">
+         {renderChannelList(filteredChannels, t('noChannels'))}
       </div>
       {isManaging && (
-        <div className="absolute bottom-0 left-0 right-0 bg-background border-t p-2 flex justify-between items-center">
+        <div className="bottom-0 left-0 right-0 bg-background border-t p-2 flex justify-between items-center">
             <div className="flex items-center gap-2">
-                <Checkbox id="select-all" onCheckedChange={handleSelectAll} checked={selectedChannels.size > 0 && selectedChannels.size === channels.length} />
-                <label htmlFor="select-all">{t('selectAll')}</label>
+                <Checkbox 
+                  id="select-all" 
+                  onCheckedChange={() => handleSelectAll(filteredChannels)} 
+                  checked={filteredChannels.length > 0 && filteredChannels.every(c => selectedChannels.has(c.id))}
+                  aria-label={t('selectAll')}
+                />
+                <label htmlFor="select-all" className="text-sm font-medium">{t('selectAll')}</label>
             </div>
             <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedChannels.size === 0}>
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -540,14 +567,15 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
   
       const cleanedLink = link.split(' ')[0].trim();
   
-      if (!cleanedLink.startsWith('http')) {
+      const isM3u = cleanedLink.toLowerCase().endsWith('.m3u') || cleanedLink.toLowerCase().endsWith('.m3u8');
+  
+      if (!isM3u && !cleanedLink.startsWith('http')) {
         toast({ variant: 'destructive', title: t('invalidLinkTitle'), description: t('invalidLinkDescription') });
         return;
       }
   
       setIsLoading(true);
 
-      const isM3u = cleanedLink.toLowerCase().endsWith('.m3u') || cleanedLink.toLowerCase().endsWith('.m3u8');
       if (!isM3u) {
          const newChannel: M3uChannel = {
           name: cleanedLink,
@@ -1760,6 +1788,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
