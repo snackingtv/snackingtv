@@ -365,7 +365,7 @@ export function ChannelListSheetContent({
          {renderChannelList(filteredChannels, t('noChannels'))}
       </div>
       {isManaging && (
-        <div className="bottom-0 left-0 right-0 bg-background border-t p-2 flex justify-between items-center">
+        <div className="border-t p-2 flex justify-between items-center">
             <div className="flex items-center gap-2">
                 <Checkbox 
                   id="select-all" 
@@ -1368,6 +1368,7 @@ export function SettingsSheetContent({
           <button onClick={() => setIsClearCacheDialogOpen(true)} className="flex items-center justify-center p-3 rounded-lg hover:bg-destructive/10 w-full text-destructive">
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
+          <Separator className="my-2" />
           <div className="text-center text-xs text-muted-foreground">
             Build ❤️ 1.0.69
           </div>
@@ -1833,6 +1834,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
