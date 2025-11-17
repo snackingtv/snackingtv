@@ -582,9 +582,9 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
     await verifyChannels(parsedChannels);
   };
   
-  const handleAddFromUrl = (url?: string) => {
+  const handleAddFromUrl = () => {
     checkTos(async () => {
-      const link = url || channelLink;
+      const link = channelLink;
       if (!link) {
         toast({ variant: 'destructive', title: t('invalidLinkTitle'), description: t('invalidLinkDescription') });
         return;
@@ -713,7 +713,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
                 disabled={!user || isDisabled}
                 className="flex-grow"
               />
-              <Button onClick={() => handleAddFromUrl()} disabled={!user || isDisabled || !channelLink}>
+              <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
                 {isLoading ? <Loader className="animate-spin" /> : t('add')}
               </Button>
             </div>
@@ -1154,33 +1154,33 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                     )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <FormField
-                    control={registerForm.control}
-                    name="acceptPrivacy"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value as boolean}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>
-                            {t('acceptPrivacyLabel')} {' '}
-                            <Sheet>
-                              <SheetTrigger asChild>
-                                <button className="text-primary underline">{t('privacyPolicy')}</button>                              </SheetTrigger>
-                              <PrivacyPolicySheetContent />
-                            </Sheet>
-                          </FormLabel>
-                          <FormMessage />
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={registerForm.control}
+                  name="acceptPrivacy"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          id="acceptPrivacy"
+                        />
+                      </FormControl>
+                      <div className="grid gap-1.5 leading-none">
+                        <label htmlFor="acceptPrivacy" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          {t('acceptPrivacyLabel')}{' '}
+                          <Sheet>
+                            <SheetTrigger asChild>
+                              <button type="button" className="text-primary underline">{t('privacyPolicy')}</button>
+                            </SheetTrigger>
+                            <PrivacyPolicySheetContent />
+                          </Sheet>
+                        </label>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
                 <Button type="submit" className="w-full mt-4" disabled={!registerForm.formState.isValid}>{t('register')}</Button>
               </form>
             </Form>
@@ -1834,6 +1834,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
