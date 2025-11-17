@@ -74,11 +74,11 @@ interface Channel {
 function TermsOfServiceSheetContent() {
     const { t } = useTranslation();
     return (
-        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
+        <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
             <SheetHeader>
                 <SheetTitle>{t('termsOfServiceTitle')}</SheetTitle>
             </SheetHeader>
-            <div className="p-4 overflow-y-auto h-full">
+            <div className="p-4 overflow-y-auto flex-grow">
                 <div className="space-y-4">
                     <h2 className="text-2xl font-semibold">{t('termsOfServiceH2_1')}</h2>
                     <p>{t('termsOfServiceP1')}</p>
@@ -96,6 +96,11 @@ function TermsOfServiceSheetContent() {
                     <p>{t('termsOfServiceP5')}</p>
                 </div>
             </div>
+             <div className="p-4 border-t border-border mt-auto">
+                <div className="text-center text-xs text-muted-foreground">
+                    Build ❤️ 1.0.69
+                </div>
+            </div>
         </SheetContent>
     );
 }
@@ -103,11 +108,11 @@ function TermsOfServiceSheetContent() {
 function PrivacyPolicySheetContent() {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader>
         <SheetTitle>{t('privacyPolicyTitle')}</SheetTitle>
       </SheetHeader>
-      <div className="p-4 overflow-y-auto h-full">
+      <div className="p-4 overflow-y-auto flex-grow">
         <div className="space-y-4">
           <p>{t('privacyPolicyP1')}</p>
           <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_1')}</h2>
@@ -125,6 +130,11 @@ function PrivacyPolicySheetContent() {
           <p>{t('privacyPolicyP7')}</p>
         </div>
       </div>
+      <div className="p-4 border-t border-border mt-auto">
+        <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.69
+        </div>
+      </div>
     </SheetContent>
   )
 }
@@ -132,11 +142,11 @@ function PrivacyPolicySheetContent() {
 function ImprintSheetContent() {
   const { t } = useTranslation();
   return (
-    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader>
         <SheetTitle>{t('imprintTitle')}</SheetTitle>
       </SheetHeader>
-      <div className="p-4 overflow-y-auto h-full">
+      <div className="p-4 overflow-y-auto flex-grow">
         <div className="space-y-4">
           <p>SnackingTV Inc.</p>
           <p>123 Snack Street</p>
@@ -153,6 +163,11 @@ function ImprintSheetContent() {
           <h2 className="text-2xl font-semibold mt-6">{t('imprintRegisterEntry')}</h2>
           <p>{t('imprintRegisterCourt')}</p>
           <p>{t('imprintRegisterNumber')}</p>
+        </div>
+      </div>
+       <div className="p-4 border-t border-border mt-auto">
+        <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.69
         </div>
       </div>
     </SheetContent>
@@ -173,11 +188,11 @@ export function FavoriteChannelListSheetContent({
   const { t } = useTranslation();
 
   return (
-    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2">
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader className="text-center">
         <SheetTitle>{title}</SheetTitle>
       </SheetHeader>
-      <div className="p-4 overflow-y-auto h-[calc(100%-80px)]">
+      <div className="p-4 overflow-y-auto flex-grow">
         {channels.length > 0 ? (
           <ul className="space-y-1">
             {channels.map((channel) => (
@@ -204,6 +219,11 @@ export function FavoriteChannelListSheetContent({
         ) : (
           <p className="text-muted-foreground text-center py-4">{t('noFavorites')}</p>
         )}
+      </div>
+      <div className="p-4 border-t border-border mt-auto">
+        <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.69
+        </div>
       </div>
     </SheetContent>
   );
@@ -361,6 +381,11 @@ export function ChannelListSheetContent({
             </Button>
         </div>
       )}
+      {!isManaging && <div className="p-4 border-t border-border mt-auto">
+        <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.69
+        </div>
+      </div>}
     </SheetContent>
   );
 }
@@ -719,6 +744,11 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
             </Button>
           </div>
         </div>
+        <div className="p-4 border-t border-border">
+          <div className="text-center text-xs text-muted-foreground">
+              Build ❤️ 1.0.69
+          </div>
+        </div>
       </SheetContent>
       
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
@@ -1015,6 +1045,11 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
             {t('logout')}
           </Button>
         </div>
+        <div className="p-4 border-t border-border">
+          <div className="text-center text-xs text-muted-foreground">
+              Build ❤️ 1.0.69
+          </div>
+        </div>
       </SheetContent>
     );
   }
@@ -1158,6 +1193,11 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
               <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
           </div>
           <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
+      </div>
+       <div className="p-4 border-t border-border">
+        <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.69
+        </div>
       </div>
     </SheetContent>
   );
@@ -1329,7 +1369,7 @@ export function SettingsSheetContent({
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.68
+            Build ❤️ 1.0.69
           </div>
         </div>
       </SheetContent>
@@ -1462,6 +1502,11 @@ export function EpgSheetContent({ video }: { video: Video }) {
             )}
           </div>
         )}
+      </div>
+      <div className="p-4 border-t border-border mt-auto">
+        <div className="text-center text-xs text-muted-foreground">
+            Build ❤️ 1.0.69
+        </div>
       </div>
     </SheetContent>
   );
@@ -1788,6 +1833,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
