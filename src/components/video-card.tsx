@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -1825,6 +1825,20 @@ export function VideoCard({
                 <Loader className="animate-spin h-8 w-8" />
               </div>
             )}
+            {!isPlaying && !isBuffering && (
+              <button
+                className="pointer-events-auto"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPlaying(true);
+                }}
+              >
+                <Play
+                  className="h-24 w-24 text-white/70 drop-shadow-lg"
+                  fill="currentColor"
+                />
+              </button>
+            )}
           </div>
         </div>
 
@@ -1834,6 +1848,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
