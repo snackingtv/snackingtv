@@ -335,7 +335,7 @@ export function ChannelListSheetContent({
   return (
     <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader className="text-center px-4 pt-4">
-        <div className="relative flex justify-between items-center">
+        <div className="relative flex justify-between items-center pb-4">
           {channels.length > 0 ? (
             <Button
               variant="ghost"
@@ -351,7 +351,7 @@ export function ChannelListSheetContent({
           <SheetTitle className="absolute left-1/2 -translate-x-1/2">{title}</SheetTitle>
           <div className="w-24"></div>
         </div>
-        <div className="relative mt-4">
+        <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
                 placeholder={t('searchChannels')}
@@ -1834,6 +1834,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
