@@ -1821,8 +1821,8 @@ export function VideoCard({
 
           <div className="absolute inset-0 flex items-center justify-center">
             {isBuffering && (
-              <div className="bg-black/50 rounded-full p-3 text-white text-xs">
-                {t('loading')} {Math.floor(bufferedPercent)}%
+              <div className="bg-black/50 rounded-full p-3 text-white">
+                <Loader className="animate-spin h-8 w-8" />
               </div>
             )}
           </div>
@@ -1834,6 +1834,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
