@@ -92,6 +92,14 @@ export function VideoFeed({
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const preloadUrls = usePreload(emblaApi, feedItems);
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
   
   useEffect(() => {
     if (activeChannel && emblaApi) {
@@ -181,6 +189,8 @@ export function VideoFeed({
                   videoQuality={videoQuality}
                   onQualityLevelsChange={onQualityLevelsChange}
                   bufferSize={bufferSize}
+                  onScrollPrev={scrollPrev}
+                  onScrollNext={scrollNext}
                 />
               </div>
             ))}

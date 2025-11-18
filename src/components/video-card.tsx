@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,8 @@ interface VideoCardProps {
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
   bufferSize: string;
+  onScrollPrev: () => void;
+  onScrollNext: () => void;
 }
 
 // Define the Channel type
@@ -992,7 +994,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? t('loading') : t('updateEmail')}</Button>                  </form>
+                      <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? <Loader className="animate-spin" /> : t('updateEmail')}</Button>                  </form>
                   </Form>
                 </AccordionContent>
               </AccordionItem>
@@ -1032,7 +1034,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? t('loading') : t('updatePassword')}</Button>
+                      <Button type="submit" className="w-full" disabled={isUpdating}>{isUpdating ? <Loader className="animate-spin" /> : t('updatePassword')}</Button>
                     </form>
                   </Form>
                 </AccordionContent>
@@ -1176,7 +1178,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                             <PrivacyPolicySheetContent />
                           </Sheet>
                         </label>
-                        <FormMessage />
+                         <FormMessage>{registerForm.formState.errors.acceptPrivacy && t(registerForm.formState.errors.acceptPrivacy.message as string)}</FormMessage>
                       </div>
                     </FormItem>
                   )}
@@ -1530,6 +1532,8 @@ export function VideoCard({
   videoQuality,
   onQualityLevelsChange,
   bufferSize,
+  onScrollPrev,
+  onScrollNext,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<ReactPlayer>(null);
@@ -1818,6 +1822,30 @@ export function VideoCard({
               </TooltipContent>
             </Tooltip>
           </div>
+          
+          <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-14 w-14 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
+                  <ChevronUp size={32} className="drop-shadow-lg" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Vorheriger Kanal</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-14 w-14 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollNext(); }}>
+                  <ChevronDown size={32} className="drop-shadow-lg" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p>Nächster Kanal</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
 
           <div className="absolute inset-0 flex items-center justify-center">
             {isBuffering && (
@@ -1825,7 +1853,7 @@ export function VideoCard({
                 <Loader className="animate-spin h-8 w-8" />
               </div>
             )}
-            {!isPlaying && !isBuffering && (
+             {!isPlaying && !isBuffering && !isYoutubeOrTwitch && (
               <button
                 className="pointer-events-auto"
                 onClick={(e) => {
@@ -1848,20 +1876,3 @@ export function VideoCard({
 }
 
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
