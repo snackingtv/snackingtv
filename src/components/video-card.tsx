@@ -210,7 +210,7 @@ export function FavoriteChannelListSheetContent({
                   />
                   <span className="font-medium flex-grow truncate">{channel.name}</span>
                 </button>
-                <Button variant="ghost" size="icon" onClick={() => onToggleFavorite(channel.url)} className='text-destructive/80 hover:text-destructive'>
+                <Button variant="destructive" size="icon" onClick={() => onToggleFavorite(channel.url)}>
                   <Trash2 className="h-5 w-5" />
                 </Button>
               </li>
@@ -1834,6 +1834,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
