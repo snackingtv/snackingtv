@@ -335,15 +335,15 @@ export function ChannelListSheetContent({
   return (
     <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader className="text-center px-4 pt-4">
-        <div className="relative flex justify-between items-center pb-4">
+        <div className="relative flex justify-between items-start pb-4">
           {channels.length > 0 ? (
             <Button
-              variant="ghost"
+              variant="outline"
               onClick={() => {
                 setIsManaging(!isManaging);
                 setSelectedChannels(new Set());
               }}
-              className="w-24 text-left justify-start"
+              className="w-24 text-center justify-center"
             >
               {isManaging ? t('done') : t('manage')}
             </Button>
@@ -1834,6 +1834,7 @@ export function VideoCard({
 }
 
     
+
 
 
 
