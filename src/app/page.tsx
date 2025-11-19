@@ -307,12 +307,6 @@ export default function Home() {
               </AlertDialog>
             )}
 
-            {showClock && (
-              <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-normal text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                {currentTime}
-              </div>
-            )}
-
             <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
                 <Sheet>
                   <Tooltip>
@@ -355,6 +349,12 @@ export default function Home() {
                     onBufferSizeChange={handleBufferSizeChange}
                   />
                 </Sheet>
+                
+                {showClock && (
+                  <div className="z-30 font-headline text-2xl font-normal text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                    {currentTime}
+                  </div>
+                )}
             </div>
 
             <VideoFeed 
