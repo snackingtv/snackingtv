@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { VideoFeed } from '@/components/video-feed';
 import { SplashScreen } from '@/components/splash-screen';
-import { BottomNavigation } from '@/components/bottom-navigation';
+import { AppSidebar } from '@/components/sidebar';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { Video } from '@/lib/videos';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
-import { Search, Settings } from 'lucide-react';
+import { Search, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
@@ -307,6 +307,32 @@ export default function Home() {
               </AlertDialog>
             )}
 
+            <div className="absolute top-4 left-4 z-30">
+              <Sheet>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SheetTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
+                        <Menu size={28} className="drop-shadow-lg"/>
+                      </Button>
+                    </SheetTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>{t('menu')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <AppSidebar
+                    onChannelSelect={handleChannelSelect}
+                    addedChannels={userChannels || []}
+                    favoriteChannelUrls={favoriteChannels}
+                    onLocalVideoSelect={handleLocalVideoSelect}
+                    user={user}
+                    isUserLoading={isUserLoading}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+              </Sheet>
+            </div>
+
             <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
                 <Sheet>
                   <Tooltip>
@@ -376,7 +402,7 @@ export default function Home() {
             />
 
             {(activeChannel || localVideoItem) && (
-              <div className="absolute bottom-[5rem] left-4 z-30 flex items-center gap-2 pointer-events-none">
+              <div className="absolute bottom-6 left-4 z-30 flex items-center gap-2 pointer-events-none">
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                   <p className="text-white font-normal text-[10px]">
                     {localVideoItem?.title || activeChannel?.title}
@@ -394,7 +420,7 @@ export default function Home() {
 
             <div 
               data-progress-bar
-              className="fixed bottom-16 left-0 right-0 h-1 cursor-pointer group z-20"
+              className="fixed bottom-0 left-0 right-0 h-1 cursor-pointer group z-20"
               onClick={handleProgressClick}
             >
               <Progress
@@ -402,15 +428,7 @@ export default function Home() {
                 className="h-full group-hover:h-2.5 transition-all duration-200"
               />
             </div>
-            <BottomNavigation 
-              onChannelSelect={handleChannelSelect}
-              addedChannels={userChannels || []}
-              favoriteChannelUrls={favoriteChannels}
-              onLocalVideoSelect={handleLocalVideoSelect}
-              user={user}
-              isUserLoading={isUserLoading}
-              onToggleFavorite={handleToggleFavorite}
-            />
+            
           </TooltipProvider>
         </div>
       )}

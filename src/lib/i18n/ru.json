@@ -173,5 +173,6 @@
   "tosConfirmDescription": "Прежде чем вы сможете искать или добавлять каналы, вы должны прочитать и принять Условия использования.",
   "readTermsOfService": "Прочитать Условия использования",
   "tosAcceptAndContinue": "Принять и продолжить",
-  "noChannelsAvailable": "Нет доступных каналов"
+  "noChannelsAvailable": "Нет доступных каналов",
+  "menu": "Меню"
 }

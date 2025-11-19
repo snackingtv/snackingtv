@@ -172,5 +172,6 @@
   "tosConfirmDescription": "Bevor Sie Kanäle suchen oder hinzufügen können, müssen Sie die Nutzungsbedingungen lesen und akzeptieren.",
   "readTermsOfService": "Nutzungsbedingungen lesen",
   "tosAcceptAndContinue": "Akzeptieren & Fortfahren",
-  "noChannelsAvailable": "Keine Sender verfügbar"
+  "noChannelsAvailable": "Keine Sender verfügbar",
+  "menu": "Menü"
 }
