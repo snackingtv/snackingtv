@@ -377,7 +377,7 @@ export default function Home() {
                 </Sheet>
                 
                 {showClock && (
-                  <div className="z-30 font-body text-2xl font-light text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                  <div className="z-30 font-light text-2xl text-white" style={{ fontFamily: 'Inter, sans-serif', textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
                     {currentTime}
                   </div>
                 )}

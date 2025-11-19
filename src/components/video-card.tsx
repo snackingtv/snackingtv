@@ -1257,7 +1257,7 @@ export function SettingsSheetContent({
   
   return (
     <>
-      <SheetContent side="bottom" className="h-auto max-h-[90vh] flex flex-col rounded-t-lg mx-2 mb-2">
+      <SheetContent side="right">
         <SheetHeader>
           <SheetTitle className="text-center">{t('settings')}</SheetTitle>
         </SheetHeader>
