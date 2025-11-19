@@ -16,6 +16,7 @@ import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
 import { findEpgUrl } from '@/ai/flows/find-epg-flow';
+import { fetchUrlContent } from '@/ai/flows/proxy-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -1469,9 +1470,6 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
           const result = await findEpgUrl({ channelName: video.title });
           if (result.url) {
             epgUrl = result.url;
-            // The AI might return the TVG ID in the URL or we might need to guess it.
-            // For now, let's assume the found XML file is for our channel.
-            // We'll also try to extract a tvg-id from the channel name for matching.
             effectiveTvgId = video.title.replace(/ /g, '');
           }
         } catch (aiError) {
@@ -1485,24 +1483,18 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
         return;
       }
       
-      // Fallback/Default EPG source if no specific one is found
       if (!epgUrl) {
-         // This is a placeholder for a generic EPG provider
-         // In a real app, this could point to one or more known good EPG sources
          epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
       }
 
 
       try {
-        const proxyUrl = `https://cors.eu.org/${epgUrl}`;
-        const response = await fetch(proxyUrl);
+        const xmlText = await fetchUrlContent({ url: epgUrl });
         
-        if (!response.ok) {
-          throw new Error(`Network response was not ok (${response.status})`);
+        if (!xmlText) {
+          throw new Error(`Network response was not ok`);
         }
 
-        const xmlText = await response.text();
-        
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
 
