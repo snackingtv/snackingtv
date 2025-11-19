@@ -1466,12 +1466,28 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
         setIsLoading(false);
         return;
       }
-      
-      const epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
 
       try {
-        const xmlText = await fetchUrlContent({ url: epgUrl });
+        // 1. Fetch the channels metadata to find the EPG URL
+        const channelsMetaUrl = 'https://raw.githubusercontent.com/iptv-org/database/master/data/channels.json';
+        const channelsMetaResponse = await fetchUrlContent({ url: channelsMetaUrl });
+        const channelsMeta = JSON.parse(channelsMetaResponse);
         
+        const channelMeta = channelsMeta.find((c: any) => c.id === tvgId);
+        const epgUrl = channelMeta?.epg;
+
+        if (!epgUrl) {
+          setError(t('noEpgData'));
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. Fetch the actual EPG XML file using the found URL
+        const xmlText = await fetchUrlContent({ url: epgUrl });
+        if (!xmlText) {
+          throw new Error('Network response was not ok');
+        }
+
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
         
@@ -1764,11 +1780,11 @@ export function VideoCard({
         onClick={handleVideoClick}
       >
         {isPlaceholder ? (
-          <div className="w-full h-full flex flex-col items-center justify-center text-center text-white">
-            <div className="absolute z-10 p-4 bg-black/50 rounded-lg">
-                <h2 className="text-2xl font-bold">{video.title}</h2>
-                <p className="text-muted-foreground">{t('noChannels')}</p>
-            </div>
+          <div className="w-full h-full flex flex-col items-center justify-center text-center text-white p-8">
+              <div className="absolute z-10 p-4 bg-black/50 rounded-lg">
+                  <h2 className="text-2xl font-bold">{t('noChannelsAvailable')}</h2>
+                  <p className="text-muted-foreground">{t('noChannels')}</p>
+              </div>
           </div>
         ) : (
           <ReactPlayer

@@ -39,7 +39,10 @@ const urlProxyFlow = ai.defineFlow(
       return textContent;
     } catch (error: any) {
       console.error(`Failed to fetch content from ${url}:`, error);
-      // Re-throw the error to be handled by the caller
+      // Re-throw the error to be handled by the caller, adding more context if it's a fetch error
+      if (error.cause) {
+         throw new Error(`Failed to fetch from ${url}: ${error.message} - Cause: ${error.cause}`);
+      }
       throw error;
     }
   }
