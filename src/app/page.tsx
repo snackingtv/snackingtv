@@ -10,7 +10,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
-import { Search, Settings, Menu } from 'lucide-react';
+import { Search, Settings, Menu, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
@@ -60,6 +60,38 @@ export default function Home() {
   
   const [feedItems, setFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
   const [filteredFeedItems, setFilteredFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
+
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const toggleFullScreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullScreenChange);
+    document.addEventListener('msfullscreenchange', handleFullScreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullScreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullScreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullScreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullScreenChange);
+    };
+  }, []);
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -350,6 +382,17 @@ export default function Home() {
                    <ChannelListSheetContent channels={userChannels || []} onChannelSelect={handleChannelSelect} title={t('channels')} />
                 </Sheet>
                 
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0" onClick={toggleFullScreen}>
+                      {isFullScreen ? <Minimize size={28} className="drop-shadow-lg" /> : <Maximize size={28} className="drop-shadow-lg" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 <Sheet>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -437,3 +480,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
