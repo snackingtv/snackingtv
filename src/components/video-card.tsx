@@ -15,7 +15,6 @@ import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredentia
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
-import { findEpgUrl } from '@/ai/flows/find-epg-flow';
 import { fetchUrlContent } from '@/ai/flows/proxy-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
@@ -338,7 +337,7 @@ export function ChannelListSheetContent({
 
   return (
     <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
-      <SheetHeader className="text-center px-4 pt-4">
+      <SheetHeader className="text-center px-4 pt-4 pb-4">
         <div className="relative flex justify-between items-start pb-4">
           {channels.length > 0 ? (
             <Button
@@ -1462,45 +1461,14 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
       const channelInfo = addedChannels.find(c => c.url === video.url);
       const tvgId = channelInfo?.tvgId;
 
-      let epgUrl = '';
-      let effectiveTvgId = tvgId;
-
       if (!tvgId) {
-        const cacheKey = `epg-url-cache-${video.title}`;
-        const cachedUrl = localStorage.getItem(cacheKey);
-
-        if (cachedUrl) {
-          epgUrl = cachedUrl;
-        } else {
-          try {
-            const result = await findEpgUrl({ channelName: video.title });
-            if (result.url) {
-              epgUrl = result.url;
-              localStorage.setItem(cacheKey, epgUrl); // Cache the result
-            }
-          } catch (aiError) {
-            console.error("AI EPG search failed:", aiError);
-            // Don't set an error, just proceed without an epgUrl
-          }
-        }
-        
-        if (epgUrl) {
-          // A generic effectiveTvgId can be used when the EPG file is specific to the channel
-          effectiveTvgId = video.title.replace(/ /g, '');
-        }
-      }
-
-      if (!tvgId && !epgUrl) {
         setError(t('noEpgData'));
         setIsLoading(false);
         return;
       }
-      
-      // Fallback or default EPG URL logic
-      if (!epgUrl) {
-         epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
-      }
 
+      // TODO: Users could provide their own EPG URL in the settings in the future.
+      const epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
 
       try {
         const xmlText = await fetchUrlContent({ url: epgUrl });
@@ -1513,7 +1481,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
 
         const programs = Array.from(xmlDoc.getElementsByTagName('programme'))
-          .filter(p => p.getAttribute('channel') === effectiveTvgId)
+          .filter(p => p.getAttribute('channel') === tvgId)
           .map(p => ({
             start: p.getAttribute('start'),
             stop: p.getAttribute('stop'),
