@@ -1603,6 +1603,8 @@ export function VideoCard({
   const firestore = useFirestore();
   const { toast } = useToast();
   
+  const isPlaceholder = video.id === 'placeholder';
+
   const handleShare = async () => {
     if (!video || !video.url) return;
 
@@ -1680,7 +1682,7 @@ export function VideoCard({
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const target = e.target as HTMLElement;
-    if (target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[data-progress-bar]') || isYoutubeOrTwitch) {
+    if (isPlaceholder || target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[data-progress-bar]') || isYoutubeOrTwitch) {
       return;
     }
 
@@ -1761,52 +1763,67 @@ export function VideoCard({
         className="relative w-full h-full bg-background flex items-center justify-center cursor-pointer"
         onClick={handleVideoClick}
       >
-        <ReactPlayer
-            ref={playerRef}
-            url={sourceUrl}
-            playing={isPlaying}
-            loop={!isYoutubeOrTwitch}
-            playsinline
-            width="100%"
-            height="100%"
-            controls={isYoutubeOrTwitch}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            onBuffer={() => setIsBuffering(true)}
-            onBufferEnd={() => setIsBuffering(false)}
-            onProgress={handleProgress}
-            onDuration={handleDuration}
-            onSeek={played => onProgressUpdate(played * 100)}
-            config={{
-                file: {
-                    hlsOptions: {
-                        maxBufferLength: bufferSize === 'auto' ? 30 : parseInt(bufferSize, 10),
-                        maxMaxBufferLength: bufferSize === 'auto' ? 60 : parseInt(bufferSize, 10) * 2,
-                    },
-                    attributes: {
-                        crossOrigin: 'anonymous',
-                    },
-                    tracks: showCaptions && video.subtitlesUrl ? [{
-                        kind: 'subtitles',
-                        src: video.subtitlesUrl,
-                        srcLang: 'de',
-                        default: true,
-                        label: 'Deutsch',
-                    }] : [],
-                },
-                youtube: {
-                    playerVars: {
-                        showinfo: 0,
-                        controls: 1,
-                    },
-                },
-            }}
-            style={{ objectFit: 'contain' }}
-        />
+        {isPlaceholder ? (
+          <div className="w-full h-full flex flex-col items-center justify-center text-center text-white">
+            <Image 
+                src={video.url as string} 
+                alt={video.title} 
+                layout="fill"
+                objectFit="contain"
+            />
+            <div className="absolute z-10 p-4 bg-black/50 rounded-lg">
+                <h2 className="text-2xl font-bold">{video.title}</h2>
+                <p className="text-muted-foreground">{t('noChannels')}</p>
+            </div>
+          </div>
+        ) : (
+          <ReactPlayer
+              ref={playerRef}
+              url={sourceUrl}
+              playing={isPlaying}
+              loop={!isYoutubeOrTwitch}
+              playsinline
+              width="100%"
+              height="100%"
+              controls={isYoutubeOrTwitch}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onBuffer={() => setIsBuffering(true)}
+              onBufferEnd={() => setIsBuffering(false)}
+              onProgress={handleProgress}
+              onDuration={handleDuration}
+              onSeek={played => onProgressUpdate(played * 100)}
+              config={{
+                  file: {
+                      hlsOptions: {
+                          maxBufferLength: bufferSize === 'auto' ? 30 : parseInt(bufferSize, 10),
+                          maxMaxBufferLength: bufferSize === 'auto' ? 60 : parseInt(bufferSize, 10) * 2,
+                      },
+                      attributes: {
+                          crossOrigin: 'anonymous',
+                      },
+                      tracks: showCaptions && video.subtitlesUrl ? [{
+                          kind: 'subtitles',
+                          src: video.subtitlesUrl,
+                          srcLang: 'de',
+                          default: true,
+                          label: 'Deutsch',
+                      }] : [],
+                  },
+                  youtube: {
+                      playerVars: {
+                          showinfo: 0,
+                          controls: 1,
+                      },
+                  },
+              }}
+              style={{ objectFit: 'contain' }}
+          />
+        )}
         
         <div
           className={`absolute inset-0 transition-opacity duration-300 pointer-events-none ${
-            (showControls || !isPlaying) && !isYoutubeOrTwitch ? 'opacity-100' : 'opacity-0'
+            (showControls || !isPlaying) && !isYoutubeOrTwitch && !isPlaceholder ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto">
@@ -1919,9 +1936,3 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
-
-    
-
-    
-
-    
