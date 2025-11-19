@@ -100,7 +100,7 @@ function TermsOfServiceSheetContent() {
             </div>
              <div className="p-4 border-t border-border mt-auto">
                 <div className="text-center text-xs text-muted-foreground">
-                    Build ❤️ 1.0.83
+                    Build ❤️ 1.0.84
                 </div>
             </div>
         </SheetContent>
@@ -134,7 +134,7 @@ function PrivacyPolicySheetContent() {
       </div>
       <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
+            Build ❤️ 1.0.84
         </div>
       </div>
     </SheetContent>
@@ -169,7 +169,7 @@ function ImprintSheetContent() {
       </div>
        <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
+            Build ❤️ 1.0.84
         </div>
       </div>
     </SheetContent>
@@ -224,7 +224,7 @@ export function FavoriteChannelListSheetContent({
       </div>
       <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
+            Build ❤️ 1.0.84
         </div>
       </div>
     </SheetContent>
@@ -385,7 +385,7 @@ export function ChannelListSheetContent({
       )}
       {!isManaging && <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
+            Build ❤️ 1.0.84
         </div>
       </div>}
     </SheetContent>
@@ -748,7 +748,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
         </div>
         <div className="p-4 border-t border-border">
           <div className="text-center text-xs text-muted-foreground">
-              Build ❤️ 1.0.83
+              Build ❤️ 1.0.84
           </div>
         </div>
       </SheetContent>
@@ -1049,7 +1049,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
         </div>
         <div className="p-4 border-t border-border">
           <div className="text-center text-xs text-muted-foreground">
-              Build ❤️ 1.0.83
+              Build ❤️ 1.0.84
           </div>
         </div>
       </SheetContent>
@@ -1198,7 +1198,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
       </div>
        <div className="p-4 border-t border-border">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
+            Build ❤️ 1.0.84
         </div>
       </div>
     </SheetContent>
@@ -1372,7 +1372,7 @@ export function SettingsSheetContent({
           </button>
           <Separator className="my-2" />
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
+            Build ❤️ 1.0.84
           </div>
         </div>
       </SheetContent>
@@ -1440,7 +1440,6 @@ export function VideoCard({
   const { toast } = useToast();
   
   const isPlaceholder = video.id === 'placeholder';
-  const hasEpg = !!video.tvgId;
 
 
   const handleShare = async () => {
