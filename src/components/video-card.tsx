@@ -1469,7 +1469,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
 
       try {
         // 1. Fetch the channels metadata to find the EPG URL
-        const channelsMetaUrl = 'https://iptv-org.github.io/database/channels.json';
+        const channelsMetaUrl = 'https://iptv-org.github.io/database/data/channels.json';
         const channelsMetaResponse = await fetchUrlContent({ url: channelsMetaUrl });
         const channelsMeta = JSON.parse(channelsMetaResponse);
         
@@ -1485,7 +1485,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
         // 2. Fetch the actual EPG XML file using the found URL
         const xmlText = await fetchUrlContent({ url: epgUrl });
         if (!xmlText) {
-          throw new Error('Network response was not ok');
+          throw new Error(`Network response was not ok`);
         }
 
         const parser = new DOMParser();
@@ -1620,6 +1620,8 @@ export function VideoCard({
   const { toast } = useToast();
   
   const isPlaceholder = video.id === 'placeholder';
+  const hasEpg = !!addedChannels.find(c => c.url === video.url)?.tvgId;
+
 
   const handleShare = async () => {
     if (!video || !video.url) return;
@@ -1848,21 +1850,23 @@ export function VideoCard({
                 </TooltipContent>
               </Tooltip>
               
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                          <CalendarDays size={32} className="drop-shadow-lg" />
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>{t('epg')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <EpgSheetContent video={video} addedChannels={addedChannels} />
-              </Sheet>
+              {hasEpg && (
+                <Sheet>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                            <CalendarDays size={32} className="drop-shadow-lg" />
+                        </Button>
+                      </SheetTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      <p>{t('epg')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <EpgSheetContent video={video} addedChannels={addedChannels} />
+                </Sheet>
+              )}
 
               <Tooltip>
                 <TooltipTrigger asChild>
