@@ -1469,7 +1469,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
 
       try {
         // 1. Fetch the channels metadata to find the EPG URL
-        const channelsMetaUrl = 'https://raw.githubusercontent.com/iptv-org/database/master/data/channels.json';
+        const channelsMetaUrl = 'https://iptv-org.github.io/database/channels.json';
         const channelsMetaResponse = await fetchUrlContent({ url: channelsMetaUrl });
         const channelsMeta = JSON.parse(channelsMetaResponse);
         
