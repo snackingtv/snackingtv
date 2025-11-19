@@ -9,6 +9,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
 import Head from 'next/head';
 import { WithId } from '@/firebase/firestore/use-collection';
+import { useTranslation } from '@/lib/i18n';
 
 interface VideoFeedProps {
   feedItems: Video[];
@@ -95,6 +96,7 @@ export function VideoFeed({
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const preloadUrls = usePreload(emblaApi, feedItems);
+  const { t } = useTranslation();
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -149,8 +151,8 @@ export function VideoFeed({
 
   const placeholderVideo: Video = {
     id: 'placeholder',
-    url: 'https://i.imgur.com/2ZZU5p3.png',
-    title: 'Keine Sender verfügbar',
+    url: '',
+    title: t('noChannelsAvailable'),
     author: 'SnackingTV',
     avatarId: 'iptv_placeholder'
   };

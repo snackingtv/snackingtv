@@ -173,8 +173,10 @@
   "tosConfirmTitle": "Accept Terms of Service?",
   "tosConfirmDescription": "Before you can search for or add channels, you must read and accept the Terms of Service.",
   "readTermsOfService": "Read Terms of Service",
-  "tosAcceptAndContinue": "Accept & Continue"
+  "tosAcceptAndContinue": "Accept & Continue",
+  "noChannelsAvailable": "No channels available"
 }
+
 
 
 

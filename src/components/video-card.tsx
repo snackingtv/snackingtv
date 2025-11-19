@@ -1466,8 +1466,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
         setIsLoading(false);
         return;
       }
-
-      // TODO: Users could provide their own EPG URL in the settings in the future.
+      
       const epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
 
       try {
@@ -1765,12 +1764,6 @@ export function VideoCard({
       >
         {isPlaceholder ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-center text-white">
-            <Image 
-                src={video.url as string} 
-                alt={video.title} 
-                layout="fill"
-                objectFit="contain"
-            />
             <div className="absolute z-10 p-4 bg-black/50 rounded-lg">
                 <h2 className="text-2xl font-bold">{video.title}</h2>
                 <p className="text-muted-foreground">{t('noChannels')}</p>

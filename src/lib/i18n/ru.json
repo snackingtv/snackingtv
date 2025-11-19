@@ -174,8 +174,10 @@
   "tosConfirmTitle": "Принять Условия использования?",
   "tosConfirmDescription": "Прежде чем вы сможете искать или добавлять каналы, вы должны прочитать и принять Условия использования.",
   "readTermsOfService": "Прочитать Условия использования",
-  "tosAcceptAndContinue": "Принять и продолжить"
+  "tosAcceptAndContinue": "Принять и продолжить",
+  "noChannelsAvailable": "Нет доступных каналов"
 }
+
 
 
 
