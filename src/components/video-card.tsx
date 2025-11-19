@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
 import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
-import Hls from 'hls.js';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
@@ -1397,185 +1396,6 @@ export function SettingsSheetContent({
   );
 }
 
-const EpgProgramItem = ({ program, isCurrent, isPast }: { program: any; isCurrent: boolean; isPast: boolean }) => {
-  const { t } = useTranslation();
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (isCurrent) {
-      const updateProgress = () => {
-        const now = Date.now();
-        const start = new Date(program.start).getTime();
-        const stop = new Date(program.stop).getTime();
-        const duration = stop - start;
-        if (duration <= 0) {
-          setProgress(100);
-          return;
-        }
-        const elapsed = now - start;
-        const calculatedProgress = Math.min(100, (elapsed / duration) * 100);
-        setProgress(calculatedProgress);
-      };
-      
-      updateProgress();
-      const intervalId = setInterval(updateProgress, 60000); // Update every minute
-      return () => clearInterval(intervalId);
-    }
-  }, [isCurrent, program.start, program.stop]);
-
-  const itemClasses = `p-4 rounded-lg ${isCurrent ? 'bg-primary/20 border border-primary/50' : ''} ${isPast ? 'opacity-50' : ''}`;
-
-  return (
-    <div className={itemClasses}>
-      <div className="flex justify-between items-baseline">
-        <h4 className={`font-semibold ${isCurrent ? 'text-primary' : 'text-foreground'}`}>
-          {program.title}
-        </h4>
-        <p className="text-xs text-muted-foreground">
-          {new Date(program.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(program.stop).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </p>
-      </div>
-      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{program.desc}</p>
-      {isCurrent && (
-        <div className="mt-2">
-          <Progress value={progress} className="h-1 bg-primary/30" />
-        </div>
-      )}
-    </div>
-  );
-};
-
-
-export function EpgSheetContent({ video, addedChannels }: { video: Video, addedChannels: WithId<M3uChannel>[] }) {
-  const { t } = useTranslation();
-  const [epgData, setEpgData] = useState<any[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchEpgData = async () => {
-      setIsLoading(true);
-      setError(null);
-      setEpgData(null);
-
-      const channelInfo = addedChannels.find(c => c.url === video.url);
-      const tvgId = channelInfo?.tvgId;
-
-      if (!tvgId) {
-        setError(t('noEpgData'));
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // 1. Fetch the channels metadata to find the EPG URL
-        const channelsMetaUrl = 'https://iptv-org.github.io/database/data/channels.json';
-        const channelsMetaResponse = await fetchUrlContent({ url: channelsMetaUrl });
-        const channelsMeta = JSON.parse(channelsMetaResponse);
-        
-        const channelMeta = channelsMeta.find((c: any) => c.id === tvgId);
-        const epgUrl = channelMeta?.epg;
-
-        if (!epgUrl) {
-          setError(t('noEpgData'));
-          setIsLoading(false);
-          return;
-        }
-
-        // 2. Fetch the actual EPG XML file using the found URL
-        const xmlText = await fetchUrlContent({ url: epgUrl });
-        if (!xmlText) {
-          throw new Error(`Network response was not ok`);
-        }
-
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-        
-        const errorNode = xmlDoc.querySelector('parsererror');
-        if (errorNode) {
-          throw new Error('Failed to parse XML');
-        }
-
-        const programs = Array.from(xmlDoc.getElementsByTagName('programme'))
-          .filter(p => p.getAttribute('channel') === tvgId)
-          .map(p => ({
-            start: p.getAttribute('start'),
-            stop: p.getAttribute('stop'),
-            title: p.getElementsByTagName('title')[0]?.textContent,
-            desc: p.getElementsByTagName('desc')[0]?.textContent,
-          }));
-
-        if (programs.length > 0) {
-          setEpgData(programs.sort((a, b) => new Date(a.start as string).getTime() - new Date(b.start as string).getTime()));
-        } else {
-           setError(t('noEpgData'));
-        }
-
-      } catch (e: any) {
-        console.error("Failed to fetch or parse EPG data:", e);
-        setError(e.message || t('noEpgData'));
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEpgData();
-  }, [video.url, video.title, addedChannels, t]);
-  
-  const now = Date.now();
-  const pastPrograms = epgData?.filter(p => new Date(p.stop).getTime() < now);
-  const currentProgram = epgData?.find(p => new Date(p.start).getTime() <= now && new Date(p.stop).getTime() > now);
-  const upcomingPrograms = epgData?.filter(p => new Date(p.start).getTime() > now);
-
-  return (
-    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
-      <SheetHeader className="text-center pb-2">
-        <SheetTitle>{t('epg')} - {video.title}</SheetTitle>
-      </SheetHeader>
-      <div className="flex-grow overflow-y-auto p-4">
-        {isLoading && <div className="flex justify-center items-center h-full"><Loader className="h-8 w-8 animate-spin" /></div>}
-        {error && !isLoading && <p className="text-center text-muted-foreground py-10">{error}</p>}
-        {!isLoading && !error && epgData && (
-          <div className="space-y-4">
-             {pastPrograms && pastPrograms.length > 0 && (
-              <>
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="past-programs">
-                    <AccordionTrigger>Vergangene Sendungen</AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-2">
-                        {pastPrograms.map(p => <EpgProgramItem key={p.start} program={p} isCurrent={false} isPast={true}/>)}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                <Separator />
-              </>
-            )}
-            {currentProgram && <EpgProgramItem program={currentProgram} isCurrent={true} isPast={false} />}
-            {upcomingPrograms && upcomingPrograms.length > 0 && (
-              <>
-                {currentProgram && <Separator />}
-                <div className="space-y-2">
-                  {upcomingPrograms.map(p => <EpgProgramItem key={p.start} program={p} isCurrent={false} isPast={false} />)}
-                </div>
-              </>
-            )}
-             {!currentProgram && !upcomingPrograms?.length && (
-              <p className="text-center text-muted-foreground py-10">{t('noEpgData')}</p>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="p-4 border-t border-border mt-auto">
-        <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.83
-        </div>
-      </div>
-    </SheetContent>
-  );
-}
-
 
 export function VideoCard({ 
   video, 
@@ -1620,7 +1440,7 @@ export function VideoCard({
   const { toast } = useToast();
   
   const isPlaceholder = video.id === 'placeholder';
-  const hasEpg = !!addedChannels.find(c => c.url === video.url)?.tvgId;
+  const hasEpg = !!video.tvgId;
 
 
   const handleShare = async () => {
@@ -1849,24 +1669,6 @@ export function VideoCard({
                   <p>{t('favorites')}</p>
                 </TooltipContent>
               </Tooltip>
-              
-              {hasEpg && (
-                <Sheet>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                            <CalendarDays size={32} className="drop-shadow-lg" />
-                        </Button>
-                      </SheetTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="left">
-                      <p>{t('epg')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <EpgSheetContent video={video} addedChannels={addedChannels} />
-                </Sheet>
-              )}
 
               <Tooltip>
                 <TooltipTrigger asChild>

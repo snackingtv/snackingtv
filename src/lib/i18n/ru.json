@@ -147,8 +147,6 @@
   "bufferSizeChangedTitle": "Размер буфера изменен",
   "bufferSizeChangedDescription": "Размер буфера установлен на {size}.",
   "bugReport": "Сообщить об ошибке",
-  "epg": "Телепрограмма",
-  "noEpgData": "Нет информации о программе.",
   "russian": "Русский",
   "noResultsFound": "Ничего не найдено.",
   "clearCache": "Очистить кэш",
@@ -177,7 +175,3 @@
   "tosAcceptAndContinue": "Принять и продолжить",
   "noChannelsAvailable": "Нет доступных каналов"
 }
-
-
-
-

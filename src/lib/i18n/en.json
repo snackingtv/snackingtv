@@ -147,8 +147,6 @@
   "bufferSizeChangedTitle": "Buffer Size Changed",
   "bufferSizeChangedDescription": "The buffer size has been set to {size}.",
   "bugReport": "Report a bug",
-  "epg": "Program Guide",
-  "noEpgData": "No program information available.",
   "noResultsFound": "No results found.",
   "clearCache": "Clear Cache",
   "clearCacheConfirmTitle": "Clear cache?",
@@ -176,7 +174,3 @@
   "tosAcceptAndContinue": "Accept & Continue",
   "noChannelsAvailable": "No channels available"
 }
-
-
-
-

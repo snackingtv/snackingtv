@@ -147,8 +147,6 @@
   "bufferSizeChangedTitle": "Puffergröße geändert",
   "bufferSizeChangedDescription": "Die Puffergröße wurde auf {size} eingestellt.",
   "bugReport": "Fehler melden",
-  "epg": "Programmführer",
-  "noEpgData": "Keine Programminformationen verfügbar.",
   "noResultsFound": "Keine Ergebnisse gefunden.",
   "clearCache": "Cache leeren",
   "clearCacheConfirmTitle": "Cache leeren?",
@@ -176,7 +174,3 @@
   "tosAcceptAndContinue": "Akzeptieren & Fortfahren",
   "noChannelsAvailable": "Keine Sender verfügbar"
 }
-
-
-
-
