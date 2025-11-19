@@ -1466,14 +1466,27 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
       let effectiveTvgId = tvgId;
 
       if (!tvgId) {
-        try {
-          const result = await findEpgUrl({ channelName: video.title });
-          if (result.url) {
-            epgUrl = result.url;
-            effectiveTvgId = video.title.replace(/ /g, '');
+        const cacheKey = `epg-url-cache-${video.title}`;
+        const cachedUrl = localStorage.getItem(cacheKey);
+
+        if (cachedUrl) {
+          epgUrl = cachedUrl;
+        } else {
+          try {
+            const result = await findEpgUrl({ channelName: video.title });
+            if (result.url) {
+              epgUrl = result.url;
+              localStorage.setItem(cacheKey, epgUrl); // Cache the result
+            }
+          } catch (aiError) {
+            console.error("AI EPG search failed:", aiError);
+            // Don't set an error, just proceed without an epgUrl
           }
-        } catch (aiError) {
-          console.error("AI EPG search failed:", aiError);
+        }
+        
+        if (epgUrl) {
+          // A generic effectiveTvgId can be used when the EPG file is specific to the channel
+          effectiveTvgId = video.title.replace(/ /g, '');
         }
       }
 
@@ -1483,6 +1496,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
         return;
       }
       
+      // Fallback or default EPG URL logic
       if (!epgUrl) {
          epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
       }
@@ -1937,6 +1951,8 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
+    
 
     
 
