@@ -308,7 +308,7 @@ export default function Home() {
             )}
 
             {showClock && (
-              <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-bold text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+              <div className="absolute top-4 left-4 z-30 font-headline text-2xl font-normal text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
                 {currentTime}
               </div>
             )}
