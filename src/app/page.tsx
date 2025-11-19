@@ -351,7 +351,7 @@ export default function Home() {
                 </Sheet>
                 
                 {showClock && (
-                  <div className="z-30 font-headline text-2xl font-normal text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
+                  <div className="z-30 font-body text-2xl font-light text-white" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
                     {currentTime}
                   </div>
                 )}
@@ -409,7 +409,7 @@ export default function Home() {
               onLocalVideoSelect={handleLocalVideoSelect}
               user={user}
               isUserLoading={isUserLoading}
-              onToggleFavorite={handleToggleFavorite}
+              onToggleFavorite={onToggleFavorite}
             />
           </TooltipProvider>
         </div>
