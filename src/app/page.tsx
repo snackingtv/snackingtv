@@ -409,7 +409,7 @@ export default function Home() {
               onLocalVideoSelect={handleLocalVideoSelect}
               user={user}
               isUserLoading={isUserLoading}
-              onToggleFavorite={onToggleFavorite}
+              onToggleFavorite={handleToggleFavorite}
             />
           </TooltipProvider>
         </div>
