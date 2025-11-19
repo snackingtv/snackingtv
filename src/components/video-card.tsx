@@ -337,21 +337,23 @@ export function ChannelListSheetContent({
   return (
     <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
       <SheetHeader className="text-center px-4 pt-4 pb-4">
-        <div className="relative flex justify-between items-start pb-4">
-          {channels.length > 0 ? (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsManaging(!isManaging);
-                setSelectedChannels(new Set());
-              }}
-              className="w-24 text-center justify-center"
-            >
-              {isManaging ? t('done') : t('manage')}
-            </Button>
-          ) : <div className="w-24"></div> }
-          <SheetTitle className="absolute left-1/2 -translate-x-1/2">{title}</SheetTitle>
-          <div className="w-24"></div>
+        <div className="grid grid-cols-3 items-center pb-4">
+          <div className="flex justify-start">
+            {channels.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsManaging(!isManaging);
+                  setSelectedChannels(new Set());
+                }}
+                className="w-24 text-center justify-center"
+              >
+                {isManaging ? t('done') : t('manage')}
+              </Button>
+            )}
+          </div>
+          <SheetTitle className="text-center">{title}</SheetTitle>
+          <div />
         </div>
         <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
