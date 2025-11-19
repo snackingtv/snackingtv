@@ -1257,7 +1257,7 @@ export function SettingsSheetContent({
   
   return (
     <>
-      <SheetContent side="right">
+      <SheetContent side="right" className="flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-center">{t('settings')}</SheetTitle>
         </SheetHeader>
@@ -1368,7 +1368,7 @@ export function SettingsSheetContent({
             </li>
           </ul>
         </div>
-        <div className="p-4 flex flex-col items-center gap-4">
+        <div className="p-4 flex flex-col items-center gap-4 mt-auto">
           <button onClick={() => setIsClearCacheDialogOpen(true)} className="flex items-center justify-center p-3 rounded-lg hover:bg-destructive/10 w-full text-destructive">
             <span className='flex items-center gap-2'><Trash2 className="h-5 w-5" /> {t('clearCache')}</span>
           </button>
