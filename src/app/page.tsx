@@ -402,33 +402,35 @@ export default function Home() {
             />
 
             {(activeChannel || localVideoItem) && (
-              <div className="absolute bottom-6 left-4 z-30 flex items-center gap-2 pointer-events-none">
-                <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                  <p className="text-white font-normal text-[10px]">
-                    {localVideoItem?.title || activeChannel?.title}
-                  </p>
-                </div>
-                {activeChannel?.author && (
-                  <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                    <p className="text-white font-normal text-[10px]">
-                        {activeChannel.author}
+              <div className="absolute bottom-6 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
+                  <div className="flex items-center gap-2">
+                    <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
+                      <p className="text-white font-normal text-[10px]">
+                        {localVideoItem?.title || activeChannel?.title}
                       </p>
+                    </div>
+                    {activeChannel?.author && (
+                      <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
+                        <p className="text-white font-normal text-[10px]">
+                            {activeChannel.author}
+                          </p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
             )}
-
-            <div 
-              data-progress-bar
-              className="fixed bottom-0 left-0 right-0 h-1 cursor-pointer group z-20"
-              onClick={handleProgressClick}
-            >
-              <Progress
-                value={progress}
-                className="h-full group-hover:h-2.5 transition-all duration-200"
-              />
-            </div>
             
+            <div
+                className="fixed bottom-0 left-0 right-0 h-1 z-20 cursor-pointer group"
+                onClick={handleProgressClick}
+                data-progress-bar
+              >
+                <Progress
+                  value={progress}
+                  className="h-full transition-all duration-200 group-hover:h-2"
+                />
+              </div>
+
           </TooltipProvider>
         </div>
       )}

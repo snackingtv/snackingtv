@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState, MutableRefObject } from 'react';
+import React, { useCallback, useEffect, useState, MutableRefObject, useRef } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import type { EmblaCarouselType, EmblaOptionsType } from 'embla-carousel';
 import type { Video } from '@/lib/videos';
@@ -10,6 +10,7 @@ import type { M3uChannel } from '@/lib/m3u-parser';
 import Head from 'next/head';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { useTranslation } from '@/lib/i18n';
+import ReactPlayer from 'react-player';
 
 interface VideoFeedProps {
   feedItems: Video[];
@@ -17,7 +18,7 @@ interface VideoFeedProps {
   activeChannel: M3uChannel | Video | null;
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
-  activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
+  activeVideoRef: MutableRefObject<ReactPlayer | null>;
   localVideoItem: Video | null;
   favoriteChannels: string[];
   onToggleFavorite: (channelUrl: string) => void;

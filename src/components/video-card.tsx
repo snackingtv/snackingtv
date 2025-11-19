@@ -55,7 +55,7 @@ interface VideoCardProps {
   onToggleFavorite: (channelUrl: string) => void;
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
-  activeVideoRef: MutableRefObject<HTMLVideoElement | null>;
+  activeVideoRef: MutableRefObject<ReactPlayer | null>;
   localVideoItem: Video | null;
   showCaptions: boolean;
   videoQuality: string;
@@ -1419,7 +1419,6 @@ export function VideoCard({
   onScrollNext,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<ReactPlayer>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -1525,7 +1524,7 @@ export function VideoCard({
       return;
     }
 
-    if (playerRef.current) {
+    if (activeVideoRef.current) {
        setIsPlaying(prev => !prev);
     }
   };
@@ -1560,6 +1559,7 @@ export function VideoCard({
   };
   
   const handleProgress = (state: { loaded: number, loadedSeconds: number, played: number, playedSeconds: number }) => {
+      onProgressUpdate(state.played * 100);
       setBufferedPercent(state.loaded * 100);
   };
 
@@ -1604,15 +1604,20 @@ export function VideoCard({
       >
         {isPlaceholder ? (
           <div className="w-full h-full flex flex-col items-center justify-center text-center text-white p-8">
-              <div className="absolute z-10 p-4 bg-black/50 rounded-lg">
-                  <h2 className="text-2xl font-bold">{t('noChannelsAvailable')}</h2>
-                  <p className="text-muted-foreground">{t('noChannels')}</p>
+              <div className="absolute z-10 p-4 bg-black/50 rounded-lg text-center">
+                  <h2 className="text-2xl font-bold mb-4">{t('noChannelsAvailable')}</h2>
+                  <Sheet>
+                      <SheetTrigger asChild>
+                          <Button><Plus className="mr-2 h-4 w-4" /> {t('addChannel')}</Button>
+                      </SheetTrigger>
+                      <AddChannelSheetContent user={user} isUserLoading={isUserLoading} />
+                  </Sheet>
               </div>
           </div>
         ) : (
           <ReactPlayer
-              ref={playerRef}
-              url={sourceUrl}
+              ref={activeVideoRef}
+              url={sourceUrl as string | undefined}
               playing={isPlaying}
               loop={!isYoutubeOrTwitch}
               playsinline
