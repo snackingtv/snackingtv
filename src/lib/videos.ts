@@ -5,6 +5,7 @@ export type Video = {
   author: string;
   avatarId: string;
   subtitlesUrl?: string;
+  tvgId?: string;
 };
 
 export const videos: Video[] = [];

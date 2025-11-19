@@ -58,8 +58,8 @@ export default function Home() {
   
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   
-  const [feedItems, setFeedItems] = useState<Video[]>([]);
-  const [filteredFeedItems, setFilteredFeedItems] = useState<Video[]>([]);
+  const [feedItems, setFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
+  const [filteredFeedItems, setFilteredFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -194,7 +194,7 @@ export default function Home() {
   const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
 
   useEffect(() => {
-    const combinedFeed: Video[] = [];
+    const combinedFeed: (Video & { tvgId?: string })[] = [];
     const combinedUrls = new Set<string>();
 
     if (userChannels) {
@@ -207,6 +207,7 @@ export default function Home() {
             author: channel.group || 'IPTV',
             avatarId: 'iptv_placeholder',
             subtitlesUrl: channel.subtitlesUrl,
+            tvgId: channel.tvgId,
           });
           combinedUrls.add(channel.url);
         }
@@ -371,6 +372,7 @@ export default function Home() {
               videoQuality={videoQuality}
               onQualityLevelsChange={setQualityLevels}
               bufferSize={bufferSize}
+              addedChannels={userChannels || []}
             />
 
             {(activeChannel || localVideoItem) && (

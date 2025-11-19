@@ -1396,7 +1396,8 @@ export function SettingsSheetContent({
   );
 }
 
-const EpgProgramItem = ({ program, isCurrent }: { program: any; isCurrent: boolean }) => {
+const EpgProgramItem = ({ program, isCurrent, isPast }: { program: any; isCurrent: boolean; isPast: boolean }) => {
+  const { t } = useTranslation();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -1404,8 +1405,12 @@ const EpgProgramItem = ({ program, isCurrent }: { program: any; isCurrent: boole
       const updateProgress = () => {
         const now = Date.now();
         const start = new Date(program.start).getTime();
-        const end = new Date(program.end).getTime();
-        const duration = end - start;
+        const stop = new Date(program.stop).getTime();
+        const duration = stop - start;
+        if (duration <= 0) {
+          setProgress(100);
+          return;
+        }
         const elapsed = now - start;
         const calculatedProgress = Math.min(100, (elapsed / duration) * 100);
         setProgress(calculatedProgress);
@@ -1415,18 +1420,24 @@ const EpgProgramItem = ({ program, isCurrent }: { program: any; isCurrent: boole
       const intervalId = setInterval(updateProgress, 60000); // Update every minute
       return () => clearInterval(intervalId);
     }
-  }, [isCurrent, program.start, program.end]);
+  }, [isCurrent, program.start, program.stop]);
+
+  const itemClasses = `p-4 rounded-lg ${isCurrent ? 'bg-primary/20 border border-primary/50' : ''} ${isPast ? 'opacity-50' : ''}`;
 
   return (
-    <div className={`p-4 rounded-lg ${isCurrent ? 'bg-accent/20' : ''}`}>
+    <div className={itemClasses}>
       <div className="flex justify-between items-baseline">
-        <h4 className={`font-semibold ${isCurrent ? 'text-primary' : 'text-foreground'}`}>{program.title}</h4>
-        <p className="text-xs text-muted-foreground">{new Date(program.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(program.end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+        <h4 className={`font-semibold ${isCurrent ? 'text-primary' : 'text-foreground'}`}>
+          {program.title}
+        </h4>
+        <p className="text-xs text-muted-foreground">
+          {new Date(program.start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(program.stop).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </p>
       </div>
-      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{program.description}</p>
+      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{program.desc}</p>
       {isCurrent && (
         <div className="mt-2">
-          <Progress value={progress} className="h-1" />
+          <Progress value={progress} className="h-1 bg-primary/30" />
         </div>
       )}
     </div>
@@ -1434,54 +1445,75 @@ const EpgProgramItem = ({ program, isCurrent }: { program: any; isCurrent: boole
 };
 
 
-export function EpgSheetContent({ video }: { video: Video }) {
+export function EpgSheetContent({ video, addedChannels }: { video: Video, addedChannels: WithId<M3uChannel>[] }) {
   const { t } = useTranslation();
   const [epgData, setEpgData] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Implement actual EPG fetching from video.epgUrl
-    // For now, using placeholder data
-    const fetchEpgData = () => {
+    const fetchEpgData = async () => {
       setIsLoading(true);
-      setTimeout(() => {
-        const now = new Date();
-        const placeholderData = [
-          {
-            title: 'Past Program',
-            description: 'This was on earlier.',
-            start: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-            end: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            title: 'Current Program',
-            description: 'This is on right now. Enjoy the show!',
-            start: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-            end: new Date(now.getTime() + 30 * 60 * 1000).toISOString(),
-          },
-          {
-            title: 'Next Program',
-            description: 'This is coming up next.',
-            start: new Date(now.getTime() + 30 * 60 * 1000).toISOString(),
-            end: new Date(now.getTime() + 90 * 60 * 1000).toISOString(),
-          },
-          {
-            title: 'Future Program',
-            description: 'This will be on later.',
-            start: new Date(now.getTime() + 90 * 60 * 1000).toISOString(),
-            end: new Date(now.getTime() + 150 * 60 * 1000).toISOString(),
-          },
-        ];
-        setEpgData(placeholderData);
+      setError(null);
+      
+      const channelInfo = addedChannels.find(c => c.url === video.url);
+      const tvgId = channelInfo?.tvgId;
+
+      if (!tvgId) {
+        setError(t('noEpgData'));
         setIsLoading(false);
-      }, 1000);
+        return;
+      }
+      
+      try {
+        // Using a CORS proxy for development. Replace with a direct call if the API supports CORS.
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://epg.provider.com/epg.xml.gz`)}`);
+        
+        // The above URL is a placeholder. A real EPG provider URL is needed.
+        // For this example, we will simulate a fetch from a static file for `srfsachsen.de`
+        let finalResponse;
+        if (tvgId === 'srf-sachsen.de') {
+          // This is a proxy to avoid CORS issues fetching a static file.
+          finalResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml')}`);
+        } else {
+            // For now, let's just show an error if it's not the one we have data for.
+            throw new Error('EPG data for this channel is not available in this demo.');
+        }
+
+        if (!finalResponse.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await finalResponse.json();
+        const xmlText = data.contents;
+        
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+        const programs = Array.from(xmlDoc.getElementsByTagName('programme'))
+          .filter(p => p.getAttribute('channel') === tvgId)
+          .map(p => ({
+            start: p.getAttribute('start'),
+            stop: p.getAttribute('stop'),
+            title: p.getElementsByTagName('title')[0]?.textContent,
+            desc: p.getElementsByTagName('desc')[0]?.textContent,
+          }));
+
+        setEpgData(programs.sort((a, b) => new Date(a.start as string).getTime() - new Date(b.start as string).getTime()));
+
+      } catch (e: any) {
+        console.error("Failed to fetch or parse EPG data:", e);
+        setError(e.message || t('noEpgData'));
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchEpgData();
-  }, [video]);
+  }, [video.url, addedChannels, t]);
   
   const now = Date.now();
-  const currentProgram = epgData?.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+  const pastPrograms = epgData?.filter(p => new Date(p.stop).getTime() < now);
+  const currentProgram = epgData?.find(p => new Date(p.start).getTime() <= now && new Date(p.stop).getTime() > now);
   const upcomingPrograms = epgData?.filter(p => new Date(p.start).getTime() > now);
 
   return (
@@ -1490,18 +1522,36 @@ export function EpgSheetContent({ video }: { video: Video }) {
         <SheetTitle>{t('epg')} - {video.title}</SheetTitle>
       </SheetHeader>
       <div className="flex-grow overflow-y-auto p-4">
-        {isLoading && <p className="text-center text-muted-foreground">{t('loading')}...</p>}
-        {!isLoading && !epgData && <p className="text-center text-muted-foreground">{t('noEpgData')}</p>}
-        {!isLoading && epgData && (
+        {isLoading && <div className="flex justify-center items-center h-full"><Loader className="h-8 w-8 animate-spin" /></div>}
+        {error && !isLoading && <p className="text-center text-muted-foreground py-10">{error}</p>}
+        {!isLoading && !error && epgData && (
           <div className="space-y-4">
-            {currentProgram && <EpgProgramItem program={currentProgram} isCurrent={true} />}
+             {pastPrograms && pastPrograms.length > 0 && (
+              <>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="past-programs">
+                    <AccordionTrigger>Vergangene Sendungen</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        {pastPrograms.map(p => <EpgProgramItem key={p.start} program={p} isCurrent={false} isPast={true}/>)}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                <Separator />
+              </>
+            )}
+            {currentProgram && <EpgProgramItem program={currentProgram} isCurrent={true} isPast={false} />}
             {upcomingPrograms && upcomingPrograms.length > 0 && (
               <>
-                <Separator />
+                {currentProgram && <Separator />}
                 <div className="space-y-2">
-                  {upcomingPrograms.map(p => <EpgProgramItem key={p.start} program={p} isCurrent={false} />)}
+                  {upcomingPrograms.map(p => <EpgProgramItem key={p.start} program={p} isCurrent={false} isPast={false} />)}
                 </div>
               </>
+            )}
+             {!currentProgram && !upcomingPrograms?.length && (
+              <p className="text-center text-muted-foreground py-10">{t('noEpgData')}</p>
             )}
           </div>
         )}
@@ -1789,7 +1839,7 @@ export function VideoCard({
                     <p>{t('epg')}</p>
                   </TooltipContent>
                 </Tooltip>
-                <EpgSheetContent video={video} />
+                <EpgSheetContent video={video} addedChannels={addedChannels} />
               </Sheet>
 
               <Tooltip>

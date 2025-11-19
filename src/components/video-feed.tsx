@@ -8,6 +8,7 @@ import { VideoCard } from '@/components/video-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import type { M3uChannel } from '@/lib/m3u-parser';
 import Head from 'next/head';
+import { WithId } from '@/firebase/firestore/use-collection';
 
 interface VideoFeedProps {
   feedItems: Video[];
@@ -24,6 +25,7 @@ interface VideoFeedProps {
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
   bufferSize: string;
+  addedChannels: WithId<M3uChannel>[];
 }
 
 const PRELOAD_COUNT = 1; // Number of items to preload on each side
@@ -85,6 +87,7 @@ export function VideoFeed({
   videoQuality,
   onQualityLevelsChange,
   bufferSize,
+  addedChannels
 }: VideoFeedProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
@@ -178,7 +181,7 @@ export function VideoFeed({
                   isActive={index === activeIndex}
                   onAddChannels={() => {}}
                   onChannelSelect={onChannelSelect}
-                  addedChannels={[]}
+                  addedChannels={addedChannels}
                   isFavorite={favoriteChannels.includes(video.url as string)}
                   onToggleFavorite={onToggleFavorite}
                   onProgressUpdate={onProgressUpdate}
