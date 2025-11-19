@@ -446,16 +446,6 @@ export default function Home() {
 
             {(activeChannel || localVideoItem) && (
               <div className="absolute bottom-0 left-4 right-4 z-30 pb-6 pointer-events-none">
-                <div
-                  className="w-full h-1 z-20 cursor-pointer group mb-2"
-                  onClick={handleProgressClick}
-                  data-progress-bar
-                >
-                  <Progress
-                    value={progress}
-                    className="h-full transition-all duration-200 group-hover:h-2"
-                  />
-                </div>
                 <div className="flex items-center gap-2">
                   <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                     <p className="text-white font-normal text-[10px]">
