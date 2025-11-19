@@ -15,6 +15,7 @@ import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredentia
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
+import { findEpgUrl } from '@/ai/flows/find-epg-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -1455,42 +1456,62 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
     const fetchEpgData = async () => {
       setIsLoading(true);
       setError(null);
-      
+      setEpgData(null);
+
       const channelInfo = addedChannels.find(c => c.url === video.url);
       const tvgId = channelInfo?.tvgId;
 
+      let epgUrl = '';
+      let effectiveTvgId = tvgId;
+
       if (!tvgId) {
+        try {
+          const result = await findEpgUrl({ channelName: video.title });
+          if (result.url) {
+            epgUrl = result.url;
+            // The AI might return the TVG ID in the URL or we might need to guess it.
+            // For now, let's assume the found XML file is for our channel.
+            // We'll also try to extract a tvg-id from the channel name for matching.
+            effectiveTvgId = video.title.replace(/ /g, '');
+          }
+        } catch (aiError) {
+          console.error("AI EPG search failed:", aiError);
+        }
+      }
+
+      if (!tvgId && !epgUrl) {
         setError(t('noEpgData'));
         setIsLoading(false);
         return;
       }
       
-      try {
-        // Using a CORS proxy for development. Replace with a direct call if the API supports CORS.
-        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://epg.provider.com/epg.xml.gz`)}`);
-        
-        // The above URL is a placeholder. A real EPG provider URL is needed.
-        // For this example, we will simulate a fetch from a static file for `srfsachsen.de`
-        let finalResponse;
-        if (tvgId === 'srf-sachsen.de') {
-          // This is a proxy to avoid CORS issues fetching a static file.
-          finalResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml')}`);
-        } else {
-            // For now, let's just show an error if it's not the one we have data for.
-            throw new Error('EPG data for this channel is not available in this demo.');
-        }
+      // Fallback/Default EPG source if no specific one is found
+      if (!epgUrl) {
+         // This is a placeholder for a generic EPG provider
+         // In a real app, this could point to one or more known good EPG sources
+         epgUrl = `https://raw.githubusercontent.com/iptv-org/epg/master/sites/srf.ch/srf.ch.epg.xml`;
+      }
 
-        if (!finalResponse.ok) {
+
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(epgUrl)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
           throw new Error('Network response was not ok');
         }
 
-        const data = await finalResponse.json();
+        const data = await response.json();
+        if (!data.contents) {
+          throw new Error('Failed to retrieve content from proxy.');
+        }
         const xmlText = data.contents;
         
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
         const programs = Array.from(xmlDoc.getElementsByTagName('programme'))
-          .filter(p => p.getAttribute('channel') === tvgId)
+          .filter(p => p.getAttribute('channel') === effectiveTvgId)
           .map(p => ({
             start: p.getAttribute('start'),
             stop: p.getAttribute('stop'),
@@ -1498,7 +1519,11 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
             desc: p.getElementsByTagName('desc')[0]?.textContent,
           }));
 
-        setEpgData(programs.sort((a, b) => new Date(a.start as string).getTime() - new Date(b.start as string).getTime()));
+        if (programs.length > 0) {
+          setEpgData(programs.sort((a, b) => new Date(a.start as string).getTime() - new Date(b.start as string).getTime()));
+        } else {
+           setError(t('noEpgData'));
+        }
 
       } catch (e: any) {
         console.error("Failed to fetch or parse EPG data:", e);
@@ -1509,7 +1534,7 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
     };
 
     fetchEpgData();
-  }, [video.url, addedChannels, t]);
+  }, [video.url, video.title, addedChannels, t]);
   
   const now = Date.now();
   const pastPrograms = epgData?.filter(p => new Date(p.stop).getTime() < now);
