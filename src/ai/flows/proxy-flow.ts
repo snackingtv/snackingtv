@@ -31,14 +31,16 @@ const urlProxyFlow = ai.defineFlow(
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        console.error(`HTTP error! status: ${response.status} for url: ${url}`);
-        return ''; 
+        const errorText = await response.text();
+        // Throw an error that can be caught by the calling component
+        throw new Error(`HTTP error! status: ${response.status} for url: ${url}. Body: ${errorText}`);
       }
       const textContent = await response.text();
       return textContent;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to fetch content from ${url}:`, error);
-      return '';
+      // Re-throw the error to be handled by the caller
+      throw error;
     }
   }
 );

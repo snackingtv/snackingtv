@@ -1472,12 +1472,13 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
       try {
         const xmlText = await fetchUrlContent({ url: epgUrl });
         
-        if (!xmlText) {
-          throw new Error(`Network response was not ok`);
-        }
-
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+        
+        const errorNode = xmlDoc.querySelector('parsererror');
+        if (errorNode) {
+          throw new Error('Failed to parse XML');
+        }
 
         const programs = Array.from(xmlDoc.getElementsByTagName('programme'))
           .filter(p => p.getAttribute('channel') === tvgId)
