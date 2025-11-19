@@ -127,7 +127,7 @@ function PrivacyPolicySheetContent() {
           <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_3')}</h2>
           <p>{t('privacyPolicyP4')}</p>
 
-          <h2 className-="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
+          <h2 classNameName="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
           <p>{t('privacyPolicyP5')}</p>
           <p>{t('privacyPolicyP6')}</p>
           <p>{t('privacyPolicyP7')}</p>
@@ -759,10 +759,10 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
           <AlertDialogHeader>
             <AlertDialogTitle>{t('tosConfirmTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('tosConfirmDescription')}
+              {t('tosConfirmDescription')}{' '}
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="link" className="p-0 h-auto ml-1">{t('readTermsOfService')}</Button>
+                  <Button variant="link" className="p-0 h-auto">{t('readTermsOfService')}</Button>
                 </SheetTrigger>
                 <TermsOfServiceSheetContent />
               </Sheet>
@@ -1494,18 +1494,14 @@ export function EpgSheetContent({ video, addedChannels }: { video: Video, addedC
 
 
       try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(epgUrl)}`;
+        const proxyUrl = `https://cors.eu.org/${epgUrl}`;
         const response = await fetch(proxyUrl);
         
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error(`Network response was not ok (${response.status})`);
         }
 
-        const data = await response.json();
-        if (!data.contents) {
-          throw new Error('Failed to retrieve content from proxy.');
-        }
-        const xmlText = data.contents;
+        const xmlText = await response.text();
         
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, "application/xml");
@@ -1949,5 +1945,7 @@ export function VideoCard({
     </TooltipProvider>
   );
 }
+
+    
 
     
