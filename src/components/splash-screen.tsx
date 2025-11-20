@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v9' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v10' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -27,6 +27,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v9' }: SplashScreenPro
     version === 'v7' ? 'splash-animation-v7' :
     version === 'v8' ? 'splash-animation-v8' :
     version === 'v9' ? 'splash-animation-v9' :
+    version === 'v10' ? 'splash-animation-v10' :
     'splash-animation';
 
   return (
@@ -90,6 +91,15 @@ export function SplashScreen({ onAnimationEnd, version = 'v9' }: SplashScreenPro
       {version === 'v9' && (
         <div className="focus-in-container">
           <div className="focus-in-ring"></div>
+        </div>
+      )}
+      {version === 'v10' && (
+        <div className="colorful-spinner-container">
+          <div className="colorful-petal" style={{ transform: 'rotate(0deg)', '--color': '#ef4444' } as React.CSSProperties}></div>
+          <div className="colorful-petal" style={{ transform: 'rotate(72deg)', '--color': '#3b82f6' } as React.CSSProperties}></div>
+          <div className="colorful-petal" style={{ transform: 'rotate(144deg)', '--color': '#22c55e' } as React.CSSProperties}></div>
+          <div className="colorful-petal" style={{ transform: 'rotate(216deg)', '--color': '#eab308' } as React.CSSProperties}></div>
+          <div className="colorful-petal" style={{ transform: 'rotate(288deg)', '--color': '#f97316' } as React.CSSProperties}></div>
         </div>
       )}
     </div>
