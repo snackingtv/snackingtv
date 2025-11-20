@@ -9,14 +9,6 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
-  const [animationData, setAnimationData] = useState(null);
-
-  useEffect(() => {
-    fetch('https://lottie.host/85067c82-dbcb-4599-b0b6-9dce7349393f/LlzVjM98tv.lottie')
-      .then((response) => response.json())
-      .then((data) => setAnimationData(data))
-      .catch((error) => console.error('Error fetching Lottie animation:', error));
-  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,15 +24,11 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
         'absolute inset-0 z-50 flex items-center justify-center bg-background splash-animation'
       )}
     >
-      {animationData ? (
-        <Lottie
-          animationData={animationData}
-          loop={true}
-          style={{ width: 300, height: 300 }}
-        />
-      ) : (
-        <div style={{ width: 300, height: 300 }} /> // Empty placeholder
-      )}
+      <Lottie
+        path={'https://lottie.host/85067c82-dbcb-4599-b0b6-9dce7349393f/LlzVjM98tv.lottie'}
+        loop={true}
+        style={{ width: 300, height: 300 }}
+      />
     </div>
   );
 }
