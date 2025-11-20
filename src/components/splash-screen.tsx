@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3';
+  version?: 'v1' | 'v2' | 'v3' | 'v4';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v3' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v4' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -21,6 +21,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v3' }: SplashScreenPro
   const animationClass = 
     version === 'v2' ? 'splash-animation-v2' :
     version === 'v3' ? 'splash-animation-v3' :
+    version === 'v4' ? 'splash-animation-v4' :
     'splash-animation';
 
   return (
@@ -48,6 +49,13 @@ export function SplashScreen({ onAnimationEnd, version = 'v3' }: SplashScreenPro
       {version === 'v3' && (
         <div className="gemini-spinner">
           <div className="gemini-spinner-text gemini-text-gradient">SnackingTV</div>
+        </div>
+      )}
+      {version === 'v4' && (
+        <div className="bouncing-dots">
+          <div className="dot"></div>
+          <div className="dot"></div>
+          <div className="dot"></div>
         </div>
       )}
     </div>

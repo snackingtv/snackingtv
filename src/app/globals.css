@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -207,5 +207,31 @@ body {
   @keyframes spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+
+  .bouncing-dots {
+    @apply flex justify-center items-center h-48;
+  }
+
+  .bouncing-dots .dot {
+    @apply h-4 w-4 rounded-full bg-primary mx-1;
+    animation: bounce 1.4s infinite ease-in-out both;
+  }
+
+  .bouncing-dots .dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+
+  .bouncing-dots .dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+    }
+    40% {
+      transform: scale(1.0);
+    }
   }
 }
