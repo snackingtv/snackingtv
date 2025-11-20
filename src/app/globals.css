@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -303,5 +303,32 @@ body {
   @keyframes shutter-anim {
     0%, 100% { transform: scaleY(1); }
     50% { transform: scaleY(0); }
+  }
+  
+  .gemini-star-container {
+    @apply relative w-48 h-48;
+  }
+
+  .gemini-star {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background: conic-gradient(from 180deg, #4285F4, #9B59B6, #D93025, #4285F4);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    transform-origin: center center;
+    animation: gemini-star-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes gemini-star-pulse {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(2.5) rotate(180deg);
+      opacity: 0.5;
+    }
   }
 }

@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v7' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v8' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -25,6 +25,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v7' }: SplashScreenPro
     version === 'v5' ? 'splash-animation-v5' :
     version === 'v6' ? 'splash-animation-v6' :
     version === 'v7' ? 'splash-animation-v7' :
+    version === 'v8' ? 'splash-animation-v8' :
     'splash-animation';
 
   return (
@@ -78,6 +79,11 @@ export function SplashScreen({ onAnimationEnd, version = 'v7' }: SplashScreenPro
           <div className="shutter-panel"></div>
           <div className="shutter-panel"></div>
           <div className="shutter-panel"></div>
+        </div>
+      )}
+      {version === 'v8' && (
+        <div className="gemini-star-container">
+          <div className="gemini-star"></div>
         </div>
       )}
     </div>

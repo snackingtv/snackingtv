@@ -312,7 +312,7 @@ export default function Home() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
       {showSplash ? (
-        <SplashScreen onAnimationEnd={() => setShowSplash(false)} version="v7" />
+        <SplashScreen onAnimationEnd={() => setShowSplash(false)} version="v8" />
       ) : (
         <div className="h-full w-full app-fade-in">
           <TooltipProvider>
@@ -358,9 +358,9 @@ export default function Home() {
                 </Tooltip>
                 <AppSidebar
                     onChannelSelect={handleChannelSelect}
+                    onLocalVideoSelect={handleLocalVideoSelect}
                     addedChannels={userChannels || []}
                     favoriteChannelUrls={favoriteChannels}
-                    onLocalVideoSelect={handleLocalVideoSelect}
                     user={user}
                     isUserLoading={isUserLoading}
                     onToggleFavorite={handleToggleFavorite}
