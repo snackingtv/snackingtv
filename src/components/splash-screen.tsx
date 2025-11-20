@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v8' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v9' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -26,6 +26,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v8' }: SplashScreenPro
     version === 'v6' ? 'splash-animation-v6' :
     version === 'v7' ? 'splash-animation-v7' :
     version === 'v8' ? 'splash-animation-v8' :
+    version === 'v9' ? 'splash-animation-v9' :
     'splash-animation';
 
   return (
@@ -84,6 +85,11 @@ export function SplashScreen({ onAnimationEnd, version = 'v8' }: SplashScreenPro
       {version === 'v8' && (
         <div className="gemini-star-container">
           <div className="gemini-star"></div>
+        </div>
+      )}
+      {version === 'v9' && (
+        <div className="focus-in-container">
+          <div className="focus-in-ring"></div>
         </div>
       )}
     </div>
