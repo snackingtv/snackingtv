@@ -1412,7 +1412,7 @@ function formatTime(seconds: number) {
 }
 
 
-function LocalPlayerControls({
+function PlayerControls({
   playerRef,
   isPlaying,
   onPlayPause,
@@ -1851,8 +1851,8 @@ export function VideoCard({
               </button>
             )}
           </div>
-           {isLocalVideo && (
-            <LocalPlayerControls
+           {(!isYoutubeOrTwitch) && (
+            <PlayerControls
               playerRef={activeVideoRef.current}
               isPlaying={isPlaying}
               onPlayPause={() => setIsPlaying(p => !p)}
