@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -256,5 +256,33 @@ body {
       transform-origin: right;
       transform: scaleX(-1);
     }
+  }
+  
+  .curtain-container {
+    @apply relative w-48 h-48 overflow-hidden;
+  }
+
+  .curtain-panel {
+    @apply absolute top-0 w-1/2 h-full bg-primary;
+  }
+
+  .curtain-left {
+    @apply left-0;
+    animation: curtain-open-left 2s ease-in-out infinite;
+  }
+
+  .curtain-right {
+    @apply right-0;
+    animation: curtain-open-right 2s ease-in-out infinite;
+  }
+
+  @keyframes curtain-open-left {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(-100%); }
+  }
+
+  @keyframes curtain-open-right {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(100%); }
   }
 }
