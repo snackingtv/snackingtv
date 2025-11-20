@@ -1518,7 +1518,7 @@ export function VideoCard({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
-  isLocalVideo = !!localVideoItem;
+  const isLocalVideo = !!localVideoItem;
 
   const handleShare = async () => {
     if (!video || !video.url) return;
