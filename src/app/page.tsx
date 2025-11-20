@@ -381,17 +381,6 @@ export default function Home() {
                   </Tooltip>
                    <ChannelListSheetContent channels={userChannels || []} onChannelSelect={handleChannelSelect} title={t('channels')} />
                 </Sheet>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0" onClick={toggleFullScreen}>
-                      {isFullScreen ? <Minimize size={28} className="drop-shadow-lg" /> : <Maximize size={28} className="drop-shadow-lg" />}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
-                  </TooltipContent>
-                </Tooltip>
 
                 <Sheet>
                   <Tooltip>
@@ -468,5 +457,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
