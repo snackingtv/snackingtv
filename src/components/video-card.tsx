@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Slider } from './ui/slider';
+import { cn } from '@/lib/utils';
 
 interface VideoCardProps {
   video: Video;
@@ -1691,6 +1692,8 @@ export function VideoCard({
     setIsMuted(prev => !prev);
   };
 
+  const shouldShowOverlay = (showControls || !isPlaying) && !isYoutubeOrTwitch && !isPlaceholder;
+
 
   return (
     <TooltipProvider>
@@ -1759,12 +1762,10 @@ export function VideoCard({
         )}
         
         <div
-          className={`absolute inset-0 transition-opacity duration-300 pointer-events-none ${
-            (showControls || !isPlaying) && !isYoutubeOrTwitch && !isPlaceholder ? 'opacity-100' : 'opacity-0'
-          }`}
+          className="absolute inset-0 pointer-events-none"
         >
-          {(video) && (
-            <div className="absolute bottom-20 left-4 right-4 z-30 pointer-events-none">
+          {video && (
+             <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
               <div className="flex items-center gap-2">
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                   <p className="text-white font-normal text-sm">
@@ -1871,18 +1872,20 @@ export function VideoCard({
             )}
           </div>
            {(!isYoutubeOrTwitch) && (
-            <PlayerControls
-              playerRef={activeVideoRef.current}
-              isPlaying={isPlaying}
-              onPlayPause={() => setIsPlaying(p => !p)}
-              played={played}
-              duration={duration}
-              onSeek={handleSeek}
-              volume={volume}
-              onVolumeChange={handleVolumeChange}
-              isMuted={isMuted}
-              onMuteToggle={handleMuteToggle}
-            />
+            <div className={cn('absolute inset-x-0 bottom-0 transition-opacity duration-300', shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
+              <PlayerControls
+                playerRef={activeVideoRef.current}
+                isPlaying={isPlaying}
+                onPlayPause={() => setIsPlaying(p => !p)}
+                played={played}
+                duration={duration}
+                onSeek={handleSeek}
+                volume={volume}
+                onVolumeChange={handleVolumeChange}
+                isMuted={isMuted}
+                onMuteToggle={handleMuteToggle}
+              />
+            </div>
           )}
         </div>
 
