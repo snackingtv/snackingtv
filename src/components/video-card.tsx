@@ -1764,8 +1764,8 @@ export function VideoCard({
         <div
           className="absolute inset-0 pointer-events-none"
         >
-          {video && (
-             <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
+          <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
+            {video && (
               <div className="flex items-center gap-2">
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                   <p className="text-white font-normal text-sm">
@@ -1780,51 +1780,53 @@ export function VideoCard({
                   </div>
                 )}
               </div>
+            )}
+          </div>
+
+          {!isPlaceholder && (
+            <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
+                        <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>{t('favorites')}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                      <Share2 size={32} className="drop-shadow-lg" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    <p>{t('shareChannel')}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFullScreen();
+                    }}
+                  >
+                    {isFullScreen ? <Minimize size={32} className="drop-shadow-lg" /> : <Maximize size={32} className="drop-shadow-lg" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
-
-          <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
-                      <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>{t('favorites')}</p>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
-                    <Share2 size={32} className="drop-shadow-lg" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>{t('shareChannel')}</p>
-                </TooltipContent>
-              </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFullScreen();
-                  }}
-                >
-                  {isFullScreen ? <Minimize size={32} className="drop-shadow-lg" /> : <Maximize size={32} className="drop-shadow-lg" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
           
           <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto">
             <Tooltip>
