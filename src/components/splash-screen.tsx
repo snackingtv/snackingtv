@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11' | 'v12';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v11' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v12' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -29,6 +29,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v11' }: SplashScreenPr
     version === 'v9' ? 'splash-animation-v9' :
     version === 'v10' ? 'splash-animation-v10' :
     version === 'v11' ? 'splash-animation-v11' :
+    version === 'v12' ? 'splash-animation-v12' :
     'splash-animation';
 
   return (
@@ -110,6 +111,15 @@ export function SplashScreen({ onAnimationEnd, version = 'v11' }: SplashScreenPr
             <div className="bursting-line" style={{ transform: 'rotate(144deg)', backgroundColor: '#22c55e', animationDelay: '0.4s' }}></div>
             <div className="bursting-line" style={{ transform: 'rotate(216deg)', backgroundColor: '#eab308', animationDelay: '0.6s' }}></div>
             <div className="bursting-line" style={{ transform: 'rotate(288deg)', backgroundColor: '#f97316', animationDelay: '0.8s' }}></div>
+        </div>
+      )}
+      {version === 'v12' && (
+        <div className="orbiting-dots-container">
+            <div className="orbiting-dot" style={{ backgroundColor: '#ef4444', animationDelay: '0s' }}></div>
+            <div className="orbiting-dot" style={{ backgroundColor: '#3b82f6', animationDelay: '0.2s' }}></div>
+            <div className="orbiting-dot" style={{ backgroundColor: '#22c55e', animationDelay: '0.4s' }}></div>
+            <div className="orbiting-dot" style={{ backgroundColor: '#eab308', animationDelay: '0.6s' }}></div>
+            <div className="orbiting-dot" style={{ backgroundColor: '#f97316', animationDelay: '0.8s' }}></div>
         </div>
       )}
     </div>

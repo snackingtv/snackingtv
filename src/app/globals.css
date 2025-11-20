@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8, .splash-animation-v9, .splash-animation-v10, .splash-animation-v11 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8, .splash-animation-v9, .splash-animation-v10, .splash-animation-v11, .splash-animation-v12 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -405,6 +405,24 @@ body {
     100% {
       width: 50%;
       opacity: 0;
+    }
+  }
+
+  .orbiting-dots-container {
+    @apply relative h-48 w-48;
+  }
+
+  .orbiting-dot {
+    @apply absolute top-1/2 left-1/2 h-4 w-4 rounded-full;
+    animation: orbit 4s linear infinite;
+  }
+
+  @keyframes orbit {
+    from {
+      transform: translate(-50%, -50%) rotate(0deg) translateX(48px) rotate(0deg);
+    }
+    to {
+      transform: translate(-50%, -50%) rotate(360deg) translateX(48px) rotate(-360deg);
     }
   }
 }
