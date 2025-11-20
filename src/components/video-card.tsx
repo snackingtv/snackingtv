@@ -1436,7 +1436,7 @@ function LocalPlayerControls({
   onMuteToggle: () => void;
 }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-auto">
+    <div className="absolute bottom-10 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-auto">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-4 text-white">
           <button onClick={onPlayPause} className="p-2">
@@ -1518,7 +1518,7 @@ export function VideoCard({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.8);
   const [isMuted, setIsMuted] = useState(false);
-  const isLocalVideo = !!localVideoItem;
+  isLocalVideo = !!localVideoItem;
 
   const handleShare = async () => {
     if (!video || !video.url) return;
