@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -44,6 +44,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Slider } from './ui/slider';
 
 interface VideoCardProps {
   video: Video;
@@ -1398,6 +1399,82 @@ export function SettingsSheetContent({
   );
 }
 
+function formatTime(seconds: number) {
+  if (isNaN(seconds) || seconds < 0) return '00:00';
+  const date = new Date(seconds * 1000);
+  const hh = date.getUTCHours();
+  const mm = date.getUTCMinutes();
+  const ss = date.getUTCSeconds().toString().padStart(2, '0');
+  if (hh) {
+    return `${hh}:${mm.toString().padStart(2, '0')}:${ss}`;
+  }
+  return `${mm}:${ss}`;
+}
+
+
+function LocalPlayerControls({
+  playerRef,
+  isPlaying,
+  onPlayPause,
+  played,
+  duration,
+  onSeek,
+  volume,
+  onVolumeChange,
+  isMuted,
+  onMuteToggle,
+}: {
+  playerRef: ReactPlayer | null;
+  isPlaying: boolean;
+  onPlayPause: () => void;
+  played: number;
+  duration: number;
+  onSeek: (value: number) => void;
+  volume: number;
+  onVolumeChange: (value: number) => void;
+  isMuted: boolean;
+  onMuteToggle: () => void;
+}) {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-auto">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-4 text-white">
+          <button onClick={onPlayPause} className="p-2">
+            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+          </button>
+          
+          <div className="text-xs font-mono">{formatTime(played * duration)}</div>
+
+          <Slider
+            min={0}
+            max={0.999999}
+            step={0.0001}
+            value={[played]}
+            onValueChange={(value) => onSeek(value[0])}
+            className="w-full"
+          />
+
+          <div className="text-xs font-mono">{formatTime(duration)}</div>
+
+          <div className="flex items-center gap-2">
+            <button onClick={onMuteToggle}>
+              {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+            <Slider
+              min={0}
+              max={1}
+              step={0.05}
+              value={[isMuted ? 0 : volume]}
+              onValueChange={(value) => onVolumeChange(value[0])}
+              className="w-24"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export function VideoCard({ 
   video, 
@@ -1424,16 +1501,10 @@ export function VideoCard({
   const [showControls, setShowControls] = useState(true);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { t } = useTranslation();
-  const [bufferedPercent, setBufferedPercent] = useState(0);
   
   const { user, isUserLoading } = useUser();
   const [localVideoUrl, setLocalVideoUrl] = useState<string | null>(null);
   
-  // Swipe to seek state
-  const [isSeeking, setIsSeeking] = useState(false);
-  const [seekSpeed, setSeekSpeed] = useState(0);
-  const [wasPlayingBeforeSeek, setWasPlayingBeforeSeek] = useState(false);
-
   // Fullscreen state
   const [isFullScreen, setIsFullScreen] = useState(false);
   
@@ -1442,6 +1513,12 @@ export function VideoCard({
   
   const isPlaceholder = video.id === 'placeholder';
 
+  // Player state for local controls
+  const [played, setPlayed] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0.8);
+  const [isMuted, setIsMuted] = useState(false);
+  const isLocalVideo = !!localVideoItem;
 
   const handleShare = async () => {
     if (!video || !video.url) return;
@@ -1506,7 +1583,9 @@ export function VideoCard({
     if (isActive && localVideoItem) {
         const url = URL.createObjectURL(localVideoItem.url as any);
         setLocalVideoUrl(url);
-
+        // Reset local player state
+        setPlayed(0);
+        setDuration(0);
         return () => {
             URL.revokeObjectURL(url);
             setLocalVideoUrl(null);
@@ -1520,7 +1599,7 @@ export function VideoCard({
 
   const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const target = e.target as HTMLElement;
-    if (isPlaceholder || target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[data-progress-bar]') || isYoutubeOrTwitch) {
+    if (isPlaceholder || target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[role=slider]')) {
       return;
     }
 
@@ -1542,25 +1621,24 @@ export function VideoCard({
   useEffect(() => {
     const videoContainer = containerRef.current;
     videoContainer?.addEventListener('mousemove', handleInteraction);
+    videoContainer?.addEventListener('click', handleInteraction);
     return () => {
       videoContainer?.removeEventListener('mousemove', handleInteraction);
+      videoContainer?.removeEventListener('click', handleInteraction);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
   }, [handleInteraction]);
   
-  const handleTimeUpdate = (state: { played: number, playedSeconds: number, loaded: number, loadedSeconds: number }) => {
-    onProgressUpdate(state.played * 100);
-  };
-
-  const handleDuration = (duration: number) => {
-    onDurationChange(duration);
+  const handleProgress = (state: { played: number, playedSeconds: number, loaded: number, loadedSeconds: number }) => {
+      onProgressUpdate(state.played * 100);
+      setPlayed(state.played);
   };
   
-  const handleProgress = (state: { loaded: number, loadedSeconds: number, played: number, playedSeconds: number }) => {
-      onProgressUpdate(state.played * 100);
-      setBufferedPercent(state.loaded * 100);
+  const handleDuration = (newDuration: number) => {
+    onDurationChange(newDuration);
+    setDuration(newDuration);
   };
 
   // Fullscreen logic
@@ -1591,8 +1669,27 @@ export function VideoCard({
           setIsPlaying(true);
       } else {
           setIsPlaying(false);
+          // Also reset local player state when not active
+          setPlayed(0);
       }
   }, [isActive]);
+
+
+  const handleSeek = (value: number) => {
+    if (activeVideoRef.current) {
+      activeVideoRef.current.seekTo(value, 'fraction');
+      setPlayed(value);
+    }
+  };
+
+  const handleVolumeChange = (value: number) => {
+    setVolume(value);
+    setIsMuted(value === 0);
+  };
+
+  const handleMuteToggle = () => {
+    setIsMuted(prev => !prev);
+  };
 
 
   return (
@@ -1619,18 +1716,20 @@ export function VideoCard({
               ref={activeVideoRef}
               url={sourceUrl as string | undefined}
               playing={isPlaying}
-              loop={!isYoutubeOrTwitch}
+              loop={!isYoutubeOrTwitch && !isLocalVideo}
               playsinline
               width="100%"
               height="100%"
               controls={isYoutubeOrTwitch}
+              volume={volume}
+              muted={isMuted}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
               onBuffer={() => setIsBuffering(true)}
               onBufferEnd={() => setIsBuffering(false)}
               onProgress={handleProgress}
               onDuration={handleDuration}
-              onSeek={played => onProgressUpdate(played * 100)}
+              onSeek={p => setPlayed(p)}
               config={{
                   file: {
                       hlsOptions: {
@@ -1752,6 +1851,20 @@ export function VideoCard({
               </button>
             )}
           </div>
+           {isLocalVideo && (
+            <LocalPlayerControls
+              playerRef={activeVideoRef.current}
+              isPlaying={isPlaying}
+              onPlayPause={() => setIsPlaying(p => !p)}
+              played={played}
+              duration={duration}
+              onSeek={handleSeek}
+              volume={volume}
+              onVolumeChange={handleVolumeChange}
+              isMuted={isMuted}
+              onMuteToggle={handleMuteToggle}
+            />
+          )}
         </div>
 
       </div>
