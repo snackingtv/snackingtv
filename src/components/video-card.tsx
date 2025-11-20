@@ -1699,7 +1699,10 @@ export function VideoCard({
     <TooltipProvider>
       <div
         ref={containerRef}
-        className="relative w-full h-full bg-background flex items-center justify-center cursor-pointer"
+        className={cn(
+          'relative w-full h-full bg-background flex items-center justify-center',
+          !shouldShowOverlay ? 'cursor-none' : 'cursor-pointer'
+        )}
         onClick={handleVideoClick}
       >
         {isPlaceholder ? (
@@ -1828,7 +1831,7 @@ export function VideoCard({
             </div>
           )}
           
-          <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto">
+          <div className={cn("absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-14 w-14 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
