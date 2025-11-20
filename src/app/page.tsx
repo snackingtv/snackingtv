@@ -10,7 +10,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebas
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { Progress } from '@/components/ui/progress';
-import { Search, Settings, Menu, Maximize, Minimize } from 'lucide-react';
+import { Search, Settings, Menu, Maximize, Minimize, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
@@ -384,6 +384,22 @@ export default function Home() {
                   </Tooltip>
                    <ChannelListSheetContent channels={userChannels || []} onChannelSelect={handleChannelSelect} title={t('channels')} />
                 </Sheet>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0"
+                      onClick={() => window.location.reload()}
+                    >
+                      <RefreshCw size={28} className="drop-shadow-lg" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Neu laden</p>
+                  </TooltipContent>
+                </Tooltip>
 
                 <Sheet>
                   <Tooltip>
