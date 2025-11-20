@@ -1763,6 +1763,25 @@ export function VideoCard({
             (showControls || !isPlaying) && !isYoutubeOrTwitch && !isPlaceholder ? 'opacity-100' : 'opacity-0'
           }`}
         >
+          {(video) && (
+            <div className="absolute top-[calc(env(safe-area-inset-top)_+_5rem)] left-4 right-4 z-30 pointer-events-none">
+              <div className="flex items-center gap-2">
+                <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
+                  <p className="text-white font-normal text-sm">
+                    {video?.title}
+                  </p>
+                </div>
+                {video?.author && !localVideoItem && (
+                  <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
+                    <p className="text-white font-normal text-sm">
+                        {video.author}
+                      </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto">
               <Tooltip>
                 <TooltipTrigger asChild>

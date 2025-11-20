@@ -415,25 +415,6 @@ export default function Home() {
                 )}
             </div>
 
-            {(activeChannel || localVideoItem) && (
-              <div className="absolute top-[calc(env(safe-area-inset-top)_+_5rem)] left-4 right-4 z-30 pointer-events-none">
-                <div className="flex items-center gap-2">
-                  <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                    <p className="text-white font-normal text-sm">
-                      {localVideoItem?.title || activeChannel?.title}
-                    </p>
-                  </div>
-                  {activeChannel?.author && !localVideoItem && (
-                    <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                      <p className="text-white font-normal text-sm">
-                          {activeChannel.author}
-                        </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             <VideoFeed 
               feedItems={filteredFeedItems}
               onChannelSelect={handleChannelSelect} 
