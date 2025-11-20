@@ -1436,7 +1436,7 @@ function PlayerControls({
   onMuteToggle: () => void;
 }) {
   return (
-    <div className="absolute bottom-10 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-auto">
+    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-auto">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-4 text-white">
           <button onClick={onPlayPause} className="p-2">
