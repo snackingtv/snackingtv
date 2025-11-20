@@ -102,7 +102,7 @@ function TermsOfServiceSheetContent() {
             </div>
              <div className="p-4 border-t border-border mt-auto">
                 <div className="text-center text-xs text-muted-foreground">
-                    Build ❤️ 1.0.85
+                    Build ❤️ 1.1.11
                 </div>
             </div>
         </SheetContent>
@@ -136,7 +136,7 @@ function PrivacyPolicySheetContent() {
       </div>
       <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.85
+            Build ❤️ 1.1.11
         </div>
       </div>
     </SheetContent>
@@ -171,7 +171,7 @@ function ImprintSheetContent() {
       </div>
        <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.85
+            Build ❤️ 1.1.11
         </div>
       </div>
     </SheetContent>
@@ -226,7 +226,7 @@ export function FavoriteChannelListSheetContent({
       </div>
       <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.85
+            Build ❤️ 1.1.11
         </div>
       </div>
     </SheetContent>
@@ -389,7 +389,7 @@ export function ChannelListSheetContent({
       )}
       {!isManaging && <div className="p-4 border-t border-border mt-auto">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.85
+            Build ❤️ 1.1.11
         </div>
       </div>}
     </SheetContent>
@@ -752,7 +752,7 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
         </div>
         <div className="p-4 border-t border-border">
           <div className="text-center text-xs text-muted-foreground">
-              Build ❤️ 1.0.85
+              Build ❤️ 1.1.11
           </div>
         </div>
       </SheetContent>
@@ -1053,7 +1053,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
         </div>
         <div className="p-4 border-t border-border">
           <div className="text-center text-xs text-muted-foreground">
-              Build ❤️ 1.0.85
+              Build ❤️ 1.1.11
           </div>
         </div>
       </SheetContent>
@@ -1202,7 +1202,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
       </div>
        <div className="p-4 border-t border-border">
         <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.85
+            Build ❤️ 1.1.11
         </div>
       </div>
     </SheetContent>
@@ -1376,7 +1376,7 @@ export function SettingsSheetContent({
           </button>
           <Separator className="my-2" />
           <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.0.85
+            Build ❤️ 1.1.11
           </div>
         </div>
       </SheetContent>
@@ -1692,7 +1692,7 @@ export function VideoCard({
     setIsMuted(prev => !prev);
   };
 
-  const shouldShowOverlay = (showControls || !isPlaying) && !isYoutubeOrTwitch && !isPlaceholder;
+  const shouldShowOverlay = (showControls || !isPlaying) && !isYoutubeOrTwitch;
 
 
   return (
@@ -1701,7 +1701,7 @@ export function VideoCard({
         ref={containerRef}
         className={cn(
           'relative w-full h-full bg-background flex items-center justify-center',
-          !shouldShowOverlay ? 'cursor-none' : 'cursor-pointer'
+          !shouldShowOverlay || isPlaceholder ? 'cursor-auto' : 'cursor-none'
         )}
         onClick={handleVideoClick}
       >
@@ -1767,8 +1767,8 @@ export function VideoCard({
         <div
           className="absolute inset-0 pointer-events-none"
         >
-          <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
-            {video && (
+          {video && !isPlaceholder && (
+            <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
               <div className="flex items-center gap-2">
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                   <p className="text-white font-normal text-sm">
@@ -1783,8 +1783,8 @@ export function VideoCard({
                   </div>
                 )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {!isPlaceholder && (
             <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
@@ -1861,7 +1861,7 @@ export function VideoCard({
                 <Loader className="animate-spin h-8 w-8" />
               </div>
             )}
-             {!isPlaying && !isBuffering && !isYoutubeOrTwitch && (
+             {!isPlaying && !isBuffering && !isYoutubeOrTwitch && !isPlaceholder && (
               <button
                 className="pointer-events-auto"
                 onClick={(e) => {
@@ -1876,7 +1876,7 @@ export function VideoCard({
               </button>
             )}
           </div>
-           {(!isYoutubeOrTwitch) && (
+           {(!isYoutubeOrTwitch && !isPlaceholder) && (
             <div className={cn('absolute inset-x-0 bottom-0 transition-opacity duration-300', shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
               <PlayerControls
                 playerRef={activeVideoRef.current}
