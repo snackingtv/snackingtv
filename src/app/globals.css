@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation {
+  .splash-animation, .splash-animation-v2 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -157,5 +157,28 @@ body {
   @keyframes app-fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+
+  .scaling-squares-container {
+    @apply relative h-48 w-48;
+  }
+
+  .scaling-square {
+    @apply absolute border-2 border-primary;
+    animation: scaling-squares 2s ease-in-out infinite;
+  }
+
+  @keyframes scaling-squares {
+    0%, 100% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    80% {
+      transform: scale(1);
+      opacity: 0;
+    }
   }
 }
