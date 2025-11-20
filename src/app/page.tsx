@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { cn } from '@/lib/utils';
+import ReactPlayer from 'react-player';
 
 
 export default function Home() {
@@ -41,7 +42,7 @@ export default function Home() {
 
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const activeVideoRef = useRef<ReactPlayer | null>(null);
   const localVideoInputRef = useRef<HTMLInputElement>(null);
   const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
 
@@ -294,16 +295,18 @@ export default function Home() {
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const progressBar = e.currentTarget;
-    const videoElement = activeVideoRef.current;
-    if (!progressBar || !videoElement || isNaN(videoElement.duration)) return;
+    const player = activeVideoRef.current;
+    if (!progressBar || !player) return;
   
     const rect = progressBar.getBoundingClientRect();
     const clickPositionX = e.clientX - rect.left;
     const clickRatio = clickPositionX / rect.width;
-    const newTime = clickRatio * videoElement.duration;
+    const newTime = clickRatio * player.getDuration();
   
-    videoElement.currentTime = newTime;
-    setProgress(clickRatio * 100);
+    if (isFinite(newTime)) {
+      player.seekTo(clickRatio, 'fraction');
+      setProgress(clickRatio * 100);
+    }
   };
   
   return (
