@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8, .splash-animation-v9, .splash-animation-v10 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8, .splash-animation-v9, .splash-animation-v10, .splash-animation-v11 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -379,11 +379,32 @@ body {
   .colorful-petal::before {
     content: '';
     @apply absolute w-1/2 h-1/2 rounded-full;
+    background-color: var(--color);
     transform-origin: 100% 100%;
   }
 
   @keyframes colorful-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+
+  .bursting-lines-container {
+    @apply relative h-48 w-48;
+  }
+
+  .bursting-line {
+    @apply absolute top-1/2 left-1/2 h-0.5 origin-left;
+    animation: burst-anim 2s ease-out infinite;
+  }
+
+  @keyframes burst-anim {
+    0% {
+      width: 0;
+      opacity: 1;
+    }
+    100% {
+      width: 50%;
+      opacity: 0;
+    }
   }
 }

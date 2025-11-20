@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v10' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v11' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -28,6 +28,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v10' }: SplashScreenPr
     version === 'v8' ? 'splash-animation-v8' :
     version === 'v9' ? 'splash-animation-v9' :
     version === 'v10' ? 'splash-animation-v10' :
+    version === 'v11' ? 'splash-animation-v11' :
     'splash-animation';
 
   return (
@@ -100,6 +101,15 @@ export function SplashScreen({ onAnimationEnd, version = 'v10' }: SplashScreenPr
           <div className="colorful-petal" style={{ transform: 'rotate(144deg)', '--color': '#22c55e' } as React.CSSProperties}></div>
           <div className="colorful-petal" style={{ transform: 'rotate(216deg)', '--color': '#eab308' } as React.CSSProperties}></div>
           <div className="colorful-petal" style={{ transform: 'rotate(288deg)', '--color': '#f97316' } as React.CSSProperties}></div>
+        </div>
+      )}
+      {version === 'v11' && (
+        <div className="bursting-lines-container">
+            <div className="bursting-line" style={{ transform: 'rotate(0deg)', backgroundColor: '#ef4444', animationDelay: '0s' }}></div>
+            <div className="bursting-line" style={{ transform: 'rotate(72deg)', backgroundColor: '#3b82f6', animationDelay: '0.2s' }}></div>
+            <div className="bursting-line" style={{ transform: 'rotate(144deg)', backgroundColor: '#22c55e', animationDelay: '0.4s' }}></div>
+            <div className="bursting-line" style={{ transform: 'rotate(216deg)', backgroundColor: '#eab308', animationDelay: '0.6s' }}></div>
+            <div className="bursting-line" style={{ transform: 'rotate(288deg)', backgroundColor: '#f97316', animationDelay: '0.8s' }}></div>
         </div>
       )}
     </div>
