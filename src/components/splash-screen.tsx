@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v6' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v7' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -24,6 +24,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v6' }: SplashScreenPro
     version === 'v4' ? 'splash-animation-v4' :
     version === 'v5' ? 'splash-animation-v5' :
     version === 'v6' ? 'splash-animation-v6' :
+    version === 'v7' ? 'splash-animation-v7' :
     'splash-animation';
 
   return (
@@ -69,6 +70,14 @@ export function SplashScreen({ onAnimationEnd, version = 'v6' }: SplashScreenPro
         <div className="curtain-container">
           <div className="curtain-panel curtain-left"></div>
           <div className="curtain-panel curtain-right"></div>
+        </div>
+      )}
+      {version === 'v7' && (
+        <div className="shutter-container">
+          <div className="shutter-panel"></div>
+          <div className="shutter-panel"></div>
+          <div className="shutter-panel"></div>
+          <div className="shutter-panel"></div>
         </div>
       )}
     </div>
