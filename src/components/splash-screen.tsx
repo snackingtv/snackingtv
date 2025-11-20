@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11' | 'v12';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11' | 'v12' | 'v13';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v12' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v13' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -30,6 +30,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v12' }: SplashScreenPr
     version === 'v10' ? 'splash-animation-v10' :
     version === 'v11' ? 'splash-animation-v11' :
     version === 'v12' ? 'splash-animation-v12' :
+    version === 'v13' ? 'splash-animation-v13' :
     'splash-animation';
 
   return (
@@ -120,6 +121,15 @@ export function SplashScreen({ onAnimationEnd, version = 'v12' }: SplashScreenPr
             <div className="orbiting-dot" style={{ backgroundColor: '#22c55e', animationDelay: '0.4s' }}></div>
             <div className="orbiting-dot" style={{ backgroundColor: '#eab308', animationDelay: '0.6s' }}></div>
             <div className="orbiting-dot" style={{ backgroundColor: '#f97316', animationDelay: '0.8s' }}></div>
+        </div>
+      )}
+      {version === 'v13' && (
+        <div className="dancing-bars-container">
+            <div className="dancing-bar" style={{ backgroundColor: '#ef4444', animationDelay: '0s' }}></div>
+            <div className="dancing-bar" style={{ backgroundColor: '#3b82f6', animationDelay: '0.1s' }}></div>
+            <div className="dancing-bar" style={{ backgroundColor: '#22c55e', animationDelay: '0.2s' }}></div>
+            <div className="dancing-bar" style={{ backgroundColor: '#eab308', animationDelay: '0.3s' }}></div>
+            <div className="dancing-bar" style={{ backgroundColor: '#f97316', animationDelay: '0.4s' }}></div>
         </div>
       )}
     </div>

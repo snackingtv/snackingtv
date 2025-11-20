@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8, .splash-animation-v9, .splash-animation-v10, .splash-animation-v11, .splash-animation-v12 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5, .splash-animation-v6, .splash-animation-v7, .splash-animation-v8, .splash-animation-v9, .splash-animation-v10, .splash-animation-v11, .splash-animation-v12, .splash-animation-v13 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -423,6 +423,26 @@ body {
     }
     to {
       transform: translate(-50%, -50%) rotate(360deg) translateX(48px) rotate(-360deg);
+    }
+  }
+
+  .dancing-bars-container {
+    @apply flex justify-center items-center h-48 gap-2;
+  }
+
+  .dancing-bar {
+    @apply w-4;
+    animation: dance 1.2s ease-in-out infinite;
+  }
+
+  @keyframes dance {
+    0%, 40%, 100% {
+      transform: scaleY(0.1);
+      height: 2rem;
+    }
+    20% {
+      transform: scaleY(1);
+      height: 6rem;
     }
   }
 }

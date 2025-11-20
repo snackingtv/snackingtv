@@ -312,7 +312,7 @@ export default function Home() {
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
       {showSplash ? (
-        <SplashScreen onAnimationEnd={() => setShowSplash(false)} version="v12" />
+        <SplashScreen onAnimationEnd={() => setShowSplash(false)} version="v13" />
       ) : (
         <div className="h-full w-full app-fade-in">
           <TooltipProvider>
