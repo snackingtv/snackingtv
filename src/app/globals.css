@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -180,5 +180,32 @@ body {
       transform: scale(1);
       opacity: 0;
     }
+  }
+
+  .gemini-spinner {
+    @apply relative flex h-48 w-48 items-center justify-center;
+  }
+
+  .gemini-spinner::before {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    background: conic-gradient(#4285F4, #9B59B6, #D93025, #4285F4);
+    animation: spin 1.5s linear infinite;
+  }
+
+  .gemini-spinner::after {
+    content: '';
+    @apply absolute rounded-full bg-background;
+    width: calc(100% - 16px);
+    height: calc(100% - 16px);
+  }
+
+  .gemini-spinner-text {
+    @apply absolute z-10 text-2xl font-bold font-fredoka;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 }
