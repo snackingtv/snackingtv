@@ -33,7 +33,6 @@ import ReactPlayer from 'react-player';
 
 export default function Home() {
   const { t } = useTranslation();
-  const [showSplash, setShowSplash] = useState(true);
   const [activeChannel, setActiveChannel] = useState<M3uChannel | Video | null>(null);
 
   const { user, isUserLoading } = useUser();
@@ -63,6 +62,26 @@ export default function Home() {
   const [filteredFeedItems, setFilteredFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
+  
+  const userChannelsQuery = useMemoFirebase(
+    () =>
+      user
+        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
+        : null,
+    [user, firestore]
+  );
+  
+  const { data: userChannels, isLoading: areChannelsLoading } = useCollection<M3uChannel>(userChannelsQuery);
+  const [isAppLoading, setIsAppLoading] = useState(true);
+  
+  useEffect(() => {
+    // The app is considered loaded when we are done checking for a user AND
+    // we are done loading their channels.
+    if (!isUserLoading && !areChannelsLoading) {
+      setIsAppLoading(false);
+    }
+  }, [isUserLoading, areChannelsLoading]);
+
 
   const toggleFullScreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -216,15 +235,7 @@ export default function Home() {
     return () => clearInterval(timerId);
   }, []);
 
-  const userChannelsQuery = useMemoFirebase(
-    () =>
-      user
-        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
-        : null,
-    [user, firestore]
-  );
 
-  const { data: userChannels } = useCollection<M3uChannel>(userChannelsQuery);
 
   useEffect(() => {
     const combinedFeed: (Video & { tvgId?: string })[] = [];
@@ -311,8 +322,8 @@ export default function Home() {
   
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
-      {showSplash ? (
-        <SplashScreen onAnimationEnd={() => setShowSplash(false)} version="v5" />
+      {isAppLoading ? (
+        <SplashScreen version="v5" />
       ) : (
         <div className="h-full w-full app-fade-in">
           <TooltipProvider>

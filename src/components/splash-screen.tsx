@@ -5,18 +5,10 @@ import { cn } from '@/lib/utils';
 import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
-  onAnimationEnd: () => void;
   version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5' | 'v6' | 'v7' | 'v8' | 'v9' | 'v10' | 'v11' | 'v12' | 'v13';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v13' }: SplashScreenProps) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onAnimationEnd();
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [onAnimationEnd]);
+export function SplashScreen({ version = 'v13' }: SplashScreenProps) {
 
   const animationClass = 
     version === 'v2' ? 'splash-animation-v2' :
@@ -36,8 +28,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v13' }: SplashScreenPr
   return (
     <div
       className={cn(
-        'absolute inset-0 z-50 flex items-center justify-center bg-background',
-        animationClass
+        'absolute inset-0 z-50 flex items-center justify-center bg-background'
       )}
     >
       {version === 'v1' && (
