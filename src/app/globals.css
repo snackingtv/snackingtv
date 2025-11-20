@@ -115,7 +115,7 @@ body {
 }
 
 @layer components {
-  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4 {
+  .splash-animation, .splash-animation-v2, .splash-animation-v3, .splash-animation-v4, .splash-animation-v5 {
     animation: splash-fade-in-out 3s ease-in-out forwards;
   }
 
@@ -232,6 +232,29 @@ body {
     }
     40% {
       transform: scale(1.0);
+    }
+  }
+
+  .loading-bar-container {
+    @apply w-48 h-1 bg-muted rounded-full overflow-hidden;
+  }
+
+  .loading-bar {
+    @apply h-full bg-primary rounded-full;
+    animation: loading-bar-anim 2.5s ease-in-out infinite;
+  }
+
+  @keyframes loading-bar-anim {
+    0% {
+      width: 0%;
+    }
+    50% {
+      width: 100%;
+    }
+    100% {
+      width: 0%;
+      transform-origin: right;
+      transform: scaleX(-1);
     }
   }
 }

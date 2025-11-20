@@ -6,10 +6,10 @@ import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
-  version?: 'v1' | 'v2' | 'v3' | 'v4';
+  version?: 'v1' | 'v2' | 'v3' | 'v4' | 'v5';
 }
 
-export function SplashScreen({ onAnimationEnd, version = 'v4' }: SplashScreenProps) {
+export function SplashScreen({ onAnimationEnd, version = 'v5' }: SplashScreenProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
@@ -22,6 +22,7 @@ export function SplashScreen({ onAnimationEnd, version = 'v4' }: SplashScreenPro
     version === 'v2' ? 'splash-animation-v2' :
     version === 'v3' ? 'splash-animation-v3' :
     version === 'v4' ? 'splash-animation-v4' :
+    version === 'v5' ? 'splash-animation-v5' :
     'splash-animation';
 
   return (
@@ -56,6 +57,11 @@ export function SplashScreen({ onAnimationEnd, version = 'v4' }: SplashScreenPro
           <div className="dot"></div>
           <div className="dot"></div>
           <div className="dot"></div>
+        </div>
+      )}
+      {version === 'v5' && (
+        <div className="loading-bar-container">
+          <div className="loading-bar"></div>
         </div>
       )}
     </div>
