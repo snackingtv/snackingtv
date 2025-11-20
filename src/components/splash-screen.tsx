@@ -14,7 +14,8 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
   useEffect(() => {
     fetch('https://lottie.host/85067c82-dbcb-4599-b0b6-9dce7349393f/LlzVjM98tv.lottie')
       .then((response) => response.json())
-      .then((data) => setAnimationData(data));
+      .then((data) => setAnimationData(data))
+      .catch((error) => console.error('Error fetching Lottie animation:', error));
   }, []);
 
   useEffect(() => {
@@ -36,12 +37,9 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
           animationData={animationData}
           loop={true}
           style={{ width: 300, height: 300 }}
-          onComplete={() => {
-            // The main timer will handle the transition, but you could add logic here
-          }}
         />
       ) : (
-        <h1 className="text-4xl md:text-6xl font-fredoka splash-text-animation gemini-text-gradient">
+        <h1 className="text-4xl md:text-6xl font-fredoka gemini-text-gradient">
           SnackingTV
         </h1>
       )}
