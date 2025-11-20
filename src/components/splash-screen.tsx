@@ -2,18 +2,16 @@
 
 import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import Lottie from 'lottie-react';
 
 interface SplashScreenProps {
   onAnimationEnd: () => void;
 }
 
 export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
-
   useEffect(() => {
     const timer = setTimeout(() => {
       onAnimationEnd();
-    }, 3000); // Keep the 3-second duration
+    }, 3000);
 
     return () => clearTimeout(timer);
   }, [onAnimationEnd]);
@@ -24,11 +22,14 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
         'absolute inset-0 z-50 flex items-center justify-center bg-background splash-animation'
       )}
     >
-      <Lottie
-        path={'https://lottie.host/85067c82-dbcb-4599-b0b6-9dce7349393f/LlzVjM98tv.lottie'}
-        loop={true}
-        style={{ width: 300, height: 300 }}
-      />
+      <div className="relative flex h-48 w-48 items-center justify-center">
+        {/* Pulsating rings */}
+        <div className="pulsating-ring"></div>
+        <div className="pulsating-ring" style={{ animationDelay: '1s' }}></div>
+        <div className="pulsating-ring" style={{ animationDelay: '2s' }}></div>
+        {/* Central dot */}
+        <div className="absolute h-4 w-4 rounded-full bg-primary"></div>
+      </div>
     </div>
   );
 }

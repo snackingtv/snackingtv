@@ -44,7 +44,6 @@
     "firebase": "^11.9.1",
     "genkit": "^1.0.0",
     "jspdf": "^2.5.1",
-    "lottie-react": "^2.4.0",
     "lucide-react": "^0.475.0",
     "next": "15.3.3",
     "react": "^18.3.1",
