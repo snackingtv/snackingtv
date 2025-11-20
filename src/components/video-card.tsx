@@ -1701,7 +1701,7 @@ export function VideoCard({
         ref={containerRef}
         className={cn(
           'relative w-full h-full bg-background flex items-center justify-center',
-          !shouldShowOverlay || isPlaceholder ? 'cursor-auto' : 'cursor-none'
+          !shouldShowOverlay && isPlaying && !isPlaceholder ? 'cursor-none' : 'cursor-auto'
         )}
         onClick={handleVideoClick}
       >
@@ -1767,8 +1767,7 @@ export function VideoCard({
         <div
           className="absolute inset-0 pointer-events-none"
         >
-          {video && !isPlaceholder && (
-            <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
+          <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
               <div className="flex items-center gap-2">
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                   <p className="text-white font-normal text-sm">
@@ -1784,10 +1783,8 @@ export function VideoCard({
                 )}
               </div>
             </div>
-          )}
 
-          {!isPlaceholder && (
-            <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
+          <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
@@ -1829,9 +1826,8 @@ export function VideoCard({
                 </TooltipContent>
               </Tooltip>
             </div>
-          )}
           
-          <div className={cn("absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
+          <div className={cn("absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-14 w-14 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
