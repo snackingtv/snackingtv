@@ -39,9 +39,7 @@ export function SplashScreen({ onAnimationEnd }: SplashScreenProps) {
           style={{ width: 300, height: 300 }}
         />
       ) : (
-        <h1 className="text-4xl md:text-6xl font-fredoka gemini-text-gradient">
-          SnackingTV
-        </h1>
+        <div style={{ width: 300, height: 300 }} /> // Empty placeholder
       )}
     </div>
   );
