@@ -38,7 +38,7 @@ function formatICUMessage(message: string, replacements: Record<string, string |
 
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('de');
+  const [language, setLanguage] = useState<Language>('en');
 
   const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
     const keys = key.split('.');
