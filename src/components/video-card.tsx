@@ -128,7 +128,7 @@ function PrivacyPolicySheetContent() {
           <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_3')}</h2>
           <p>{t('privacyPolicyP4')}</p>
 
-          <h2 classNameName="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
+          <h2 className="text-2xl font-semibold">{t('privacyPolicyH2_4')}</h2>
           <p>{t('privacyPolicyP5')}</p>
           <p>{t('privacyPolicyP6')}</p>
           <p>{t('privacyPolicyP7')}</p>
