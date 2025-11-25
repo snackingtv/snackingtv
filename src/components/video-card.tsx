@@ -152,13 +152,13 @@ function ImprintSheetContent() {
       </SheetHeader>
       <div className="p-4 overflow-y-auto flex-grow">
         <div className="space-y-4">
-          <p>SnackingTV Inc.</p>
+          <p>Tivio Inc.</p>
           <p>123 Snack Street</p>
           <p>Food City, 98765</p>
           <p>United States</p>
 
           <h2 className="text-2xl font-semibold mt-6">{t('imprintContact')}</h2>
-          <p>Email: contact@snacking.tv</p>
+          <p>Email: contact@tivio.tv</p>
           <p>Phone: +1 (555) 123-4567</p>
 
           <h2 className="text-2xl font-semibold mt-6">{t('imprintRepresentedBy')}</h2>
@@ -558,34 +558,6 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
     }
     
     setIsLoading(false);
-  };
-  
-  const processM3uContent = async (content: string, source: string) => {
-    setIsLoading(true);
-    let parsedChannels: M3uChannel[] = [];
-    try {
-      parsedChannels = parseM3u(content);
-      if (parsedChannels.length === 0) {
-        toast({
-          variant: 'destructive',
-          title: t('noChannelsFoundTitle'),
-          description: t('noChannelsFoundDescription'),
-        });
-        setIsLoading(false);
-        return;
-      }
-    } catch (error) {
-      console.error(`Failed to parse M3U from ${source}:`, error);
-      toast({
-        variant: 'destructive',
-        title: t('channelAddErrorTitle'),
-        description: t('channelAddErrorDescription'),
-      });
-      setIsLoading(false);
-      return;
-    }
-    
-    await verifyChannels(parsedChannels);
   };
   
   const handleAddFromUrl = () => {
@@ -1330,7 +1302,7 @@ export function SettingsSheetContent({
               </RadioGroup>
             </li>
             <li>
-              <a href="mailto:snackingtv.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
+              <a href="mailto:tivio.beta@gmail.com" className="flex items-center justify-between p-3 -m-3 rounded-lg hover:bg-accent w-full">
                 <span className='flex items-center gap-2'><MessageSquareWarning className="h-5 w-5 text-muted-foreground" /> {t('bugReport')}</span>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </a>
@@ -1541,7 +1513,7 @@ export function VideoCard({
 
     const shareData = {
       title: t('shareChannel'),
-      text: `Schau mal, was ich auf SnackingTV gefunden habe: ${video.title}`,
+      text: `Schau mal, was ich auf Tivio gefunden habe: ${video.title}`,
       url: shareLink,
     };
 

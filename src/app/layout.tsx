@@ -6,7 +6,7 @@ import { I18nProvider } from '@/lib/i18n';
 import { GoogleAnalytics } from '@/components/google-analytics';
 
 export const metadata: Metadata = {
-  title: 'SnackingTV',
+  title: 'Tivio',
   description: 'Bite-sized videos for your snacking pleasure.',
 };
 

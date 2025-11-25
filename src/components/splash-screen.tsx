@@ -48,7 +48,7 @@ export function SplashScreen({ version = 'v13' }: SplashScreenProps) {
       )}
       {version === 'v3' && (
         <div className="gemini-spinner">
-          <div className="gemini-spinner-text gemini-text-gradient">SnackingTV</div>
+          <div className="gemini-spinner-text gemini-text-gradient">Tivio</div>
         </div>
       )}
       {version === 'v4' && (

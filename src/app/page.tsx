@@ -334,7 +334,7 @@ export default function Home() {
               accept="video/*"
               className="hidden"
             />
-            <h1 className="sr-only">SnackingTV - A vertical video feed</h1>
+            <h1 className="sr-only">Tivio - A vertical video feed</h1>
 
             {isShareDialogVisible && sharedChannel && (
               <AlertDialog open onOpenChange={setIsShareDialogVisible}>
