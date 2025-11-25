@@ -73,7 +73,7 @@ export function AppSidebar({
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <Tv2 size={20} />
+                    <Tv2 size={18} />
                     <span>{t('channels')}</span>
                   </div>
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
@@ -95,8 +95,8 @@ export function AppSidebar({
                                       <Image
                                         src={channel.logo}
                                         alt={channel.name}
-                                        width={24}
-                                        height={24}
+                                        width={20}
+                                        height={20}
                                         className="rounded-sm flex-shrink-0"
                                       />
                                       <span className="font-normal flex-grow truncate text-left whitespace-normal text-xs">
@@ -122,7 +122,7 @@ export function AppSidebar({
                 <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <Star size={20} />
+                            <Star size={18} />
                             <span>{t('favorites')}</span>
                         </div>
                         <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
@@ -137,8 +137,8 @@ export function AppSidebar({
                                     <Image
                                         src={channel.logo}
                                         alt={channel.name}
-                                        width={24}
-                                        height={24}
+                                        width={20}
+                                        height={20}
                                         className="rounded-sm"
                                     />
                                     <span className="font-normal flex-grow truncate text-left">{channel.name}</span>
@@ -159,7 +159,7 @@ export function AppSidebar({
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="ghost" className="w-full justify-start gap-3">
-                      <item.icon size={20} />
+                      <item.icon size={18} />
                       <span>{item.label}</span>
                     </Button>
                   </SheetTrigger>
@@ -167,7 +167,7 @@ export function AppSidebar({
                 </Sheet>
               ) : (
                 <Button variant="ghost" onClick={item.action} className="w-full justify-start gap-3">
-                  <item.icon size={20} />
+                  <item.icon size={18} />
                   <span>{item.label}</span>
                 </Button>
               )}

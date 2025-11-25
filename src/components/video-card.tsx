@@ -1413,7 +1413,7 @@ function PlayerControls({
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-4 text-white">
           <button onClick={onPlayPause} className="p-2">
-            {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
           
           <div className="text-xs font-mono">{formatTime(played * duration)}</div>
@@ -1431,7 +1431,7 @@ function PlayerControls({
 
           <div className="flex items-center gap-2">
             <button onClick={onMuteToggle}>
-              {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
             <Slider
               min={0}
@@ -1759,8 +1759,8 @@ export function VideoCard({
           <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
-                        <Star size={32} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                    <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
+                        <Star size={28} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
@@ -1770,8 +1770,8 @@ export function VideoCard({
 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
-                      <Share2 size={32} className="drop-shadow-lg" />
+                    <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                      <Share2 size={28} className="drop-shadow-lg" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
@@ -1784,13 +1784,13 @@ export function VideoCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-14 w-14 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+                    className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFullScreen();
                     }}
                   >
-                    {isFullScreen ? <Minimize size={32} className="drop-shadow-lg" /> : <Maximize size={32} className="drop-shadow-lg" />}
+                    {isFullScreen ? <Minimize size={28} className="drop-shadow-lg" /> : <Maximize size={28} className="drop-shadow-lg" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
@@ -1802,8 +1802,8 @@ export function VideoCard({
           <div className={cn("absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
-                  <ChevronUp size={32} className="drop-shadow-lg" />
+                <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
+                  <ChevronUp size={28} className="drop-shadow-lg" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -1812,8 +1812,8 @@ export function VideoCard({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-14 w-14 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollNext(); }}>
-                  <ChevronDown size={32} className="drop-shadow-lg" />
+                <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollNext(); }}>
+                  <ChevronDown size={28} className="drop-shadow-lg" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -1838,7 +1838,7 @@ export function VideoCard({
                 }}
               >
                 <Play
-                  className="h-24 w-24 text-white/70 drop-shadow-lg"
+                  className="h-20 w-20 text-white/70 drop-shadow-lg"
                   fill="currentColor"
                 />
               </button>

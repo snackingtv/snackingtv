@@ -358,8 +358,8 @@ export default function Home() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                        <Menu size={28} className="drop-shadow-lg"/>
+                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
+                        <Menu size={24} className="drop-shadow-lg"/>
                       </Button>
                     </SheetTrigger>
                   </TooltipTrigger>
@@ -384,8 +384,8 @@ export default function Home() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                          <Search size={28} className="drop-shadow-lg"/>
+                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
+                          <Search size={24} className="drop-shadow-lg"/>
                         </Button>
                       </SheetTrigger>
                     </TooltipTrigger>
@@ -401,10 +401,10 @@ export default function Home() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0"
+                      className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0"
                       onClick={() => window.location.reload()}
                     >
-                      <RefreshCw size={28} className="drop-shadow-lg" />
+                      <RefreshCw size={24} className="drop-shadow-lg" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -416,8 +416,8 @@ export default function Home() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-12 w-12 flex-shrink-0">
-                          <Settings size={28} className="drop-shadow-lg"/>
+                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
+                          <Settings size={24} className="drop-shadow-lg"/>
                         </Button>
                       </SheetTrigger>
                     </TooltipTrigger>
