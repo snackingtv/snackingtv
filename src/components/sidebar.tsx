@@ -10,6 +10,7 @@ import { User } from 'firebase/auth';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 interface AppSidebarProps {
     onChannelSelect: (channel: M3uChannel) => void;
@@ -32,6 +33,15 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { t } = useTranslation();
   const favoriteChannels = addedChannels.filter(c => favoriteChannelUrls.includes(c.url));
+
+  const groupedChannels = addedChannels.reduce((acc, channel) => {
+    const group = channel.group || 'Uncategorized';
+    if (!acc[group]) {
+      acc[group] = [];
+    }
+    acc[group].push(channel);
+    return acc;
+  }, {} as Record<string, WithId<M3uChannel>[]>);
 
   const otherNavItems = [
     {
@@ -69,24 +79,37 @@ export function AppSidebar({
                   <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="py-1 pl-8 pr-2">
+              <CollapsibleContent className="py-1 pl-4 pr-2">
                  {addedChannels.length > 0 ? (
-                    <ul className="space-y-1">
-                      {addedChannels.map((channel) => (
-                        <li key={channel.id}>
-                           <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => onChannelSelect(channel)}>
-                              <Image
-                                src={channel.logo}
-                                alt={channel.name}
-                                width={24}
-                                height={24}
-                                className="rounded-sm"
-                              />
-                              <span className="font-normal flex-grow truncate text-left">{channel.name}</span>
-                           </Button>
-                        </li>
+                    <Accordion type="multiple" className="w-full">
+                      {Object.entries(groupedChannels).sort(([groupA], [groupB]) => groupA.localeCompare(groupB)).map(([group, channels]) => (
+                        <AccordionItem value={group} key={group}>
+                          <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                            {group} ({channels.length})
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <ul className="space-y-1 pt-1">
+                              {channels.map((channel) => (
+                                <li key={channel.id}>
+                                  <Button variant="ghost" className="w-full justify-start gap-2 h-auto py-1.5" onClick={() => onChannelSelect(channel)}>
+                                      <Image
+                                        src={channel.logo}
+                                        alt={channel.name}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-sm flex-shrink-0"
+                                      />
+                                      <span className="font-normal flex-grow truncate text-left whitespace-normal text-xs">
+                                        {channel.name}
+                                      </span>
+                                  </Button>
+                                </li>
+                              ))}
+                            </ul>
+                          </AccordionContent>
+                        </AccordionItem>
                       ))}
-                    </ul>
+                    </Accordion>
                   ) : (
                     <p className="text-muted-foreground text-sm text-center py-2">{t('noChannels')}</p>
                   )}
