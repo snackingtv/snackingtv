@@ -1,9 +1,9 @@
 'use client';
 
-import { PlusCircle, Tv2, Folder, User as UserIcon, Star, ChevronDown, Menu, Cloud } from 'lucide-react';
+import { PlusCircle, Tv2, Folder, User as UserIcon, Star, ChevronDown, Menu } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SheetContent, SheetHeader, SheetTitle, SheetTrigger, Sheet } from '@/components/ui/sheet';
-import { AddChannelSheetContent, AuthSheetContent, GoogleDriveSheetContent } from './video-card';
+import { AddChannelSheetContent, AuthSheetContent } from './video-card';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { User } from 'firebase/auth';
@@ -54,11 +54,6 @@ export function AppSidebar({
       label: t('deviceStorage'),
       icon: Folder,
       action: onLocalVideoSelect,
-    },
-    {
-      label: t('googleDrive'),
-      icon: Cloud,
-      sheetContent: user ? <GoogleDriveSheetContent /> : <AuthSheetContent />,
     },
     {
       label: user ? t('profile') : t('login'),

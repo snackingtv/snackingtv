@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase, initiateAnonymousSignIn, initiateGoogleSignIn } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
@@ -46,8 +46,6 @@ import {
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
-import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import { listGoogleDriveFiles } from '@/ai/flows/google-drive-flow';
 import Link from 'next/link';
 
 interface VideoCardProps {
@@ -180,92 +178,6 @@ function ImprintSheetContent() {
     </SheetContent>
   )
 }
-
-export function GoogleDriveSheetContent() {
-  const { t } = useTranslation();
-  const auth = useAuth();
-  const { toast } = useToast();
-  const [files, setFiles] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleLoginSuccess = async (tokenResponse: any) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const gdriveFiles = await listGoogleDriveFiles({ accessToken: tokenResponse.access_token });
-      setFiles(gdriveFiles);
-    } catch (err: any) {
-      setError(t('googleDriveError'));
-      toast({
-        variant: 'destructive',
-        title: t('googleDriveErrorTitle'),
-        description: err.message,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = useGoogleLogin({
-    onSuccess: handleLoginSuccess,
-    onError: () => {
-      setError(t('googleLoginFailed'));
-      toast({
-        variant: 'destructive',
-        title: t('googleLoginFailedTitle'),
-      });
-    },
-    scope: 'https://www.googleapis.com/auth/drive.readonly',
-  });
-
-  return (
-    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
-      <SheetHeader>
-        <SheetTitle>{t('googleDrive')}</SheetTitle>
-      </SheetHeader>
-      <div className="flex-grow overflow-y-auto p-4">
-        {error && <p className="text-destructive">{error}</p>}
-        {files.length > 0 ? (
-          <ul className="space-y-2">
-            {files.map((file) => (
-              <li key={file.id} className="flex items-center gap-4 p-2 rounded-lg hover:bg-accent/50">
-                 <Image
-                    src={file.thumbnailLink || `https://picsum.photos/seed/gdrive${file.id}/64/64`}
-                    alt={file.name}
-                    width={64}
-                    height={36}
-                    className="rounded-md object-cover"
-                  />
-                <div className="flex-grow">
-                  <p className="font-medium truncate">{file.name}</p>
-                   <p className="text-xs text-muted-foreground">{new Date(file.createdTime).toLocaleDateString()}</p>
-                </div>
-                <Button size="sm" onClick={() => {
-                  // This will be handled by a global state manager in a future step
-                  console.log("Play video: ", file.webContentLink);
-                  toast({title: "Not implemented yet"})
-                }}>
-                  <Play className="mr-2 h-4 w-4" />
-                  {t('play')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <p className="mb-4">{t('connectGoogleDriveDescription')}</p>
-            <Button onClick={() => login()} disabled={isLoading}>
-              {isLoading ? <Loader className="animate-spin mr-2"/> : <Tv2 className="mr-2 h-4 w-4" />}
-              {t('connectGoogleDrive')}
-            </Button>
-          </div>
-        )}
-      </div>
-    </SheetContent>
-  );
-}
-
 
 export function FavoriteChannelListSheetContent({ 
   channels, 
@@ -978,15 +890,6 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
     });
   };
   
-  const handleGoogleLogin = () => {
-    if (!auth) return;
-    initiateGoogleSignIn(auth);
-    toast({
-      title: t('loading'),
-      description: t('attemptingLogin'),
-    });
-  };
-
   const handleGuestLogin = () => {
     if (!auth) return;
     initiateAnonymousSignIn(auth);
@@ -1170,7 +1073,6 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 
 
   return (
-    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
       <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
         <SheetHeader>
           <SheetTitle className="text-center">
@@ -1307,10 +1209,6 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                 <Separator />
                 <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
             </div>
-            <Button variant="outline" className="w-full mt-2" onClick={handleGoogleLogin}>
-              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 109.8 512 0 402.2 0 261.8 0 120.5 109.8 11.8 244 11.8c70.3 0 129.8 27.8 174.4 71.3l-89.4 69.8c-23.2-22-53.8-35.9-85-35.9-68.4 0-124.2 55.8-124.2 124.2s55.8 124.2 124.2 124.2c78.2 0 106.3-58.1 110.3-85.7H244V261.8h244z"></path></svg>
-              {t('signInWithGoogle')}
-            </Button>
             <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
         </div>
          <div className="p-4 border-t border-border">
@@ -1319,7 +1217,6 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
           </div>
         </div>
       </SheetContent>
-    </GoogleOAuthProvider>
   );
 }
 
