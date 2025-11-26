@@ -21,7 +21,7 @@ import { deleteChannels } from '@/firebase/firestore/deletions';
 import { Card } from '@/components/ui/card';
 
 export default function HomePage() {
-  const { t, tCategory } = useTranslation();
+  const { t, tCategory, getCategoryIcon } = useTranslation();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -244,7 +244,7 @@ export default function HomePage() {
                     .map(([group, channels]) => (
                       <ChannelCarousel
                         key={group}
-                        title={tCategory(group)}
+                        title={getCategoryIcon(group)}
                         channels={channels}
                       />
                   ))}

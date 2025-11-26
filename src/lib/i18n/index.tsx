@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useCallback } fr
 import en from './en.json';
 import de from './de.json';
 import ru from './ru.json';
+import { Newspaper, Film, Zap, Music, Smile, BookOpen, Tv, Globe, Clapperboard } from 'lucide-react';
 
 const translations = { en, de, ru };
 
@@ -14,6 +15,7 @@ interface I18nContextType {
   setLanguage: (language: Language) => void;
   t: (key: string, replacements?: Record<string, string | number>) => string;
   tCategory: (category: string) => string;
+  getCategoryIcon: (category: string) => React.ReactNode;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -68,8 +70,38 @@ const categoryMap: Record<string, string> = {
   'uncategorized': 'cat_uncategorized',
 };
 
+const iconMap: Record<string, React.ElementType> = {
+  'news': Newspaper,
+  'nachrichten': Newspaper,
+  'info': Newspaper,
+  'новости': Newspaper,
+  'entertainment': Film,
+  'unterhaltung': Film,
+  'развлечения': Film,
+  'movies': Clapperboard,
+  'filme': Clapperboard,
+  'кино': Clapperboard,
+  'sports': Zap,
+  'спорт': Zap,
+  'music': Music,
+  'musik': Music,
+  'музыка': Music,
+  'kids': Smile,
+  'kinder': Smile,
+  'дети': Smile,
+  'documentary': BookOpen,
+  'doku': BookOpen,
+  'документальные': BookOpen,
+  'series': Tv,
+  'serien': Tv,
+  'сериалы': Tv,
+  'general': Globe,
+  'allgemein': Globe,
+  'общие': Globe,
+};
+
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('de');
 
   const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
     const keys = key.split('.');
@@ -115,8 +147,20 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return category;
   }, [t]);
 
+  const getCategoryIcon = useCallback((category: string): React.ReactNode => {
+    const lowerCategory = category.toLowerCase();
+    const foundKey = Object.keys(iconMap).find(key => lowerCategory.includes(key));
+    
+    if (foundKey) {
+      const IconComponent = iconMap[foundKey];
+      return <IconComponent className="h-5 w-5" />;
+    }
+    
+    return tCategory(category); // Fallback to translated text
+  }, [tCategory]);
+
   return (
-    <I18nContext.Provider value={{ language, setLanguage, t, tCategory }}>
+    <I18nContext.Provider value={{ language, setLanguage, t, tCategory, getCategoryIcon }}>
       {children}
     </I18nContext.Provider>
   );
