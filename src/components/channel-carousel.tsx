@@ -34,7 +34,7 @@ export function ChannelCarousel({ title, channels }: ChannelCarouselProps) {
             <CarouselItem key={channel.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
               <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
                 <div className="group">
-                  <Card className="overflow-hidden border-0 bg-zinc-800 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
+                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
                     <CardContent className="p-0 flex items-center justify-center h-full">
                       <Image
                         src={channel.logo}
