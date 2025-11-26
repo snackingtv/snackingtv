@@ -173,5 +173,15 @@
   "readTermsOfService": "Read Terms of Service",
   "tosAcceptAndContinue": "Accept & Continue",
   "noChannelsAvailable": "No channels available",
-  "menu": "Menu"
+  "menu": "Menu",
+  "googleDrive": "Google Drive",
+  "googleDriveError": "Error fetching files from Google Drive.",
+  "googleDriveErrorTitle": "Google Drive Error",
+  "googleLoginFailed": "Google login failed.",
+  "googleLoginFailedTitle": "Google Login Failed",
+  "connectGoogleDriveDescription": "Connect your Google Drive account to view your videos.",
+  "connectGoogleDrive": "Connect to Google Drive",
+  "play": "Play",
+  "signInWithGoogle": "Sign in with Google",
+  "cloud": "Cloud"
 }

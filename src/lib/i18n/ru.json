@@ -174,5 +174,15 @@
   "readTermsOfService": "Прочитать Условия использования",
   "tosAcceptAndContinue": "Принять и продолжить",
   "noChannelsAvailable": "Нет доступных каналов",
-  "menu": "Меню"
+  "menu": "Меню",
+  "googleDrive": "Google Диск",
+  "googleDriveError": "Ошибка при получении файлов с Google Диска.",
+  "googleDriveErrorTitle": "Ошибка Google Диска",
+  "googleLoginFailed": "Вход через Google не удался.",
+  "googleLoginFailedTitle": "Ошибка входа через Google",
+  "connectGoogleDriveDescription": "Подключите свой аккаунт Google Диска для просмотра видео.",
+  "connectGoogleDrive": "Подключиться к Google Диску",
+  "play": "Воспроизвести",
+  "signInWithGoogle": "Войти через Google",
+  "cloud": "Облако"
 }

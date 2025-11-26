@@ -173,5 +173,15 @@
   "readTermsOfService": "Nutzungsbedingungen lesen",
   "tosAcceptAndContinue": "Akzeptieren & Fortfahren",
   "noChannelsAvailable": "Keine Sender verfügbar",
-  "menu": "Menü"
+  "menu": "Menü",
+  "googleDrive": "Google Drive",
+  "googleDriveError": "Fehler beim Abrufen von Dateien von Google Drive.",
+  "googleDriveErrorTitle": "Google Drive Fehler",
+  "googleLoginFailed": "Google-Anmeldung fehlgeschlagen.",
+  "googleLoginFailedTitle": "Google-Anmeldung fehlgeschlagen",
+  "connectGoogleDriveDescription": "Verbinden Sie Ihr Google Drive-Konto, um Ihre Videos anzuzeigen.",
+  "connectGoogleDrive": "Mit Google Drive verbinden",
+  "play": "Abspielen",
+  "signInWithGoogle": "Mit Google anmelden",
+  "cloud": "Cloud"
 }

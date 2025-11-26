@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link as LinkIcon, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase, initiateAnonymousSignIn, initiateGoogleSignIn } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
@@ -47,6 +47,8 @@ import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { listGoogleDriveFiles } from '@/ai/flows/google-drive-flow';
+import Link from 'next/link';
 
 interface VideoCardProps {
   video: Video | M3uChannel;
@@ -178,6 +180,92 @@ function ImprintSheetContent() {
     </SheetContent>
   )
 }
+
+export function GoogleDriveSheetContent() {
+  const { t } = useTranslation();
+  const auth = useAuth();
+  const { toast } = useToast();
+  const [files, setFiles] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLoginSuccess = async (tokenResponse: any) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const gdriveFiles = await listGoogleDriveFiles({ accessToken: tokenResponse.access_token });
+      setFiles(gdriveFiles);
+    } catch (err: any) {
+      setError(t('googleDriveError'));
+      toast({
+        variant: 'destructive',
+        title: t('googleDriveErrorTitle'),
+        description: err.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = useGoogleLogin({
+    onSuccess: handleLoginSuccess,
+    onError: () => {
+      setError(t('googleLoginFailed'));
+      toast({
+        variant: 'destructive',
+        title: t('googleLoginFailedTitle'),
+      });
+    },
+    scope: 'https://www.googleapis.com/auth/drive.readonly',
+  });
+
+  return (
+    <SheetContent side="bottom" className="h-[90vh] rounded-t-lg mx-2 mb-2 flex flex-col">
+      <SheetHeader>
+        <SheetTitle>{t('googleDrive')}</SheetTitle>
+      </SheetHeader>
+      <div className="flex-grow overflow-y-auto p-4">
+        {error && <p className="text-destructive">{error}</p>}
+        {files.length > 0 ? (
+          <ul className="space-y-2">
+            {files.map((file) => (
+              <li key={file.id} className="flex items-center gap-4 p-2 rounded-lg hover:bg-accent/50">
+                 <Image
+                    src={file.thumbnailLink || `https://picsum.photos/seed/gdrive${file.id}/64/64`}
+                    alt={file.name}
+                    width={64}
+                    height={36}
+                    className="rounded-md object-cover"
+                  />
+                <div className="flex-grow">
+                  <p className="font-medium truncate">{file.name}</p>
+                   <p className="text-xs text-muted-foreground">{new Date(file.createdTime).toLocaleDateString()}</p>
+                </div>
+                <Button size="sm" onClick={() => {
+                  // This will be handled by a global state manager in a future step
+                  console.log("Play video: ", file.webContentLink);
+                  toast({title: "Not implemented yet"})
+                }}>
+                  <Play className="mr-2 h-4 w-4" />
+                  {t('play')}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <p className="mb-4">{t('connectGoogleDriveDescription')}</p>
+            <Button onClick={() => login()} disabled={isLoading}>
+              {isLoading ? <Loader className="animate-spin mr-2"/> : <Tv2 className="mr-2 h-4 w-4" />}
+              {t('connectGoogleDrive')}
+            </Button>
+          </div>
+        )}
+      </div>
+    </SheetContent>
+  );
+}
+
 
 export function FavoriteChannelListSheetContent({ 
   channels, 
@@ -889,6 +977,15 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
       description: t('attemptingRegister'),
     });
   };
+  
+  const handleGoogleLogin = () => {
+    if (!auth) return;
+    initiateGoogleSignIn(auth);
+    toast({
+      title: t('loading'),
+      description: t('attemptingLogin'),
+    });
+  };
 
   const handleGuestLogin = () => {
     if (!auth) return;
@@ -1073,150 +1170,156 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 
 
   return (
-     <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
-       <SheetHeader>
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}>
+      <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
+        <SheetHeader>
           <SheetTitle className="text-center">
             {activeTab === 'login' ? t('login') : t('register')}
           </SheetTitle>
         </SheetHeader>
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="login">{t('login')}</TabsTrigger>
-          <TabsTrigger value="register">{t('register')}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="login" className="pt-4">
-          <div className="p-4">
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                <FormField
-                  control={loginForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('email')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder="you@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="space-y-2">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">{t('login')}</TabsTrigger>
+            <TabsTrigger value="register">{t('register')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="login" className="pt-4">
+            <div className="p-4">
+              <Form {...loginForm}>
+                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                   <FormField
                     control={loginForm.control}
-                    name="password"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('password')}</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input type={showPassword ? "text" : "password"} {...field} />
-                          </FormControl>
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                          </button>
-                        </div>
+                        <FormLabel>{t('email')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder="you@example.com" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <Button type="submit" className="w-full mt-4" disabled={!loginForm.formState.isValid}>{t('login')}</Button>
-              </form>
-            </Form>
-          </div>
-        </TabsContent>
-        <TabsContent value="register" className="pt-4">
-          <div className="p-4">
-            <Form {...registerForm}>
-              <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-                <FormField
-                  control={registerForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('email')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder="you@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="space-y-2">
+                  <div className="space-y-2">
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('password')}</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input type={showPassword ? "text" : "password"} {...field} />
+                            </FormControl>
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3"
+                            >
+                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full mt-4" disabled={!loginForm.formState.isValid}>{t('login')}</Button>
+                </form>
+              </Form>
+            </div>
+          </TabsContent>
+          <TabsContent value="register" className="pt-4">
+            <div className="p-4">
+              <Form {...registerForm}>
+                <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                   <FormField
                     control={registerForm.control}
-                    name="password"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('password')}</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input type={showPassword ? "text" : "password"} {...field} />
-                          </FormControl>
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute inset-y-0 right-0 flex items-center pr-3"
-                          >
-                            {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                          </button>
-                        </div>
+                        <FormLabel>{t('email')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder="you@example.com" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                <FormField
-                  control={registerForm.control}
-                  name="acceptPrivacy"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          id="acceptPrivacy"
-                        />
-                      </FormControl>
-                      <div className="grid gap-1.5 leading-none">
-                        <label htmlFor="acceptPrivacy" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                          {t('acceptPrivacyLabel')}{' '}
-                          <Sheet>
-                            <SheetTrigger asChild>
-                              <button type="button" className="text-primary underline">{t('privacyPolicy')}</button>
-                            </SheetTrigger>
-                            <PrivacyPolicySheetContent />
-                          </Sheet>
-                        </label>
-                         <FormMessage>{registerForm.formState.errors.acceptPrivacy && t(registerForm.formState.errors.acceptPrivacy.message as string)}</FormMessage>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full mt-4" disabled={!registerForm.formState.isValid}>{t('register')}</Button>
-              </form>
-            </Form>
-          </div>
-        </TabsContent>
-      </Tabs>
-      <div className="px-8 pb-4">
-          <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
-          </div>
-          <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
-      </div>
-       <div className="p-4 border-t border-border">
-        <div className="text-center text-xs text-muted-foreground">
-            Build ❤️ 1.1.11
+                  <div className="space-y-2">
+                    <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('password')}</FormLabel>
+                          <div className="relative">
+                            <FormControl>
+                              <Input type={showPassword ? "text" : "password"} {...field} />
+                            </FormControl>
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute inset-y-0 right-0 flex items-center pr-3"
+                            >
+                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                            </button>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={registerForm.control}
+                    name="acceptPrivacy"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            id="acceptPrivacy"
+                          />
+                        </FormControl>
+                        <div className="grid gap-1.5 leading-none">
+                          <label htmlFor="acceptPrivacy" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            {t('acceptPrivacyLabel')}{' '}
+                            <Sheet>
+                              <SheetTrigger asChild>
+                                <button type="button" className="text-primary underline">{t('privacyPolicy')}</button>
+                              </SheetTrigger>
+                              <PrivacyPolicySheetContent />
+                            </Sheet>
+                          </label>
+                           <FormMessage>{registerForm.formState.errors.acceptPrivacy && t(registerForm.formState.errors.acceptPrivacy.message as string)}</FormMessage>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full mt-4" disabled={!registerForm.formState.isValid}>{t('register')}</Button>
+                </form>
+              </Form>
+            </div>
+          </TabsContent>
+        </Tabs>
+        <div className="px-8 pb-4">
+            <div className="relative">
+                <Separator />
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
+            </div>
+            <Button variant="outline" className="w-full mt-2" onClick={handleGoogleLogin}>
+              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 109.8 512 0 402.2 0 261.8 0 120.5 109.8 11.8 244 11.8c70.3 0 129.8 27.8 174.4 71.3l-89.4 69.8c-23.2-22-53.8-35.9-85-35.9-68.4 0-124.2 55.8-124.2 124.2s55.8 124.2 124.2 124.2c78.2 0 106.3-58.1 110.3-85.7H244V261.8h244z"></path></svg>
+              {t('signInWithGoogle')}
+            </Button>
+            <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
         </div>
-      </div>
-    </SheetContent>
+         <div className="p-4 border-t border-border">
+          <div className="text-center text-xs text-muted-foreground">
+              Build ❤️ 1.1.11
+          </div>
+        </div>
+      </SheetContent>
+    </GoogleOAuthProvider>
   );
 }
 
@@ -1813,20 +1916,6 @@ export function VideoCard({
                     <p>{t('shareChannel')}</p>
                   </TooltipContent>
                 </Tooltip>
-                
-                <Sheet>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
-                          <Sparkles size={24} className="drop-shadow-lg" />
-                        </Button>
-                      </SheetTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="left"><p>AI Helper</p></TooltipContent>
-                  </Tooltip>
-                  <AiHelperSheetContent />
-                </Sheet>
 
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1913,20 +2002,5 @@ export function VideoCard({
 
       </div>
     </TooltipProvider>
-  );
-}
-
-function AiHelperSheetContent() {
-  const { t } = useTranslation();
-  return (
-    <SheetContent>
-      <SheetHeader>
-        <SheetTitle>AI Helper</SheetTitle>
-      </SheetHeader>
-      <div className="p-4">
-        <p>AI Assistant to help you manage and control the app.</p>
-        {/* Chat interface will be implemented here */}
-      </div>
-    </SheetContent>
   );
 }
