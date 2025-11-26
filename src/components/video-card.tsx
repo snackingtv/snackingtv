@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -14,7 +14,6 @@ import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredentia
 import { useTranslation } from '@/lib/i18n';
 import { fetchM3u } from '@/ai/flows/m3u-proxy-flow';
 import { checkChannelStatus } from '@/ai/flows/check-channel-status-flow';
-import { fetchUrlContent } from '@/ai/flows/proxy-flow';
 import { parseM3u, type M3uChannel } from '@/lib/m3u-parser';
 import { Separator } from './ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -46,9 +45,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from './ui/scroll-area';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 
 interface VideoCardProps {
-  video: Video;
+  video: Video | M3uChannel;
   isActive: boolean;
   onAddChannels: (newChannels: M3uChannel[]) => void;
   onChannelSelect: (channel: M3uChannel | Video) => void;
@@ -298,7 +299,7 @@ export function ChannelListSheetContent({
   };
   
   const filteredChannels = channels.filter(channel => 
-      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+      channel.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const renderChannelList = (channelList: WithId<M3uChannel>[], emptyMessage: string) => {
@@ -396,7 +397,7 @@ export function ChannelListSheetContent({
   );
 }
 
-export function AddChannelSheetContent({ user, isUserLoading }: { user: User | null, isUserLoading: boolean }) {
+export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user: User | null, isUserLoading: boolean, trigger?: React.ReactNode }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -442,6 +443,29 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
     setTotalCount(0);
     onlineChannelsRef.current = [];
     isCancelledRef.current = false;
+  };
+
+  const processM3uContent = async (content: string, sourceType: 'URL' | 'file') => {
+    try {
+        const parsedChannels = parseM3u(content);
+        if (parsedChannels.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: t('noChannelsFoundTitle'),
+                description: t('noChannelsFoundDescription'),
+            });
+            setIsLoading(false);
+            return;
+        }
+        await verifyChannels(parsedChannels);
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: t('channelAddErrorTitle'),
+            description: error.message || t('channelAddErrorDescription'),
+        });
+        setIsLoading(false);
+    }
   };
 
   const handleSaveChannels = async (channelsToSave: M3uChannel[]) => {
@@ -672,11 +696,10 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
   }
 
   const isDisabled = isUserLoading || isLoading;
-
-  return (
+  
+  const content = (
     <>
-      <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
-        <SheetHeader>
+      <SheetHeader>
           <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
         </SheetHeader>
         <div className="p-4 space-y-4">
@@ -727,7 +750,23 @@ export function AddChannelSheetContent({ user, isUserLoading }: { user: User | n
               Build ❤️ 1.1.11
           </div>
         </div>
-      </SheetContent>
+    </>
+  );
+
+  return (
+    <>
+      {trigger ? (
+         <Sheet>
+            <SheetTrigger asChild>{trigger}</SheetTrigger>
+            <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+              {content}
+            </SheetContent>
+         </Sheet>
+      ) : (
+         <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+           {content}
+         </SheetContent>
+      )}
       
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
         <AlertDialogContent>
@@ -1448,7 +1487,6 @@ function PlayerControls({
   );
 }
 
-
 export function VideoCard({ 
   video, 
   isActive, 
@@ -1484,7 +1522,7 @@ export function VideoCard({
   const firestore = useFirestore();
   const { toast } = useToast();
   
-  const isPlaceholder = video.id === 'placeholder';
+  const isPlaceholder = 'id' in video && video.id === 'placeholder';
 
   // Player state for local controls
   const [played, setPlayed] = useState(0);
@@ -1500,7 +1538,7 @@ export function VideoCard({
       name: video.title,
       logo: (addedChannels.find(c => c.url === video.url)?.logo) || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
       url: typeof video.url === 'string' ? video.url : '', // Ensure url is a string
-      group: video.author || 'Shared'
+      group: ('author' in video ? video.author : 'group' in video ? video.group : 'Shared') || 'Shared',
     };
     
     if (!channelData.url) {
@@ -1509,7 +1547,7 @@ export function VideoCard({
     }
 
     const encodedData = btoa(JSON.stringify(channelData));
-    const shareLink = `${window.location.origin}${window.location.pathname}?channel=${encodedData}`;
+    const shareLink = `${window.location.origin}/player?channel=${encodedData}`;
 
     const shareData = {
       title: t('shareChannel'),
@@ -1566,7 +1604,7 @@ export function VideoCard({
     }
   }, [isActive, localVideoItem]);
   
-  const sourceUrl = localVideoUrl || (isActive ? video.url : undefined);
+  const sourceUrl = localVideoUrl || (isActive && typeof video.url === 'string' ? video.url : undefined);
   const isYoutubeOrTwitch = typeof sourceUrl === 'string' && (sourceUrl.includes('youtube.com') || sourceUrl.includes('twitch.tv'));
 
 
@@ -1681,18 +1719,15 @@ export function VideoCard({
           <div className="w-full h-full flex flex-col items-center justify-center text-center text-white p-8">
               <div className="absolute z-10 p-4 bg-black/50 rounded-lg text-center">
                   <h2 className="text-2xl font-bold mb-4">{t('noChannelsAvailable')}</h2>
-                  <Sheet>
-                      <SheetTrigger asChild>
-                          <Button><Plus className="mr-2 h-4 w-4" /> {t('addChannel')}</Button>
-                      </SheetTrigger>
-                      <AddChannelSheetContent user={user} isUserLoading={isUserLoading} />
-                  </Sheet>
+                   <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
+                      <Button><Plus className="mr-2 h-4 w-4" /> {t('addChannel')}</Button>
+                    } />
               </div>
           </div>
         ) : (
           <ReactPlayer
               ref={activeVideoRef}
-              url={sourceUrl as string | undefined}
+              url={sourceUrl}
               playing={isPlaying}
               loop={!isYoutubeOrTwitch && !isLocalVideo}
               playsinline
@@ -1717,7 +1752,7 @@ export function VideoCard({
                       attributes: {
                           crossOrigin: 'anonymous',
                       },
-                      tracks: showCaptions && video.subtitlesUrl ? [{
+                      tracks: showCaptions && 'subtitlesUrl' in video && video.subtitlesUrl ? [{
                           kind: 'subtitles',
                           src: video.subtitlesUrl,
                           srcLang: 'de',
@@ -1746,7 +1781,7 @@ export function VideoCard({
                     {video?.title}
                   </p>
                 </div>
-                {video?.author && !localVideoItem && (
+                {video && 'author' in video && video.author && !localVideoItem && (
                   <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                     <p className="text-white font-normal text-sm">
                         {video.author}
@@ -1759,8 +1794,8 @@ export function VideoCard({
           <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); typeof video.url === 'string' && onToggleFavorite(video.url); }}>
-                        <Star size={28} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                    <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); if (typeof video.url === 'string') onToggleFavorite(video.url); }}>
+                        <Star size={24} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
@@ -1771,13 +1806,27 @@ export function VideoCard({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
-                      <Share2 size={28} className="drop-shadow-lg" />
+                      <Share2 size={24} className="drop-shadow-lg" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">
                     <p>{t('shareChannel')}</p>
                   </TooltipContent>
                 </Tooltip>
+                
+                <Sheet>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full">
+                          <Sparkles size={24} className="drop-shadow-lg" />
+                        </Button>
+                      </SheetTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="left"><p>AI Helper</p></TooltipContent>
+                  </Tooltip>
+                  <AiHelperSheetContent />
+                </Sheet>
 
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -1790,7 +1839,7 @@ export function VideoCard({
                       toggleFullScreen();
                     }}
                   >
-                    {isFullScreen ? <Minimize size={28} className="drop-shadow-lg" /> : <Maximize size={28} className="drop-shadow-lg" />}
+                    {isFullScreen ? <Minimize size={24} className="drop-shadow-lg" /> : <Maximize size={24} className="drop-shadow-lg" />}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
@@ -1803,7 +1852,7 @@ export function VideoCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
-                  <ChevronUp size={28} className="drop-shadow-lg" />
+                  <ChevronUp size={24} className="drop-shadow-lg" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -1813,7 +1862,7 @@ export function VideoCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollNext(); }}>
-                  <ChevronDown size={28} className="drop-shadow-lg" />
+                  <ChevronDown size={24} className="drop-shadow-lg" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -1864,5 +1913,20 @@ export function VideoCard({
 
       </div>
     </TooltipProvider>
+  );
+}
+
+function AiHelperSheetContent() {
+  const { t } = useTranslation();
+  return (
+    <SheetContent>
+      <SheetHeader>
+        <SheetTitle>AI Helper</SheetTitle>
+      </SheetHeader>
+      <div className="p-4">
+        <p>AI Assistant to help you manage and control the app.</p>
+        {/* Chat interface will be implemented here */}
+      </div>
+    </SheetContent>
   );
 }

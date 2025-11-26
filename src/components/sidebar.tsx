@@ -1,6 +1,6 @@
 'use client';
 
-import { PlusCircle, Tv2, Folder, User as UserIcon, Star, ChevronDown } from 'lucide-react';
+import { PlusCircle, Tv2, Folder, User as UserIcon, Star, ChevronDown, Menu } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { SheetContent, SheetHeader, SheetTitle, SheetTrigger, Sheet } from '@/components/ui/sheet';
 import { AddChannelSheetContent, AuthSheetContent } from './video-card';
@@ -11,6 +11,7 @@ import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import Image from 'next/image';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
+import Link from 'next/link';
 
 interface AppSidebarProps {
     onChannelSelect: (channel: M3uChannel) => void;
@@ -61,120 +62,137 @@ export function AppSidebar({
     },
   ];
 
-  return (
-    <SheetContent side="left" className="flex flex-col">
-      <SheetHeader>
-        <SheetTitle>{t('menu')}</SheetTitle>
-      </SheetHeader>
-      <div className="py-4 flex-grow overflow-y-auto">
-        <ul className="space-y-1">
-          <Collapsible asChild>
-            <li>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="w-full justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Tv2 size={18} />
-                    <span>{t('channels')}</span>
-                  </div>
-                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="py-1 pl-4 pr-2">
-                 {addedChannels.length > 0 ? (
-                    <Accordion type="multiple" className="w-full">
-                      {Object.entries(groupedChannels).sort(([groupA], [groupB]) => groupA.localeCompare(groupB)).map(([group, channels]) => (
-                        <AccordionItem value={group} key={group}>
-                          <AccordionTrigger className="py-2 text-sm hover:no-underline">
-                            {group} ({channels.length})
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <ul className="space-y-1 pt-1">
-                              {channels.map((channel) => (
-                                <li key={channel.id}>
-                                  <Button variant="ghost" className="w-full justify-start gap-2 h-auto py-1.5" onClick={() => onChannelSelect(channel)}>
-                                      <Image
-                                        src={channel.logo}
-                                        alt={channel.name}
-                                        width={20}
-                                        height={20}
-                                        className="rounded-sm flex-shrink-0"
-                                      />
-                                      <span className="font-normal flex-grow truncate text-left whitespace-normal text-xs">
-                                        {channel.name}
-                                      </span>
-                                  </Button>
-                                </li>
-                              ))}
-                            </ul>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  ) : (
-                    <p className="text-muted-foreground text-sm text-center py-2">{t('noChannels')}</p>
-                  )}
-              </CollapsibleContent>
-            </li>
-          </Collapsible>
+  const ChannelLink = ({channel, children}: {channel: M3uChannel, children: React.ReactNode}) => (
+    <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`} className="w-full">
+      {children}
+    </Link>
+  );
 
-          <Collapsible asChild>
-             <li>
+  return (
+    <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
+              <Menu size={20} className="drop-shadow-lg"/>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="flex flex-col">
+        <SheetHeader>
+            <SheetTitle>{t('menu')}</SheetTitle>
+        </SheetHeader>
+        <div className="py-4 flex-grow overflow-y-auto">
+            <ul className="space-y-1">
+            <Collapsible asChild>
+                <li>
                 <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <Star size={18} />
-                            <span>{t('favorites')}</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                    <div className="flex items-center gap-3">
+                        <Tv2 size={18} />
+                        <span>{t('channels')}</span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
                     </Button>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="py-1 pl-8 pr-2">
-                    {favoriteChannels.length > 0 ? (
-                        <ul className="space-y-1">
-                            {favoriteChannels.map((channel) => (
-                            <li key={channel.id}>
-                                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => onChannelSelect(channel)}>
-                                    <Image
-                                        src={channel.logo}
-                                        alt={channel.name}
-                                        width={20}
-                                        height={20}
-                                        className="rounded-sm"
-                                    />
-                                    <span className="font-normal flex-grow truncate text-left">{channel.name}</span>
-                                </Button>
-                            </li>
-                            ))}
-                        </ul>
+                <CollapsibleContent className="py-1 pl-4 pr-2">
+                    {addedChannels.length > 0 ? (
+                        <Accordion type="multiple" className="w-full">
+                        {Object.entries(groupedChannels).sort(([groupA], [groupB]) => groupA.localeCompare(groupB)).map(([group, channels]) => (
+                            <AccordionItem value={group} key={group}>
+                            <AccordionTrigger className="py-2 text-sm hover:no-underline">
+                                {group} ({channels.length})
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <ul className="space-y-1 pt-1">
+                                {channels.map((channel) => (
+                                    <li key={channel.id}>
+                                      <ChannelLink channel={channel}>
+                                        <Button variant="ghost" className="w-full justify-start gap-2 h-auto py-1.5">
+                                            <Image
+                                                src={channel.logo}
+                                                alt={channel.name}
+                                                width={20}
+                                                height={20}
+                                                className="rounded-sm flex-shrink-0"
+                                            />
+                                            <span className="font-normal flex-grow truncate text-left whitespace-normal text-xs">
+                                                {channel.name}
+                                            </span>
+                                        </Button>
+                                      </ChannelLink>
+                                    </li>
+                                ))}
+                                </ul>
+                            </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                        </Accordion>
                     ) : (
-                        <p className="text-muted-foreground text-sm text-center py-2">{t('noFavorites')}</p>
+                        <p className="text-muted-foreground text-sm text-center py-2">{t('noChannels')}</p>
                     )}
                 </CollapsibleContent>
-             </li>
-          </Collapsible>
-          
-          {otherNavItems.map((item, index) => (
-            <li key={index}>
-              {item.sheetContent ? (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start gap-3">
-                      <item.icon size={18} />
-                      <span>{item.label}</span>
+                </li>
+            </Collapsible>
+
+            <Collapsible asChild>
+                <li>
+                    <CollapsibleTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <Star size={18} />
+                                <span>{t('favorites')}</span>
+                            </div>
+                            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200" />
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="py-1 pl-8 pr-2">
+                        {favoriteChannels.length > 0 ? (
+                            <ul className="space-y-1">
+                                {favoriteChannels.map((channel) => (
+                                <li key={channel.id}>
+                                  <ChannelLink channel={channel}>
+                                    <Button variant="ghost" className="w-full justify-start gap-2">
+                                        <Image
+                                            src={channel.logo}
+                                            alt={channel.name}
+                                            width={20}
+                                            height={20}
+                                            className="rounded-sm"
+                                        />
+                                        <span className="font-normal flex-grow truncate text-left">{channel.name}</span>
+                                    </Button>
+                                   </ChannelLink>
+                                </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted-foreground text-sm text-center py-2">{t('noFavorites')}</p>
+                        )}
+                    </CollapsibleContent>
+                </li>
+            </Collapsible>
+            
+            {otherNavItems.map((item, index) => (
+                <li key={index}>
+                {item.sheetContent ? (
+                    <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-start gap-3">
+                        <item.icon size={18} />
+                        <span>{item.label}</span>
+                        </Button>
+                    </SheetTrigger>
+                    {item.sheetContent}
+                    </Sheet>
+                ) : (
+                    <Button variant="ghost" onClick={item.action} className="w-full justify-start gap-3">
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
                     </Button>
-                  </SheetTrigger>
-                  {item.sheetContent}
-                </Sheet>
-              ) : (
-                <Button variant="ghost" onClick={item.action} className="w-full justify-start gap-3">
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </SheetContent>
+                )}
+                </li>
+            ))}
+            </ul>
+        </div>
+        </SheetContent>
+    </Sheet>
   );
 }

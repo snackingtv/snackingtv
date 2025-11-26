@@ -1,154 +1,31 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { VideoFeed } from '@/components/video-feed';
-import { SplashScreen } from '@/components/splash-screen';
-import { AppSidebar } from '@/components/sidebar';
-import { M3uChannel } from '@/lib/m3u-parser';
-import { Video } from '@/lib/videos';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, query, where, serverTimestamp } from 'firebase/firestore';
-import { Progress } from '@/components/ui/progress';
-import { Search, Settings, Menu, Maximize, Minimize, RefreshCw } from 'lucide-react';
+import { collection, query, where } from 'firebase/firestore';
+import { M3uChannel } from '@/lib/m3u-parser';
+import { SplashScreen } from '@/components/splash-screen';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Home, Menu, Plus } from 'lucide-react';
+import { AppSidebar } from '@/components/sidebar';
 import { useTranslation } from '@/lib/i18n';
-import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { cn } from '@/lib/utils';
-import ReactPlayer from 'react-player';
+import { ChannelCarousel } from '@/components/channel-carousel';
+import { AddChannelSheetContent } from '@/components/video-card';
+import Link from 'next/link';
 
-
-export default function Home() {
+export default function HomePage() {
   const { t } = useTranslation();
-  const [activeChannel, setActiveChannel] = useState<M3uChannel | Video | null>(null);
-
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
-  const { toast } = useToast();
 
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const activeVideoRef = useRef<ReactPlayer | null>(null);
-  const localVideoInputRef = useRef<HTMLInputElement>(null);
-  const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
-
-  const [showClock, setShowClock] = useState(true);
-  const [showCaptions, setShowCaptions] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [videoQuality, setVideoQuality] = useState<string>('auto');
-  const [qualityLevels, setQualityLevels] = useState<{ label: string; level: number }[]>([]);
-  const [bufferSize, setBufferSize] = useState<string>('auto');
-
-  const [sharedChannel, setSharedChannel] = useState<M3uChannel | null>(null);
-  const [isShareDialogVisible, setIsShareDialogVisible] = useState(false);
-  
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
-  
-  const [feedItems, setFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
-  const [filteredFeedItems, setFilteredFeedItems] = useState<(Video & { tvgId?: string})[]>([]);
-
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  
-  const userChannelsQuery = useMemoFirebase(
-    () =>
-      user
-        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
-        : null,
-    [user, firestore]
-  );
-  
-  const { data: userChannels, isLoading: areChannelsLoading } = useCollection<M3uChannel>(userChannelsQuery);
-  const [isAppLoading, setIsAppLoading] = useState(true);
-  
-  useEffect(() => {
-    // The app is considered loaded when we are done checking for a user AND
-    // we are done loading their channels.
-    if (!isUserLoading && !areChannelsLoading) {
-      setIsAppLoading(false);
-    }
-  }, [isUserLoading, areChannelsLoading]);
-
-
-  const toggleFullScreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleFullScreenChange = () => {
-      setIsFullScreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullScreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullScreenChange);
-    document.addEventListener('msfullscreenchange', handleFullScreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullScreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullScreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullScreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullScreenChange);
-    };
-  }, []);
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
     if (storedFavorites) {
       setFavoriteChannels(JSON.parse(storedFavorites));
     }
-    const storedShowCaptions = localStorage.getItem('showCaptions');
-    setShowCaptions(storedShowCaptions === 'true');
-
-    const storedQuality = localStorage.getItem('videoQuality');
-    if (storedQuality) {
-      setVideoQuality(storedQuality);
-    }
-    
-    const storedBufferSize = localStorage.getItem('bufferSize');
-    if (storedBufferSize) {
-      setBufferSize(storedBufferSize);
-    }
   }, []);
-  
-  const handleBufferSizeChange = (size: string) => {
-    setBufferSize(size);
-    localStorage.setItem('bufferSize', size);
-    toast({
-      title: t('bufferSizeChangedTitle'),
-      description: t('bufferSizeChangedDescription', { size: t(`buffer_${size}`) }),
-    });
-  };
-
-  const handleQualityChange = (quality: string) => {
-    setVideoQuality(quality);
-    localStorage.setItem('videoQuality', quality);
-    toast({
-      title: t('qualityChangedTitle'),
-      description: t('qualityChangedDescription', { quality: quality === 'auto' ? t('auto') : quality }),
-    });
-  };
 
   const handleToggleFavorite = useCallback((channelUrl: string) => {
     setFavoriteChannels(prev => {
@@ -159,313 +36,85 @@ export default function Home() {
       return newFavorites;
     });
   }, []);
+  
+  const userChannelsQuery = useMemoFirebase(
+    () =>
+      user
+        ? query(collection(firestore, 'user_channels'), where('userId', '==', user.uid))
+        : null,
+    [user, firestore]
+  );
+  
+  const { data: userChannels, isLoading: areChannelsLoading } = useCollection<M3uChannel>(userChannelsQuery);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const channelData = params.get('channel');
-    if (channelData) {
-      try {
-        const decodedChannel = JSON.parse(atob(channelData));
-        setSharedChannel(decodedChannel);
-        setIsShareDialogVisible(true);
-        // Clean the URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } catch (e) {
-        console.error("Failed to parse shared channel data:", e);
-      }
-    }
-  }, []);
+  const isAppLoading = isUserLoading || areChannelsLoading;
 
-  const handleConfirmShare = async () => {
-    if (!sharedChannel) return;
+  const favoriteChannelItems = useMemo(() => {
+    return userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
+  }, [userChannels, favoriteChannels]);
 
-    if (user && firestore) {
-      const channelWithId = {
-        ...sharedChannel,
-        userId: user.uid,
-        addedAt: serverTimestamp(),
-      };
-      await addDocumentNonBlocking(collection(firestore, 'user_channels'), channelWithId);
-      toast({
-        title: t('channelAddedTitle', { count: 1 }),
-        description: `${sharedChannel.name} ${t('wasAdded')}`,
-      });
-    } else {
-       toast({
-          variant: 'destructive',
-          title: t('notLoggedInTitle'),
-          description: t('notLoggedInToSave'),
-        });
-    }
-    setSharedChannel(null);
-    setIsShareDialogVisible(false);
+  const handleChannelSelect = (channel: M3uChannel) => {
+    // This function can be used for other logic if needed,
+    // as navigation is handled by Link component now.
   };
-
-  useEffect(() => {
-    const storedValue = localStorage.getItem('showClock');
-    setShowClock(storedValue === null ? true : storedValue === 'true');
-  }, []);
-
-  const handleToggleClock = () => {
-    setShowClock(prev => {
-      const newValue = !prev;
-      localStorage.setItem('showClock', String(newValue));
-      return newValue;
-    });
-  };
-
-  const handleToggleCaptions = () => {
-    setShowCaptions(prev => {
-      const newValue = !prev;
-      localStorage.setItem('showCaptions', String(newValue));
-      return newValue;
-    });
-  };
-
-  useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setCurrentTime(timeString);
-    };
-    
-    updateClock();
-    const timerId = setInterval(updateClock, 1000);
-
-    return () => clearInterval(timerId);
-  }, []);
-
-
-
-  useEffect(() => {
-    const combinedFeed: (Video & { tvgId?: string })[] = [];
-    const combinedUrls = new Set<string>();
-
-    if (userChannels) {
-      userChannels.forEach((channel) => {
-        if (!combinedUrls.has(channel.url)) {
-          combinedFeed.push({
-            id: channel.id || channel.url,
-            url: channel.url,
-            title: channel.name,
-            author: channel.group || 'IPTV',
-            avatarId: 'iptv_placeholder',
-            subtitlesUrl: channel.subtitlesUrl,
-            tvgId: channel.tvgId,
-          });
-          combinedUrls.add(channel.url);
-        }
-      });
-    }
-    setFeedItems(combinedFeed);
-  }, [userChannels]);
-
-  useEffect(() => {
-    const newFilteredItems = feedItems.filter(item => 
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredFeedItems(newFilteredItems);
-  }, [feedItems, searchTerm]);
-
-  const handleActiveIndexChange = useCallback((index: number) => {
-    if (localVideoItem) {
-        setActiveChannel(localVideoItem);
-    } else if (filteredFeedItems[index]) {
-        setActiveChannel(filteredFeedItems[index]);
-    } else {
-        setActiveChannel(null);
-    }
-  }, [filteredFeedItems, localVideoItem]);
-
-
-  const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
-    setLocalVideoItem(null); 
-    setActiveChannel(channel);
-  }, []);
 
   const handleLocalVideoSelect = () => {
-    localVideoInputRef.current?.click();
+    // Logic to handle local video selection if needed in the future
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const newVideoItem: Video = {
-        id: `local-${file.name}-${Date.now()}`,
-        url: file as any,
-        title: file.name,
-        author: 'Local File',
-        avatarId: 'local_file_placeholder'
-      };
-      setLocalVideoItem(newVideoItem);
-      setActiveChannel(newVideoItem);
-    }
-    if(event.target) event.target.value = '';
-  };
+  if (isAppLoading) {
+    return <SplashScreen version="v5" />;
+  }
 
-
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const progressBar = e.currentTarget;
-    const player = activeVideoRef.current;
-    if (!progressBar || !player) return;
-  
-    const rect = progressBar.getBoundingClientRect();
-    const clickPositionX = e.clientX - rect.left;
-    const clickRatio = clickPositionX / rect.width;
-    const newTime = clickRatio * player.getDuration();
-  
-    if (isFinite(newTime)) {
-      player.seekTo(clickRatio, 'fraction');
-      setProgress(clickRatio * 100);
-    }
-  };
-  
   return (
-    <main className="h-screen w-screen overflow-hidden bg-background">
-      {isAppLoading ? (
-        <SplashScreen version="v5" />
-      ) : (
-        <div className="h-full w-full app-fade-in">
-          <TooltipProvider>
-            <input
-              type="file"
-              ref={localVideoInputRef}
-              onChange={handleFileChange}
-              accept="video/*"
-              className="hidden"
-            />
-            <h1 className="sr-only">Tivio - A vertical video feed</h1>
+    <main className="h-screen w-screen overflow-y-auto bg-background text-foreground">
+      <div className="flex h-full w-full flex-col app-fade-in">
+        <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-4">
+          <div className="flex items-center gap-2">
+              <Link href="/">
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
+                  <Home size={20} />
+                </Button>
+              </Link>
+            <AppSidebar
+                onChannelSelect={handleChannelSelect}
+                onLocalVideoSelect={handleLocalVideoSelect}
+                addedChannels={userChannels || []}
+                favoriteChannelUrls={favoriteChannels}
+                user={user}
+                isUserLoading={isUserLoading}
+                onToggleFavorite={handleToggleFavorite}
+              />
+          </div>
+          {/* Top-right controls can be added here if needed */}
+        </header>
 
-            {isShareDialogVisible && sharedChannel && (
-              <AlertDialog open onOpenChange={setIsShareDialogVisible}>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>{t('importSharedChannelTitle')}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {t('importSharedChannelDescription', { channelName: sharedChannel.name })}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setIsShareDialogVisible(false)}>{t('cancel')}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmShare}>{t('add')}</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-
-            <div className="absolute top-4 left-4 z-30">
-              <Sheet>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SheetTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
-                        <Menu size={24} className="drop-shadow-lg"/>
-                      </Button>
-                    </SheetTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>{t('menu')}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <AppSidebar
-                    onChannelSelect={handleChannelSelect}
-                    onLocalVideoSelect={handleLocalVideoSelect}
-                    addedChannels={userChannels || []}
-                    favoriteChannelUrls={favoriteChannels}
-                    user={user}
-                    isUserLoading={isUserLoading}
-                    onToggleFavorite={handleToggleFavorite}
-                  />
-              </Sheet>
+        <div className="flex-grow overflow-y-auto pt-20">
+          {userChannels && userChannels.length > 0 ? (
+            <div className="space-y-8">
+              {favoriteChannelItems.length > 0 && (
+                <ChannelCarousel
+                  title={t('favorites')}
+                  channels={favoriteChannelItems}
+                />
+              )}
+              <ChannelCarousel
+                title={t('allChannels')}
+                channels={userChannels}
+              />
             </div>
-
-            <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-                <Sheet>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
-                          <Search size={24} className="drop-shadow-lg"/>
-                        </Button>
-                      </SheetTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('searchChannels')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                   <ChannelListSheetContent channels={userChannels || []} onChannelSelect={handleChannelSelect} title={t('channels')} />
-                </Sheet>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0"
-                      onClick={() => window.location.reload()}
-                    >
-                      <RefreshCw size={24} className="drop-shadow-lg" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Neu laden</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                <Sheet>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
-                          <Settings size={24} className="drop-shadow-lg"/>
-                        </Button>
-                      </SheetTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('settings')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <SettingsSheetContent
-                    showClock={showClock}
-                    onToggleClock={handleToggleClock}
-                    showCaptions={showCaptions}
-                    onToggleCaptions={handleToggleCaptions}
-                    quality={videoQuality}
-                    onQualityChange={handleQualityChange}
-                    qualityLevels={qualityLevels}
-                    bufferSize={bufferSize}
-                    onBufferSizeChange={handleBufferSizeChange}
-                  />
-                </Sheet>
-                
-                {showClock && (
-                  <div className="z-30 font-light text-2xl text-white" style={{ fontFamily: 'Inter, sans-serif', textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
-                    {currentTime}
-                  </div>
-                )}
+          ) : (
+             <div className="flex flex-col items-center justify-center h-full text-center text-white p-8">
+                <div className="p-4 bg-black/50 rounded-lg">
+                    <h2 className="text-2xl font-bold mb-4">{t('noChannelsAvailable')}</h2>
+                    <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
+                      <Button><Plus className="mr-2 h-4 w-4" /> {t('addChannel')}</Button>
+                    } />
+                </div>
             </div>
-
-            <VideoFeed 
-              feedItems={filteredFeedItems}
-              onChannelSelect={handleChannelSelect} 
-              activeChannel={activeChannel}
-              onProgressUpdate={setProgress}
-              onDurationChange={setDuration}
-              activeVideoRef={activeVideoRef}
-              localVideoItem={localVideoItem}
-              favoriteChannels={favoriteChannels}
-              onToggleFavorite={handleToggleFavorite}
-              onActiveIndexChange={handleActiveIndexChange}
-              showCaptions={showCaptions}
-              videoQuality={videoQuality}
-              onQualityLevelsChange={setQualityLevels}
-              bufferSize={bufferSize}
-              addedChannels={userChannels || []}
-            />
-
-          </TooltipProvider>
+          )}
         </div>
-      )}
+      </div>
     </main>
   );
 }

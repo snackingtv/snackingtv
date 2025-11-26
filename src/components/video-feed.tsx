@@ -13,7 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 import ReactPlayer from 'react-player';
 
 interface VideoFeedProps {
-  feedItems: Video[];
+  feedItems: (Video | M3uChannel)[];
   onChannelSelect: (channel: M3uChannel | Video) => void;
   activeChannel: M3uChannel | Video | null;
   onProgressUpdate: (progress: number) => void;
@@ -32,7 +32,7 @@ interface VideoFeedProps {
 
 const PRELOAD_COUNT = 1; // Number of items to preload on each side
 
-const usePreload = (emblaApi: EmblaCarouselType | undefined, feedItems: Video[]) => {
+const usePreload = (emblaApi: EmblaCarouselType | undefined, feedItems: (Video | M3uChannel)[]) => {
   const [preloadUrls, setPreloadUrls] = useState<string[]>([]);
 
   const updatePreload = useCallback(() => {
@@ -49,8 +49,11 @@ const usePreload = (emblaApi: EmblaCarouselType | undefined, feedItems: Video[])
       const prevIndex = (currentIndex - i + scrollSnapList.length) % scrollSnapList.length;
       const nextIndex = (currentIndex + i) % scrollSnapList.length;
       
-      if (feedItems[prevIndex]?.url) urlsToPreload.add(feedItems[prevIndex].url as string);
-      if (feedItems[nextIndex]?.url) urlsToPreload.add(feedItems[nextIndex].url as string);
+      const prevItem = feedItems[prevIndex];
+      const nextItem = feedItems[nextIndex];
+
+      if (prevItem?.url && typeof prevItem.url === 'string') urlsToPreload.add(prevItem.url);
+      if (nextItem?.url && typeof nextItem.url === 'string') urlsToPreload.add(nextItem.url);
     }
     
     setPreloadUrls(Array.from(urlsToPreload));
@@ -154,7 +157,7 @@ export function VideoFeed({
     id: 'placeholder',
     url: '',
     title: t('noChannelsAvailable'),
-    author: 'SnackingTV',
+    author: 'Tivio',
     avatarId: 'iptv_placeholder'
   };
 
@@ -178,19 +181,19 @@ export function VideoFeed({
       <div className="overflow-hidden h-full" ref={emblaRef}>
         <div className="flex flex-col h-full">
           {displayFeed.map((video, index) => (
-              <div className="flex-[0_0_100%] min-h-0 relative" key={video.id}>
+              <div className="flex-[0_0_100%] min-h-0 relative" key={('id' in video ? video.id : video.url) || index}>
                 <VideoCard
                   video={video}
                   isActive={index === activeIndex}
                   onAddChannels={() => {}}
                   onChannelSelect={onChannelSelect}
                   addedChannels={addedChannels}
-                  isFavorite={favoriteChannels.includes(video.url as string)}
+                  isFavorite={typeof video.url === 'string' && favoriteChannels.includes(video.url)}
                   onToggleFavorite={onToggleFavorite}
                   onProgressUpdate={onProgressUpdate}
                   onDurationChange={onDurationChange}
                   activeVideoRef={activeVideoRef}
-                  localVideoItem={video === localVideoItem ? localVideoItem : null}
+                  localVideoItem={'id' in video && video.id === localVideoItem?.id ? localVideoItem : null}
                   showCaptions={showCaptions}
                   videoQuality={videoQuality}
                   onQualityLevelsChange={onQualityLevelsChange}
