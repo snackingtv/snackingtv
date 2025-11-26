@@ -27,7 +27,7 @@ export function ChannelCarousel({ title, channels, onManageClick }: ChannelCarou
   return (
     <div className="space-y-3 px-4 md:px-8">
        <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2">{title}</h2>
+        <div className="text-lg font-bold text-white flex items-center gap-2">{title}</div>
         {onManageClick && (
           <Button variant="outline" size="sm" onClick={onManageClick}>
             {t('manage')}
