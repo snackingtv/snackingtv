@@ -314,7 +314,7 @@ function PlayerPageContent() {
               activeVideoRef={activeVideoRef}
               localVideoItem={localVideoItem}
               favoriteChannels={favoriteChannels}
-              onToggleFavorite={onToggleFavorite}
+              onToggleFavorite={handleToggleFavorite}
               onActiveIndexChange={handleActiveIndexChange}
               showCaptions={showCaptions}
               videoQuality={videoQuality}
