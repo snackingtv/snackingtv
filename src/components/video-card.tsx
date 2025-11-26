@@ -1703,6 +1703,7 @@ export function VideoCard({
   };
 
   const shouldShowOverlay = (showControls || !isPlaying) && !isYoutubeOrTwitch;
+  const shouldShowTitle = isActive && !isPlaceholder && !isYoutubeOrTwitch;
 
 
   return (
@@ -1774,7 +1775,7 @@ export function VideoCard({
         <div
           className="absolute inset-0 pointer-events-none"
         >
-          <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
+          <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowTitle ? 'opacity-100' : 'opacity-0')}>
               <div className="flex items-center gap-2">
                 <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
                   <p className="text-white font-normal text-sm">
