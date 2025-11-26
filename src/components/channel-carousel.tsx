@@ -20,8 +20,8 @@ interface ChannelCarouselProps {
 
 export function ChannelCarousel({ title, channels }: ChannelCarouselProps) {
   return (
-    <div className="space-y-4 px-4 md:px-8">
-      <h2 className="text-2xl font-bold text-white">{title}</h2>
+    <div className="space-y-3 px-4 md:px-8">
+      <h2 className="text-xl font-bold text-white">{title}</h2>
       <Carousel
         opts={{
           align: "start",
@@ -31,7 +31,7 @@ export function ChannelCarousel({ title, channels }: ChannelCarouselProps) {
       >
         <CarouselContent>
           {channels.map((channel) => (
-            <CarouselItem key={channel.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
+            <CarouselItem key={channel.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8">
               <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
                 <div className="group">
                   <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
@@ -46,7 +46,7 @@ export function ChannelCarousel({ title, channels }: ChannelCarouselProps) {
                       />
                     </CardContent>
                   </Card>
-                  <p className="mt-2 text-sm text-zinc-300 truncate group-hover:text-white">
+                  <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
                     {channel.name}
                   </p>
                 </div>
