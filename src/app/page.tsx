@@ -71,11 +71,6 @@ export default function HomePage() {
       <div className="flex h-full w-full flex-col app-fade-in">
         <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-4">
           <div className="flex items-center gap-2">
-              <Link href="/">
-                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
-                  <Home size={20} />
-                </Button>
-              </Link>
             <AppSidebar
                 onChannelSelect={handleChannelSelect}
                 onLocalVideoSelect={handleLocalVideoSelect}
