@@ -14,8 +14,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './
 import Link from 'next/link';
 
 interface AppSidebarProps {
-    onChannelSelect: (channel: M3uChannel) => void;
-    onLocalVideoSelect: () => void;
     addedChannels: WithId<M3uChannel>[];
     favoriteChannelUrls: string[];
     user: User | null;
@@ -24,8 +22,6 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-    onChannelSelect,
-    onLocalVideoSelect,
     addedChannels,
     favoriteChannelUrls,
     user,
@@ -49,11 +45,6 @@ export function AppSidebar({
       label: t('addChannel'),
       icon: PlusCircle,
       sheetContent: <AddChannelSheetContent user={user} isUserLoading={isUserLoading} />,
-    },
-    {
-      label: t('deviceStorage'),
-      icon: Folder,
-      action: onLocalVideoSelect,
     },
     {
       label: user ? t('profile') : t('login'),

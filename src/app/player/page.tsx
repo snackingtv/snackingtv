@@ -8,23 +8,13 @@ import { M3uChannel } from '@/lib/m3u-parser';
 import { Video } from '@/lib/videos';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Settings, Home, Menu, RefreshCw } from 'lucide-react';
+import { Settings, Home, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
+import { SettingsSheetContent } from '@/components/video-card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import ReactPlayer from 'react-player';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -41,8 +31,6 @@ function PlayerPageContent() {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const activeVideoRef = useRef<ReactPlayer | null>(null);
-  const localVideoInputRef = useRef<HTMLInputElement>(null);
-  const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
 
   const [showClock, setShowClock] = useState(true);
   const [showCaptions, setShowCaptions] = useState(false);
@@ -187,39 +175,16 @@ function PlayerPageContent() {
   }, [feedItems, activeChannel, searchParams]);
 
   const handleActiveIndexChange = useCallback((index: number) => {
-    if (localVideoItem) {
-        setActiveChannel(localVideoItem);
-    } else if (feedItems[index]) {
+    if (feedItems[index]) {
         setActiveChannel(feedItems[index]);
     } else {
         setActiveChannel(null);
     }
-  }, [feedItems, localVideoItem]);
+  }, [feedItems]);
 
   const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
-    setLocalVideoItem(null); 
     setActiveChannel(channel);
   }, []);
-
-  const handleLocalVideoSelect = () => {
-    localVideoInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const newVideoItem: Video = {
-        id: `local-${file.name}-${Date.now()}`,
-        url: file,
-        title: file.name,
-        author: 'Local File',
-        avatarId: 'local_file_placeholder'
-      };
-      setLocalVideoItem(newVideoItem);
-      setActiveChannel(newVideoItem);
-    }
-    if(event.target) event.target.value = '';
-  };
   
   if (isAppLoading) {
     return <SplashScreen version="v5" />;
@@ -229,13 +194,6 @@ function PlayerPageContent() {
     <main className="h-screen w-screen overflow-hidden bg-background">
         <div className="h-full w-full app-fade-in">
           <TooltipProvider>
-            <input
-              type="file"
-              ref={localVideoInputRef}
-              onChange={handleFileChange}
-              accept="video/*"
-              className="hidden"
-            />
             <h1 className="sr-only">Tivio - A vertical video feed</h1>
 
             <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
@@ -245,8 +203,6 @@ function PlayerPageContent() {
                   </Button>
                 </Link>
                 <AppSidebar
-                    onChannelSelect={handleChannelSelect}
-                    onLocalVideoSelect={handleLocalVideoSelect}
                     addedChannels={userChannels || []}
                     favoriteChannelUrls={favoriteChannels}
                     user={user}
@@ -312,7 +268,7 @@ function PlayerPageContent() {
               onProgressUpdate={setProgress}
               onDurationChange={setDuration}
               activeVideoRef={activeVideoRef}
-              localVideoItem={localVideoItem}
+              localVideoItem={null}
               favoriteChannels={favoriteChannels}
               onToggleFavorite={handleToggleFavorite}
               onActiveIndexChange={handleActiveIndexChange}

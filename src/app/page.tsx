@@ -6,12 +6,11 @@ import { collection, query, where } from 'firebase/firestore';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { SplashScreen } from '@/components/splash-screen';
 import { Button } from '@/components/ui/button';
-import { Menu, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { AppSidebar } from '@/components/sidebar';
 import { useTranslation } from '@/lib/i18n';
 import { ChannelCarousel } from '@/components/channel-carousel';
 import { AddChannelSheetContent } from '@/components/video-card';
-import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { WithId } from '@/firebase/firestore/use-collection';
 
@@ -80,15 +79,6 @@ export default function HomePage() {
     }, {} as Record<string, WithId<M3uChannel>[]>);
   }, [userChannels]);
 
-  const handleChannelSelect = (channel: M3uChannel) => {
-    // This function can be used for other logic if needed,
-    // as navigation is handled by Link component now.
-  };
-
-  const handleLocalVideoSelect = () => {
-    // Logic to handle local video selection if needed in the future
-  };
-
   if (isAppLoading) {
     return <SplashScreen version="v5" />;
   }
@@ -99,8 +89,6 @@ export default function HomePage() {
         <header className="sticky top-0 z-30 flex items-center justify-between p-4 bg-background/80 backdrop-blur-sm border-b border-border/50">
           <div className="flex items-center gap-2">
             <AppSidebar
-                onChannelSelect={handleChannelSelect}
-                onLocalVideoSelect={handleLocalVideoSelect}
                 addedChannels={userChannels || []}
                 favoriteChannelUrls={favoriteChannels}
                 user={user}
@@ -137,6 +125,10 @@ export default function HomePage() {
                       channels={favoriteChannelItems}
                     />
                   )}
+                  <ChannelCarousel
+                    title={t('allChannels')}
+                    channels={userChannels}
+                  />
                   {Object.entries(groupedChannels)
                     .sort(([groupA], [groupB]) => groupA.localeCompare(groupB))
                     .map(([group, channels]) => (
