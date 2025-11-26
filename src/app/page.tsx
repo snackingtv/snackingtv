@@ -6,12 +6,13 @@ import { collection, query, where } from 'firebase/firestore';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { SplashScreen } from '@/components/splash-screen';
 import { Button } from '@/components/ui/button';
-import { Home, Menu, Plus } from 'lucide-react';
+import { Home, Menu, Plus, Search } from 'lucide-react';
 import { AppSidebar } from '@/components/sidebar';
 import { useTranslation } from '@/lib/i18n';
 import { ChannelCarousel } from '@/components/channel-carousel';
 import { AddChannelSheetContent } from '@/components/video-card';
 import Link from 'next/link';
+import { Input } from '@/components/ui/input';
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -19,6 +20,7 @@ export default function HomePage() {
   const firestore = useFirestore();
 
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -49,9 +51,22 @@ export default function HomePage() {
 
   const isAppLoading = isUserLoading || areChannelsLoading;
 
+  const filteredChannels = useMemo(() => {
+    if (!userChannels) return [];
+    if (!searchTerm) return userChannels;
+    return userChannels.filter(channel => 
+      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [userChannels, searchTerm]);
+
   const favoriteChannelItems = useMemo(() => {
-    return userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
-  }, [userChannels, favoriteChannels]);
+    const favorites = userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
+    if (!searchTerm) return favorites;
+    return favorites.filter(channel => 
+      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [userChannels, favoriteChannels, searchTerm]);
+
 
   const handleChannelSelect = (channel: M3uChannel) => {
     // This function can be used for other logic if needed,
@@ -69,7 +84,7 @@ export default function HomePage() {
   return (
     <main className="h-screen w-screen overflow-y-auto bg-background text-foreground">
       <div className="flex h-full w-full flex-col app-fade-in">
-        <header className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-4">
+        <header className="sticky top-0 z-30 flex items-center justify-between p-4 bg-background/80 backdrop-blur-sm border-b border-border/50">
           <div className="flex items-center gap-2">
             <AppSidebar
                 onChannelSelect={handleChannelSelect}
@@ -81,22 +96,41 @@ export default function HomePage() {
                 onToggleFavorite={handleToggleFavorite}
               />
           </div>
-          {/* Top-right controls can be added here if needed */}
+          <div className="flex-1 max-w-md mx-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder={t('searchChannels')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full"
+              />
+            </div>
+          </div>
         </header>
 
-        <div className="flex-grow overflow-y-auto pt-20">
+        <div className="flex-grow overflow-y-auto pt-8">
           {userChannels && userChannels.length > 0 ? (
             <div className="space-y-8">
-              {favoriteChannelItems.length > 0 && (
+              {searchTerm ? (
                 <ChannelCarousel
-                  title={t('favorites')}
-                  channels={favoriteChannelItems}
+                  title={`${t('searchPlaceholder')} "${searchTerm}"`}
+                  channels={filteredChannels}
                 />
+              ) : (
+                <>
+                  {favoriteChannelItems.length > 0 && (
+                    <ChannelCarousel
+                      title={t('favorites')}
+                      channels={favoriteChannelItems}
+                    />
+                  )}
+                  <ChannelCarousel
+                    title={t('allChannels')}
+                    channels={userChannels}
+                  />
+                </>
               )}
-              <ChannelCarousel
-                title={t('allChannels')}
-                channels={userChannels}
-              />
             </div>
           ) : (
              <div className="flex flex-col items-center justify-center h-full text-center text-white p-8">
