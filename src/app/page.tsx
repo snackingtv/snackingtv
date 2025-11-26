@@ -6,13 +6,14 @@ import { collection, query, where } from 'firebase/firestore';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { SplashScreen } from '@/components/splash-screen';
 import { Button } from '@/components/ui/button';
-import { Home, Menu, Plus, Search } from 'lucide-react';
+import { Menu, Plus, Search } from 'lucide-react';
 import { AppSidebar } from '@/components/sidebar';
 import { useTranslation } from '@/lib/i18n';
 import { ChannelCarousel } from '@/components/channel-carousel';
 import { AddChannelSheetContent } from '@/components/video-card';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
+import { WithId } from '@/firebase/firestore/use-collection';
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -67,6 +68,17 @@ export default function HomePage() {
     );
   }, [userChannels, favoriteChannels, searchTerm]);
 
+  const groupedChannels = useMemo(() => {
+    if (!userChannels) return {};
+    return userChannels.reduce((acc, channel) => {
+      const group = channel.group || 'Uncategorized';
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(channel);
+      return acc;
+    }, {} as Record<string, WithId<M3uChannel>[]>);
+  }, [userChannels]);
 
   const handleChannelSelect = (channel: M3uChannel) => {
     // This function can be used for other logic if needed,
@@ -125,10 +137,15 @@ export default function HomePage() {
                       channels={favoriteChannelItems}
                     />
                   )}
-                  <ChannelCarousel
-                    title={t('allChannels')}
-                    channels={userChannels}
-                  />
+                  {Object.entries(groupedChannels)
+                    .sort(([groupA], [groupB]) => groupA.localeCompare(groupB))
+                    .map(([group, channels]) => (
+                      <ChannelCarousel
+                        key={group}
+                        title={group}
+                        channels={channels}
+                      />
+                  ))}
                 </>
               )}
             </div>
