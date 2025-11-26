@@ -12,16 +12,28 @@ import {
 } from "@/components/ui/carousel";
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "./ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 interface ChannelCarouselProps {
   title: string;
   channels: WithId<M3uChannel>[];
+  onManageClick?: () => void;
 }
 
-export function ChannelCarousel({ title, channels }: ChannelCarouselProps) {
+export function ChannelCarousel({ title, channels, onManageClick }: ChannelCarouselProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-3 px-4 md:px-8">
-      <h2 className="text-xl font-bold text-white">{title}</h2>
+       <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white">{title}</h2>
+        {onManageClick && (
+          <Button variant="outline" size="sm" onClick={onManageClick}>
+            {t('manage')}
+          </Button>
+        )}
+      </div>
       <Carousel
         opts={{
           align: "start",
