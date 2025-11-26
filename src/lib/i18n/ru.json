@@ -184,5 +184,15 @@
   "connectGoogleDrive": "Подключиться к Google Диску",
   "play": "Воспроизвести",
   "signInWithGoogle": "Войти через Google",
-  "cloud": "Облако"
+  "cloud": "Облако",
+  "cat_news": "Новости",
+  "cat_entertainment": "Развлечения",
+  "cat_movies": "Кино",
+  "cat_sports": "Спорт",
+  "cat_music": "Музыка",
+  "cat_kids": "Детям",
+  "cat_documentary": "Документальные",
+  "cat_series": "Сериалы",
+  "cat_general": "Общие",
+  "cat_uncategorized": "Без категории"
 }

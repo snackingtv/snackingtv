@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { WithId } from '@/firebase/firestore/use-collection';
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, tCategory } = useTranslation();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
 
@@ -60,12 +60,15 @@ export default function HomePage() {
   }, [userChannels, searchTerm]);
 
   const favoriteChannelItems = useMemo(() => {
-    const favorites = userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
-    if (!searchTerm) return favorites;
-    return favorites.filter(channel => 
+    return userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
+  }, [userChannels, favoriteChannels]);
+  
+  const searchFavoriteItems = useMemo(() => {
+    if(!searchTerm) return favoriteChannelItems;
+    return favoriteChannelItems.filter(channel => 
       channel.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [userChannels, favoriteChannels, searchTerm]);
+  }, [favoriteChannelItems, searchTerm])
 
   const groupedChannels = useMemo(() => {
     if (!userChannels) return {};
@@ -113,10 +116,10 @@ export default function HomePage() {
           {userChannels && userChannels.length > 0 ? (
             <div className="space-y-8">
               {searchTerm ? (
-                <ChannelCarousel
-                  title={`${t('searchPlaceholder')} "${searchTerm}"`}
-                  channels={filteredChannels}
-                />
+                 <ChannelCarousel
+                    title={`${t('searchPlaceholder')} "${searchTerm}"`}
+                    channels={filteredChannels}
+                  />
               ) : (
                 <>
                   {favoriteChannelItems.length > 0 && (
@@ -125,7 +128,7 @@ export default function HomePage() {
                       channels={favoriteChannelItems}
                     />
                   )}
-                  <ChannelCarousel
+                   <ChannelCarousel
                     title={t('allChannels')}
                     channels={userChannels}
                   />
@@ -134,7 +137,7 @@ export default function HomePage() {
                     .map(([group, channels]) => (
                       <ChannelCarousel
                         key={group}
-                        title={group}
+                        title={tCategory(group)}
                         channels={channels}
                       />
                   ))}

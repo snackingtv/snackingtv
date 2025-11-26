@@ -183,5 +183,15 @@
   "connectGoogleDrive": "Mit Google Drive verbinden",
   "play": "Abspielen",
   "signInWithGoogle": "Mit Google anmelden",
-  "cloud": "Cloud"
+  "cloud": "Cloud",
+  "cat_news": "Nachrichten",
+  "cat_entertainment": "Unterhaltung",
+  "cat_movies": "Filme",
+  "cat_sports": "Sport",
+  "cat_music": "Musik",
+  "cat_kids": "Kinder",
+  "cat_documentary": "Doku",
+  "cat_series": "Serien",
+  "cat_general": "Allgemein",
+  "cat_uncategorized": "Unkategorisiert"
 }
