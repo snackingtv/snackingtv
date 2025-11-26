@@ -8,7 +8,7 @@ import { M3uChannel } from '@/lib/m3u-parser';
 import { Video } from '@/lib/videos';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
-import { Search, Settings, Home, Menu, RefreshCw } from 'lucide-react';
+import { Settings, Home, Menu, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { SettingsSheetContent, ChannelListSheetContent } from '@/components/video-card';
@@ -256,22 +256,6 @@ function PlayerPageContent() {
             </div>
 
             <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-                <Sheet>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
-                          <Search size={20} className="drop-shadow-lg"/>
-                        </Button>
-                      </SheetTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('searchChannels')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                   <ChannelListSheetContent channels={userChannels || []} onChannelSelect={handleChannelSelect} title={t('channels')} />
-                </Sheet>
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -330,7 +314,7 @@ function PlayerPageContent() {
               activeVideoRef={activeVideoRef}
               localVideoItem={localVideoItem}
               favoriteChannels={favoriteChannels}
-              onToggleFavorite={handleToggleFavorite}
+              onToggleFavorite={onToggleFavorite}
               onActiveIndexChange={handleActiveIndexChange}
               showCaptions={showCaptions}
               videoQuality={videoQuality}
