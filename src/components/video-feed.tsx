@@ -14,7 +14,6 @@ import ReactPlayer from 'react-player';
 
 interface VideoFeedProps {
   feedItems: (Video | M3uChannel)[];
-  onChannelSelect: (channel: M3uChannel | Video) => void;
   activeChannel: M3uChannel | Video | null;
   onProgressUpdate: (progress: number) => void;
   onDurationChange: (duration: number) => void;
@@ -79,7 +78,6 @@ const usePreload = (emblaApi: EmblaCarouselType | undefined, feedItems: (Video |
 
 export function VideoFeed({ 
   feedItems, 
-  onChannelSelect, 
   activeChannel, 
   onProgressUpdate, 
   onDurationChange, 
@@ -97,6 +95,7 @@ export function VideoFeed({
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false,
+    draggable: !localVideoItem, // Disable dragging for local videos
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const preloadUrls = usePreload(emblaApi, feedItems);
@@ -111,13 +110,13 @@ export function VideoFeed({
   }, [emblaApi]);
   
   useEffect(() => {
-    if (activeChannel && emblaApi) {
+    if (activeChannel && emblaApi && !localVideoItem) {
         const index = feedItems.findIndex(item => item.url === activeChannel.url);
         if (index !== -1 && index !== emblaApi.selectedScrollSnap()) {
             emblaApi.scrollTo(index, true); // Use instant scroll
         }
     }
-  }, [activeChannel, emblaApi, feedItems]);
+  }, [activeChannel, emblaApi, feedItems, localVideoItem]);
 
   const onCarouselSelect = useCallback((emblaApi: EmblaCarouselType) => {
     const newIndex = emblaApi.selectedScrollSnap();
@@ -126,9 +125,8 @@ export function VideoFeed({
   }, [onActiveIndexChange]);
 
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi || localVideoItem) return;
     
-    // Initial sync
     const newIndex = emblaApi.selectedScrollSnap();
     setActiveIndex(newIndex);
     onActiveIndexChange(newIndex);
@@ -142,14 +140,14 @@ export function VideoFeed({
         emblaApi.off('reInit', onCarouselSelect);
       }
     };
-  }, [emblaApi, onCarouselSelect, onActiveIndexChange]);
+  }, [emblaApi, onCarouselSelect, onActiveIndexChange, localVideoItem]);
 
 
   useEffect(() => {
-    if (emblaApi) {
+    if (emblaApi && !localVideoItem) {
       emblaApi.reInit();
     }
-  }, [feedItems, emblaApi]);
+  }, [feedItems, emblaApi, localVideoItem]);
 
   const currentFeed = localVideoItem ? [localVideoItem] : feedItems;
 
@@ -164,7 +162,10 @@ export function VideoFeed({
   const displayFeed = currentFeed.length > 0 ? currentFeed : [placeholderVideo];
   
   useEffect(() => {
-    if (currentFeed.length === 0 && !localVideoItem) {
+    if (localVideoItem) {
+      setActiveIndex(0);
+      onActiveIndexChange(0);
+    } else if (currentFeed.length === 0) {
       setActiveIndex(0);
       onActiveIndexChange(0);
     }
@@ -185,15 +186,13 @@ export function VideoFeed({
                 <VideoCard
                   video={video}
                   isActive={index === activeIndex}
-                  onAddChannels={() => {}}
-                  onChannelSelect={onChannelSelect}
                   addedChannels={addedChannels}
                   isFavorite={typeof video.url === 'string' && favoriteChannels.includes(video.url)}
                   onToggleFavorite={onToggleFavorite}
                   onProgressUpdate={onProgressUpdate}
                   onDurationChange={onDurationChange}
                   activeVideoRef={activeVideoRef}
-                  localVideoItem={'id' in video && video.id === localVideoItem?.id ? localVideoItem : null}
+                  localVideoItem={('id' in video && video.id === localVideoItem?.id) ? localVideoItem : null}
                   showCaptions={showCaptions}
                   videoQuality={videoQuality}
                   onQualityLevelsChange={onQualityLevelsChange}

@@ -7,7 +7,6 @@ import { M3uChannel } from '@/lib/m3u-parser';
 import { SplashScreen } from '@/components/splash-screen';
 import { Button } from '@/components/ui/button';
 import { Plus, Search, Trash2, User as UserIcon } from 'lucide-react';
-import { AppSidebar } from '@/components/sidebar';
 import { useTranslation } from '@/lib/i18n';
 import { ChannelCarousel } from '@/components/channel-carousel';
 import { AddChannelSheetContent, AuthSheetContent } from '@/components/video-card';
@@ -15,14 +14,14 @@ import { Input } from '@/components/ui/input';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { deleteChannels } from '@/firebase/firestore/deletions';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
+import { DeviceStorageButton } from '@/components/device-storage';
 
 export default function HomePage() {
-  const { t, tCategory, getCategoryIcon } = useTranslation();
+  const { t, getCategoryIcon } = useTranslation();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -37,16 +36,6 @@ export default function HomePage() {
     if (storedFavorites) {
       setFavoriteChannels(JSON.parse(storedFavorites));
     }
-  }, []);
-
-  const handleToggleFavorite = useCallback((channelUrl: string) => {
-    setFavoriteChannels(prev => {
-      const newFavorites = prev.includes(channelUrl)
-        ? prev.filter(url => url !== channelUrl)
-        : [...prev, channelUrl];
-      localStorage.setItem('favoriteChannels', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
   }, []);
   
   const userChannelsQuery = useMemoFirebase(
@@ -73,16 +62,10 @@ export default function HomePage() {
     return userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
   }, [userChannels, favoriteChannels]);
   
-  const searchFavoriteItems = useMemo(() => {
-    if(!searchTerm) return favoriteChannelItems;
-    return favoriteChannelItems.filter(channel => 
-      channel.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [favoriteChannelItems, searchTerm])
-
   const groupedChannels = useMemo(() => {
     if (!userChannels) return {};
-    return userChannels.reduce((acc, channel) => {
+    const sortedChannels = [...userChannels].sort((a, b) => a.name.localeCompare(b.name));
+    return sortedChannels.reduce((acc, channel) => {
       const group = channel.group || 'Uncategorized';
       if (!acc[group]) {
         acc[group] = [];
@@ -237,8 +220,8 @@ export default function HomePage() {
                     />
                   )}
                    <div className="px-4 md:px-8 space-y-3">
-                      <div className="w-full">
-                         <div className="inline-block basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10 pr-4">
+                      <div className="flex items-start gap-4">
+                         <div className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
                            <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
                               <div className="group">
                                 <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
@@ -249,6 +232,9 @@ export default function HomePage() {
                                 </p>
                               </div>
                             } />
+                         </div>
+                         <div className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                           <DeviceStorageButton />
                          </div>
                       </div>
                    </div>

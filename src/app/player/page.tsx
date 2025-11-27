@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { VideoFeed } from '@/components/video-feed';
 import { SplashScreen } from '@/components/splash-screen';
-import { AppSidebar } from '@/components/sidebar';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { Video } from '@/lib/videos';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
@@ -42,6 +41,8 @@ function PlayerPageContent() {
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   
   const [feedItems, setFeedItems] = useState<(M3uChannel | Video)[]>([]);
+  const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
+
 
   const userChannelsQuery = useMemoFirebase(
     () =>
@@ -72,11 +73,33 @@ function PlayerPageContent() {
     if (storedBufferSize) {
       setBufferSize(storedBufferSize);
     }
+
+    // Check for local video file on mount
+    const localVideoData = sessionStorage.getItem('localVideoFile');
+    if (localVideoData) {
+      const { name, dataUrl } = JSON.parse(localVideoData);
+      // Convert data URL back to Blob/File
+      fetch(dataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], name, { type: blob.type });
+          setLocalVideoItem({
+            id: `local-${name}`,
+            url: file,
+            title: name,
+            author: 'Local',
+            avatarId: 'avatar5',
+          });
+        });
+      sessionStorage.removeItem('localVideoFile'); // Clean up
+    }
+
+
   }, []);
 
   useEffect(() => {
     const channelData = searchParams.get('channel');
-    if (channelData) {
+    if (channelData && !localVideoItem) {
       try {
         const decodedChannel = JSON.parse(decodeURIComponent(channelData));
         setActiveChannel(decodedChannel);
@@ -84,7 +107,7 @@ function PlayerPageContent() {
         console.error("Failed to parse channel data from URL:", e);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, localVideoItem]);
 
   
   const handleBufferSizeChange = (size: string) => {
@@ -165,28 +188,27 @@ function PlayerPageContent() {
   }, [userChannels]);
 
   useEffect(() => {
-    if (feedItems.length > 0 && !activeChannel) {
+     if (localVideoItem) {
+      setActiveChannel(localVideoItem);
+    } else if (feedItems.length > 0 && !activeChannel) {
         // If there's no active channel from URL, set the first from the feed.
         const channelFromUrl = searchParams.get('channel');
         if (!channelFromUrl) {
             setActiveChannel(feedItems[0]);
         }
     }
-  }, [feedItems, activeChannel, searchParams]);
+  }, [feedItems, activeChannel, searchParams, localVideoItem]);
 
   const handleActiveIndexChange = useCallback((index: number) => {
+    if (localVideoItem) return;
     if (feedItems[index]) {
         setActiveChannel(feedItems[index]);
     } else {
         setActiveChannel(null);
     }
-  }, [feedItems]);
-
-  const handleChannelSelect = useCallback((channel: M3uChannel | Video) => {
-    setActiveChannel(channel);
-  }, []);
+  }, [feedItems, localVideoItem]);
   
-  if (isAppLoading) {
+  if (isAppLoading && !localVideoItem) {
     return <SplashScreen version="v5" />;
   }
 
@@ -202,13 +224,6 @@ function PlayerPageContent() {
                     <Home size={20} />
                   </Button>
                 </Link>
-                <AppSidebar
-                    addedChannels={userChannels || []}
-                    favoriteChannelUrls={favoriteChannels}
-                    user={user}
-                    isUserLoading={isUserLoading}
-                    onToggleFavorite={handleToggleFavorite}
-                  />
             </div>
 
             <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
@@ -263,12 +278,11 @@ function PlayerPageContent() {
 
             <VideoFeed 
               feedItems={feedItems}
-              onChannelSelect={handleChannelSelect} 
               activeChannel={activeChannel}
               onProgressUpdate={setProgress}
               onDurationChange={setDuration}
               activeVideoRef={activeVideoRef}
-              localVideoItem={null}
+              localVideoItem={localVideoItem}
               favoriteChannels={favoriteChannels}
               onToggleFavorite={handleToggleFavorite}
               onActiveIndexChange={handleActiveIndexChange}

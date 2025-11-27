@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback, MutableRefObject } from 'react';
-import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link as LinkIcon, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { Settings, ChevronRight, LogOut, Copy, Download, Plus, Tv2, Upload, Wifi, WifiOff, Star, Search, Folder, Trash2, ShieldCheck, X, Maximize, Minimize, Eye, EyeOff, Mic, User as UserIcon, KeyRound, Mail, Clock, Share2, Loader, Captions, MessageSquareWarning, CalendarDays, Link as LinkIcon, FileText, Info, Play, ChevronUp, ChevronDown, Pause, Volume2, VolumeX, Sparkles, HardDrive } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -51,8 +51,6 @@ import Link from 'next/link';
 interface VideoCardProps {
   video: Video | M3uChannel;
   isActive: boolean;
-  onAddChannels: (newChannels: M3uChannel[]) => void;
-  onChannelSelect: (channel: M3uChannel | Video) => void;
   addedChannels: WithId<M3uChannel>[];
   isFavorite: boolean;
   onToggleFavorite: (channelUrl: string) => void;
@@ -1490,8 +1488,6 @@ function PlayerControls({
 export function VideoCard({ 
   video, 
   isActive, 
-  onAddChannels, 
-  onChannelSelect, 
   addedChannels, 
   isFavorite, 
   onToggleFavorite, 
@@ -1519,7 +1515,6 @@ export function VideoCard({
   // Fullscreen state
   const [isFullScreen, setIsFullScreen] = useState(false);
   
-  const firestore = useFirestore();
   const { toast } = useToast();
   
   const isPlaceholder = 'id' in video && video.id === 'placeholder';
@@ -1532,21 +1527,19 @@ export function VideoCard({
   const isLocalVideo = !!localVideoItem;
 
   const handleShare = async () => {
-    if (!video || !video.url) return;
-
-    const channelData: M3uChannel = {
-      name: video.title,
-      logo: (addedChannels.find(c => c.url === video.url)?.logo) || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
-      url: typeof video.url === 'string' ? video.url : '', // Ensure url is a string
-      group: ('author' in video ? video.author : 'group' in video ? video.group : 'Shared') || 'Shared',
-    };
-    
-    if (!channelData.url) {
+    if (!video || !video.url || typeof video.url !== 'string') {
         toast({ variant: 'destructive', title: 'Cannot share local file' });
         return;
     }
 
-    const encodedData = btoa(JSON.stringify(channelData));
+    const channelData: M3uChannel = {
+      name: video.title,
+      logo: (addedChannels.find(c => c.url === video.url)?.logo) || `https://picsum.photos/seed/iptv${Math.random()}/64/64`,
+      url: video.url,
+      group: ('author' in video ? video.author : 'group' in video ? video.group : 'Shared') || 'Shared',
+    };
+
+    const encodedData = encodeURIComponent(JSON.stringify(channelData));
     const shareLink = `${window.location.origin}/player?channel=${encodedData}`;
 
     const shareData = {
@@ -1562,7 +1555,6 @@ export function VideoCard({
           title: t('linkCopiedTitle'),
         });
       } catch (err) {
-        // Silently fail if user cancels share sheet
         if ((err as Error).name !== 'AbortError') {
           console.error('Share failed:', err);
           toast({
@@ -1573,7 +1565,6 @@ export function VideoCard({
         }
       }
     } else {
-      // Fallback for desktop
       navigator.clipboard.writeText(shareLink).then(() => {
         toast({
           title: t('linkCopiedTitle'),
@@ -1591,10 +1582,9 @@ export function VideoCard({
   };
 
   useEffect(() => {
-    if (isActive && localVideoItem) {
-        const url = URL.createObjectURL(localVideoItem.url as any);
+    if (isActive && localVideoItem && localVideoItem.url instanceof File) {
+        const url = URL.createObjectURL(localVideoItem.url);
         setLocalVideoUrl(url);
-        // Reset local player state
         setPlayed(0);
         setDuration(0);
         return () => {
@@ -1652,7 +1642,6 @@ export function VideoCard({
     setDuration(newDuration);
   };
 
-  // Fullscreen logic
   const toggleFullScreen = useCallback(() => {
     const elem = containerRef.current;
     if (!elem) return;
@@ -1680,7 +1669,6 @@ export function VideoCard({
           setIsPlaying(true);
       } else {
           setIsPlaying(false);
-          // Also reset local player state when not active
           setPlayed(0);
       }
   }, [isActive]);
