@@ -43,7 +43,7 @@ export function ChannelCarousel({ title, channels, onManageClick }: ChannelCarou
       >
         <CarouselContent>
           {channels.map((channel) => (
-            <CarouselItem key={channel.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8">
+            <CarouselItem key={channel.id} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
               <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
                 <div className="group">
                   <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
