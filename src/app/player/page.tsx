@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import ReactPlayer from 'react-player';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useLocalVideoStore } from '@/lib/local-video-store';
 
 function PlayerPageContent() {
   const { t } = useTranslation();
@@ -42,7 +43,9 @@ function PlayerPageContent() {
   
   const [feedItems, setFeedItems] = useState<(M3uChannel | Video)[]>([]);
   const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
-
+  
+  const localVideoFile = useLocalVideoStore((state) => state.file);
+  const clearLocalVideoFile = useLocalVideoStore((state) => state.clearFile);
 
   const userChannelsQuery = useMemoFirebase(
     () =>
@@ -54,7 +57,26 @@ function PlayerPageContent() {
   
   const { data: userChannels, isLoading: areChannelsLoading } = useCollection<M3uChannel>(userChannelsQuery);
   
-  const isAppLoading = isUserLoading || areChannelsLoading;
+  let isAppLoading = isUserLoading || areChannelsLoading;
+  
+  // If we have a local video file, we are not "loading" in the traditional sense
+  if (localVideoFile) {
+    isAppLoading = false;
+  }
+
+  useEffect(() => {
+    if (localVideoFile) {
+      setLocalVideoItem({
+        id: `local-${localVideoFile.name}`,
+        url: localVideoFile,
+        title: localVideoFile.name,
+        author: 'Local',
+        avatarId: 'avatar5',
+      });
+      // We don't clear it here anymore, the component lifecycle in VideoCard will handle object URL.
+    }
+  }, [localVideoFile]);
+
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -73,28 +95,6 @@ function PlayerPageContent() {
     if (storedBufferSize) {
       setBufferSize(storedBufferSize);
     }
-
-    // Check for local video file on mount
-    const localVideoData = sessionStorage.getItem('localVideoFile');
-    if (localVideoData) {
-      const { name, dataUrl } = JSON.parse(localVideoData);
-      // Convert data URL back to Blob/File
-      fetch(dataUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], name, { type: blob.type });
-          setLocalVideoItem({
-            id: `local-${name}`,
-            url: file,
-            title: name,
-            author: 'Local',
-            avatarId: 'avatar5',
-          });
-        });
-      sessionStorage.removeItem('localVideoFile'); // Clean up
-    }
-
-
   }, []);
 
   useEffect(() => {
@@ -208,7 +208,7 @@ function PlayerPageContent() {
     }
   }, [feedItems, localVideoItem]);
   
-  if (isAppLoading && !localVideoItem) {
+  if (isAppLoading) {
     return <SplashScreen version="v5" />;
   }
 
@@ -219,7 +219,7 @@ function PlayerPageContent() {
             <h1 className="sr-only">Tivio - A vertical video feed</h1>
 
             <div className="absolute top-4 left-4 z-30 flex items-center gap-2">
-                <Link href="/">
+                <Link href="/" onClick={clearLocalVideoFile}>
                   <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
                     <Home size={20} />
                   </Button>

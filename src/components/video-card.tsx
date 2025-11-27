@@ -47,6 +47,7 @@ import { Slider } from './ui/slider';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
+import { useLocalVideoStore } from '@/lib/local-video-store';
 
 interface VideoCardProps {
   video: Video | M3uChannel;
@@ -1244,10 +1245,13 @@ export function SettingsSheetContent({
   const { t, language, setLanguage } = useTranslation();
   const { toast } = useToast();
   const [isClearCacheDialogOpen, setIsClearCacheDialogOpen] = useState(false);
+  const clearLocalVideoFile = useLocalVideoStore((state) => state.clearFile);
+
 
   const handleClearCache = () => {
     try {
       localStorage.clear();
+      clearLocalVideoFile();
       toast({
         title: t('cacheClearedTitle'),
         description: t('cacheClearedDescription'),

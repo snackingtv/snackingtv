@@ -5,34 +5,25 @@ import { useRouter } from 'next/navigation';
 import { HardDrive } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-
-// Helper to read file as data URL
-function fileToDataURL(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+import { useLocalVideoStore } from '@/lib/local-video-store';
 
 export function DeviceStorageButton() {
   const { t } = useTranslation();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const setLocalVideoFile = useLocalVideoStore((state) => state.setFile);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      const dataUrl = await fileToDataURL(file);
-      // Store file info in sessionStorage to pass to the player page
-      sessionStorage.setItem('localVideoFile', JSON.stringify({ name: file.name, dataUrl }));
+      // Set the file in the global store
+      setLocalVideoFile(file);
+      // Navigate to the player page
       router.push('/player');
     } catch (error) {
-      console.error("Error reading file:", error);
+      console.error("Error setting local video file:", error);
     }
   };
 
