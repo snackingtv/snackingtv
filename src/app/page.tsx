@@ -238,6 +238,7 @@ export default function HomePage() {
                     title={t('allChannels')}
                     channels={userChannels}
                     onManageClick={() => setIsManaging(true)}
+                    showAddChannel={true}
                   />
                   {Object.entries(groupedChannels)
                     .sort(([groupA], [groupB]) => groupA.localeCompare(groupB))
