@@ -234,11 +234,25 @@ export default function HomePage() {
                       channels={favoriteChannelItems}
                     />
                   )}
+                  <div className="px-4 md:px-8 space-y-3">
+                     <div className="text-lg font-bold text-white flex items-center gap-2">{t('addChannel')}</div>
+                      <div className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10 pr-4">
+                         <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
+                            <div className="group">
+                              <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
+                                <Plus className="h-8 w-8 text-zinc-400 group-hover:text-white" />
+                              </Card>
+                              <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white text-center">
+                                {t('addChannel')}
+                              </p>
+                            </div>
+                          } />
+                      </div>
+                   </div>
                    <ChannelCarousel
                     title={t('allChannels')}
                     channels={userChannels}
                     onManageClick={() => setIsManaging(true)}
-                    showAddChannel={true}
                   />
                   {Object.entries(groupedChannels)
                     .sort(([groupA], [groupB]) => groupA.localeCompare(groupB))

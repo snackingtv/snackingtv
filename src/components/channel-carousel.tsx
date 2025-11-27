@@ -14,22 +14,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useTranslation } from "@/lib/i18n";
-import { AddChannelSheetContent } from "./video-card";
-import { Plus } from "lucide-react";
-import { useUser } from "@/firebase";
 
 interface ChannelCarouselProps {
   title: React.ReactNode;
   channels: WithId<M3uChannel>[];
   onManageClick?: () => void;
-  showAddChannel?: boolean;
 }
 
-export function ChannelCarousel({ title, channels, onManageClick, showAddChannel }: ChannelCarouselProps) {
+export function ChannelCarousel({ title, channels, onManageClick }: ChannelCarouselProps) {
   const { t } = useTranslation();
-  const { user, isUserLoading } = useUser();
-
-  const carouselItemClasses = "basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10";
 
   return (
     <div className="space-y-3 px-4 md:px-8">
@@ -41,21 +34,6 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
           </Button>
         )}
       </div>
-      <div className="flex items-start gap-4">
-        {showAddChannel && (
-            <div className={`${carouselItemClasses} flex-shrink-0 pr-4`}>
-               <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
-                  <div className="group">
-                    <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
-                      <Plus className="h-8 w-8 text-zinc-400 group-hover:text-white" />
-                    </Card>
-                    <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white text-center">
-                      {t('addChannel')}
-                    </p>
-                  </div>
-                } />
-            </div>
-          )}
         <Carousel
           opts={{
             align: "start",
@@ -65,7 +43,7 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
         >
           <CarouselContent>
             {channels.map((channel) => (
-              <CarouselItem key={channel.id} className={carouselItemClasses}>
+              <CarouselItem key={channel.id} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
                 <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
                   <div className="group">
                     <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
@@ -91,7 +69,6 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
           <CarouselPrevious className="hidden md:flex" />
           <CarouselNext className="hidden md:flex" />
         </Carousel>
-      </div>
     </div>
   );
 }
