@@ -1703,7 +1703,6 @@ export function VideoCard({
   };
 
   const shouldShowOverlay = (showControls || !isPlaying) && !isYoutubeOrTwitch;
-  const shouldShowTitle = isActive && !isPlaceholder && !isYoutubeOrTwitch;
 
 
   return (
@@ -1775,22 +1774,6 @@ export function VideoCard({
         <div
           className="absolute inset-0 pointer-events-none"
         >
-          <div className={cn("absolute left-4 right-4 z-30 pointer-events-none transition-opacity duration-300 bottom-20", shouldShowTitle ? 'opacity-100' : 'opacity-0')}>
-              <div className="flex items-center gap-2">
-                <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                  <p className="text-white font-normal text-sm">
-                    {video?.title}
-                  </p>
-                </div>
-                {video && 'author' in video && video.author && !localVideoItem && (
-                  <div className="inline-block bg-gray-900/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/40">
-                    <p className="text-white font-normal text-sm">
-                        {video.author}
-                      </p>
-                  </div>
-                )}
-              </div>
-            </div>
 
           <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
                 <Tooltip>
