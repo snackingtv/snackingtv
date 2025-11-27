@@ -824,7 +824,7 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const auth = useAuth();
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -948,6 +948,22 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
     }
   };
 
+  const languageSelector = (
+    <div className="px-4 py-2 space-y-2">
+      <p className="text-sm font-medium text-center text-muted-foreground">{t('language')}</p>
+      <Select onValueChange={(value) => setLanguage(value as 'de' | 'en' | 'ru')} value={language}>
+        <SelectTrigger>
+          <SelectValue placeholder={t('language')} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="de">{t('german')}</SelectItem>
+          <SelectItem value="en">{t('english')}</SelectItem>
+          <SelectItem value="ru">{t('russian')}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   if (isUserLoading) {
     return (
       <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
@@ -963,11 +979,11 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
   
   if (user) {
     return (
-      <SheetContent side="bottom" className="h-auto overflow-y-auto rounded-t-lg mx-2 mb-2">
+      <SheetContent side="bottom" className="h-auto overflow-y-auto rounded-t-lg mx-2 mb-2 flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-center">{user.isAnonymous ? t('guest') : t('myProfile')}</SheetTitle>
         </SheetHeader>
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 flex-grow">
           <p className="text-sm font-medium">{user.isAnonymous ? t('browsingAsGuest') : `${t('welcome')},` } <span className='font-mono text-muted-foreground'>{user.isAnonymous ? user.uid : user.email}</span></p>
 
           {!user.isAnonymous && (
@@ -1061,8 +1077,9 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
             {t('logout')}
           </Button>
         </div>
-        <div className="p-4 border-t border-border">
-          <div className="text-center text-xs text-muted-foreground">
+        <div className="p-4 border-t border-border mt-auto">
+          {languageSelector}
+          <div className="text-center text-xs text-muted-foreground mt-2">
               Build ❤️ 1.1.11
           </div>
         </div>
@@ -1072,146 +1089,149 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
 
 
   return (
-      <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2">
+      <SheetContent side="bottom" className="rounded-t-lg mx-2 mb-2 flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-center">
             {activeTab === 'login' ? t('login') : t('register')}
           </SheetTitle>
         </SheetHeader>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">{t('login')}</TabsTrigger>
-            <TabsTrigger value="register">{t('register')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login" className="pt-4">
-            <div className="p-4">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('email')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="you@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="space-y-2">
+        <div className="flex-grow overflow-y-auto">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">{t('login')}</TabsTrigger>
+              <TabsTrigger value="register">{t('register')}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login" className="pt-4">
+              <div className="p-4">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="password"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('password')}</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input type={showPassword ? "text" : "password"} {...field} />
-                            </FormControl>
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute inset-y-0 right-0 flex items-center pr-3"
-                            >
-                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                            </button>
-                          </div>
+                          <FormLabel>{t('email')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                  <Button type="submit" className="w-full mt-4" disabled={!loginForm.formState.isValid}>{t('login')}</Button>
-                </form>
-              </Form>
-            </div>
-          </TabsContent>
-          <TabsContent value="register" className="pt-4">
-            <div className="p-4">
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
-                  <FormField
-                    control={registerForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('email')}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="you@example.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="space-y-2">
+                    <div className="space-y-2">
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('password')}</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input type={showPassword ? "text" : "password"} {...field} />
+                              </FormControl>
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                              </button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full mt-4" disabled={!loginForm.formState.isValid}>{t('login')}</Button>
+                  </form>
+                </Form>
+              </div>
+            </TabsContent>
+            <TabsContent value="register" className="pt-4">
+              <div className="p-4">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                     <FormField
                       control={registerForm.control}
-                      name="password"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t('password')}</FormLabel>
-                          <div className="relative">
-                            <FormControl>
-                              <Input type={showPassword ? "text" : "password"} {...field} />
-                            </FormControl>
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute inset-y-0 right-0 flex items-center pr-3"
-                            >
-                              {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
-                            </button>
-                          </div>
+                          <FormLabel>{t('email')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </div>
-                  <FormField
-                    control={registerForm.control}
-                    name="acceptPrivacy"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            id="acceptPrivacy"
-                          />
-                        </FormControl>
-                        <div className="grid gap-1.5 leading-none">
-                          <label htmlFor="acceptPrivacy" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {t('acceptPrivacyLabel')}{' '}
-                            <Sheet>
-                              <SheetTrigger asChild>
-                                <button type="button" className="text-primary underline">{t('privacyPolicy')}</button>
-                              </SheetTrigger>
-                              <PrivacyPolicySheetContent />
-                            </Sheet>
-                          </label>
-                           <FormMessage>{registerForm.formState.errors.acceptPrivacy && t(registerForm.formState.errors.acceptPrivacy.message as string)}</FormMessage>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full mt-4" disabled={!registerForm.formState.isValid}>{t('register')}</Button>
-                </form>
-              </Form>
-            </div>
-          </TabsContent>
-        </Tabs>
-        <div className="px-8 pb-4">
-            <div className="relative">
-                <Separator />
-                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
-            </div>
-            <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
+                    <div className="space-y-2">
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('password')}</FormLabel>
+                            <div className="relative">
+                              <FormControl>
+                                <Input type={showPassword ? "text" : "password"} {...field} />
+                              </FormControl>
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                              </button>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={registerForm.control}
+                      name="acceptPrivacy"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              id="acceptPrivacy"
+                            />
+                          </FormControl>
+                          <div className="grid gap-1.5 leading-none">
+                            <label htmlFor="acceptPrivacy" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              {t('acceptPrivacyLabel')}{' '}
+                              <Sheet>
+                                <SheetTrigger asChild>
+                                  <button type="button" className="text-primary underline">{t('privacyPolicy')}</button>
+                                </SheetTrigger>
+                                <PrivacyPolicySheetContent />
+                              </Sheet>
+                            </label>
+                             <FormMessage>{registerForm.formState.errors.acceptPrivacy && t(registerForm.formState.errors.acceptPrivacy.message as string)}</FormMessage>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full mt-4" disabled={!registerForm.formState.isValid}>{t('register')}</Button>
+                  </form>
+                </Form>
+              </div>
+            </TabsContent>
+          </Tabs>
+          <div className="px-8 pb-4">
+              <div className="relative">
+                  <Separator />
+                  <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
+              </div>
+              <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
+          </div>
         </div>
-         <div className="p-4 border-t border-border">
-          <div className="text-center text-xs text-muted-foreground">
+         <div className="p-4 border-t border-border mt-auto">
+          {languageSelector}
+          <div className="text-center text-xs text-muted-foreground mt-2">
               Build ❤️ 1.1.11
           </div>
         </div>
@@ -1242,7 +1262,7 @@ export function SettingsSheetContent({
   onBufferSizeChange: (size: string) => void
 }) {
   const { user, isUserLoading } = useUser();
-  const { t, language, setLanguage } = useTranslation();
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [isClearCacheDialogOpen, setIsClearCacheDialogOpen] = useState(false);
   const clearLocalVideoFile = useLocalVideoStore((state) => state.clearFile);
@@ -1278,19 +1298,6 @@ export function SettingsSheetContent({
         </SheetHeader>
         <div className="flex-grow overflow-y-auto p-4">
           <ul className="space-y-4">
-            <li className="space-y-2">
-              <p className="text-sm font-medium">{t('language')}</p>
-              <Select onValueChange={(value) => setLanguage(value as 'de' | 'en' | 'ru')} value={language}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('language')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="de">{t('german')}</SelectItem>
-                  <SelectItem value="en">{t('english')}</SelectItem>
-                  <SelectItem value="ru">{t('russian')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </li>
             <li className="flex items-center justify-between">
                 <span className="text-sm font-medium">{t('showClock')}</span>
                 <Switch checked={showClock} onCheckedChange={onToggleClock} />
