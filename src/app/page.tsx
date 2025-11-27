@@ -6,11 +6,11 @@ import { collection, query, where } from 'firebase/firestore';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { SplashScreen } from '@/components/splash-screen';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon } from 'lucide-react';
 import { AppSidebar } from '@/components/sidebar';
 import { useTranslation } from '@/lib/i18n';
 import { ChannelCarousel } from '@/components/channel-carousel';
-import { AddChannelSheetContent } from '@/components/video-card';
+import { AddChannelSheetContent, AuthSheetContent } from '@/components/video-card';
 import { Input } from '@/components/ui/input';
 import { WithId } from '@/firebase/firestore/use-collection';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { deleteChannels } from '@/firebase/firestore/deletions';
 import { Card } from '@/components/ui/card';
+import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 
 export default function HomePage() {
   const { t, tCategory, getCategoryIcon } = useTranslation();
@@ -145,13 +146,14 @@ export default function HomePage() {
       <div className="flex h-full w-full flex-col app-fade-in">
         <header className="sticky top-0 z-30 flex items-center justify-between p-4 bg-background/80 backdrop-blur-sm border-b border-border/50">
           <div className="flex items-center gap-2">
-            <AppSidebar
-                addedChannels={userChannels || []}
-                favoriteChannelUrls={favoriteChannels}
-                user={user}
-                isUserLoading={isUserLoading}
-                onToggleFavorite={handleToggleFavorite}
-              />
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
+                  <UserIcon size={20} className="drop-shadow-lg" />
+                </Button>
+              </SheetTrigger>
+              <AuthSheetContent />
+            </Sheet>
           </div>
           <div className="flex-1 max-w-md mx-4">
             <div className="relative">
