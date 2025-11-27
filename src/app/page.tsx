@@ -39,7 +39,7 @@ function ImdbSeriesCarousel() {
             <CarouselItem key={series.id} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
               <Link href={series.imdbUrl} target="_blank" rel="noopener noreferrer">
                 <div className="group">
-                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
+                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[2/3] transition-transform duration-200 ease-in-out group-hover:scale-105">
                     <CardContent className="p-0 flex items-center justify-center h-full">
                       <Image
                         src={series.imageUrl}
