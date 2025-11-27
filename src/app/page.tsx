@@ -235,7 +235,6 @@ export default function HomePage() {
                     />
                   )}
                    <div className="px-4 md:px-8 space-y-3">
-                     <div className="text-lg font-bold text-white">{t('addChannel')}</div>
                       <div className="w-full">
                          <div className="inline-block basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10 pr-4">
                            <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
@@ -293,5 +292,3 @@ export default function HomePage() {
     </main>
   );
 }
-
-    
