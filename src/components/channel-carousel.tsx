@@ -29,6 +29,8 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
   const { t } = useTranslation();
   const { user, isUserLoading } = useUser();
 
+  const carouselItemClasses = "basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12";
+
   return (
     <div className="space-y-3 px-4 md:px-8">
        <div className="flex items-center justify-between">
@@ -41,7 +43,7 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
       </div>
       <div className="flex items-start gap-4">
         {showAddChannel && (
-            <div className="basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12 flex-shrink-0">
+            <div className={`${carouselItemClasses} flex-shrink-0`}>
                <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
                   <div className="group">
                     <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
@@ -63,7 +65,7 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
         >
           <CarouselContent>
             {channels.map((channel) => (
-              <CarouselItem key={channel.id} className="basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12">
+              <CarouselItem key={channel.id} className={carouselItemClasses}>
                 <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
                   <div className="group">
                     <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
