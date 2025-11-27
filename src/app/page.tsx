@@ -63,19 +63,6 @@ export default function HomePage() {
     return userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
   }, [userChannels, favoriteChannels]);
   
-  const groupedChannels = useMemo(() => {
-    if (!userChannels) return {};
-    const sortedChannels = [...userChannels].sort((a, b) => a.name.localeCompare(b.name));
-    return sortedChannels.reduce((acc, channel) => {
-      const group = channel.group || 'Uncategorized';
-      if (!acc[group]) {
-        acc[group] = [];
-      }
-      acc[group].push(channel);
-      return acc;
-    }, {} as Record<string, WithId<M3uChannel>[]>);
-  }, [userChannels]);
-  
   const handleToggleSelect = (channelId: string) => {
     setSelectedChannels(prev => {
       const newSelection = new Set(prev);
@@ -259,15 +246,6 @@ export default function HomePage() {
                     channels={userChannels}
                     onManageClick={() => setIsManaging(true)}
                   />
-                  {Object.entries(groupedChannels)
-                    .sort(([groupA], [groupB]) => groupA.localeCompare(groupB))
-                    .map(([group, channels]) => (
-                      <ChannelCarousel
-                        key={group}
-                        title={getCategoryIcon(group)}
-                        channels={channels}
-                      />
-                  ))}
                 </>
               )}
             </div>
