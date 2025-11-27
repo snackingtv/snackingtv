@@ -39,16 +39,9 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
           </Button>
         )}
       </div>
-      <Carousel
-        opts={{
-          align: "start",
-          dragFree: true,
-        }}
-        className="w-full"
-      >
-        <CarouselContent>
-          {showAddChannel && (
-            <CarouselItem className="basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12">
+      <div className="flex items-start gap-4">
+        {showAddChannel && (
+            <div className="basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12 flex-shrink-0">
                <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
                   <div className="group">
                     <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
@@ -59,35 +52,44 @@ export function ChannelCarousel({ title, channels, onManageClick, showAddChannel
                     </p>
                   </div>
                 } />
-            </CarouselItem>
+            </div>
           )}
-          {channels.map((channel) => (
-            <CarouselItem key={channel.id} className="basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12">
-              <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
-                <div className="group">
-                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
-                    <CardContent className="p-0 flex items-center justify-center h-full">
-                      <Image
-                        src={channel.logo}
-                        alt={channel.name}
-                        width={100}
-                        height={100}
-                        className="object-contain w-full h-full p-2"
-                        onError={(e) => e.currentTarget.src = `https://picsum.photos/seed/${channel.name}/100/100`}
-                      />
-                    </CardContent>
-                  </Card>
-                  <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
-                    {channel.name}
-                  </p>
-                </div>
-              </Link>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
+        <Carousel
+          opts={{
+            align: "start",
+            dragFree: true,
+          }}
+          className="w-full"
+        >
+          <CarouselContent>
+            {channels.map((channel) => (
+              <CarouselItem key={channel.id} className="basis-1/5 sm:basis-1/6 md:basis-1/8 lg:basis-1/10 xl:basis-1/12">
+                <Link href={`/player?channel=${encodeURIComponent(JSON.stringify(channel))}`}>
+                  <div className="group">
+                    <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
+                      <CardContent className="p-0 flex items-center justify-center h-full">
+                        <Image
+                          src={channel.logo}
+                          alt={channel.name}
+                          width={100}
+                          height={100}
+                          className="object-contain w-full h-full p-2"
+                          onError={(e) => e.currentTarget.src = `https://picsum.photos/seed/${channel.name}/100/100`}
+                        />
+                      </CardContent>
+                    </Card>
+                    <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
+                      {channel.name}
+                    </p>
+                  </div>
+                </Link>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
+        </Carousel>
+      </div>
     </div>
   );
 }
