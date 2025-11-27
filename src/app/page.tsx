@@ -19,6 +19,7 @@ import { deleteChannels } from '@/firebase/firestore/deletions';
 import { Card } from '@/components/ui/card';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { DeviceStorageButton } from '@/components/device-storage';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 export default function HomePage() {
   const { t, getCategoryIcon } = useTranslation();
@@ -219,9 +220,10 @@ export default function HomePage() {
                       channels={favoriteChannelItems}
                     />
                   )}
-                   <div className="px-4 md:px-8 space-y-3">
-                      <div className="flex items-start gap-4">
-                         <div className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                  <div className="space-y-3 px-4 md:px-8">
+                     <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
+                       <CarouselContent>
+                         <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
                            <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
                               <div className="group">
                                 <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
@@ -232,11 +234,25 @@ export default function HomePage() {
                                 </p>
                               </div>
                             } />
-                         </div>
-                         <div className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                         </CarouselItem>
+                         <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
                            <DeviceStorageButton />
-                         </div>
-                      </div>
+                         </CarouselItem>
+                         {[...Array(3)].map((_, index) => (
+                          <CarouselItem key={`placeholder-${index}`} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                              <div className="group">
+                                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
+                                  </Card>
+                                  <p className="mt-2 text-xs text-zinc-300 truncate invisible">
+                                    -
+                                  </p>
+                              </div>
+                          </CarouselItem>
+                         ))}
+                       </CarouselContent>
+                       <CarouselPrevious className="hidden md:flex" />
+                       <CarouselNext className="hidden md:flex" />
+                     </Carousel>
                    </div>
                    <ChannelCarousel
                     title={t('allChannels')}
