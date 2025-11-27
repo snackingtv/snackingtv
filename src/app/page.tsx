@@ -214,12 +214,6 @@ export default function HomePage() {
                   />
               ) : (
                 <>
-                  {favoriteChannelItems.length > 0 && (
-                    <ChannelCarousel
-                      title={t('favorites')}
-                      channels={favoriteChannelItems}
-                    />
-                  )}
                   <div className="space-y-3 px-4 md:px-8">
                      <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
                        <CarouselContent>
@@ -254,6 +248,12 @@ export default function HomePage() {
                        <CarouselNext className="hidden md:flex" />
                      </Carousel>
                    </div>
+                  {favoriteChannelItems.length > 0 && (
+                    <ChannelCarousel
+                      title={t('favorites')}
+                      channels={favoriteChannelItems}
+                    />
+                  )}
                    <ChannelCarousel
                     title={t('allChannels')}
                     channels={userChannels}
