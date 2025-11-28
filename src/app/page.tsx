@@ -20,51 +20,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { DeviceStorageButton } from '@/components/device-storage';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { imdbTop10Series, type ImdbSeries } from '@/lib/imdb-series';
 import Link from 'next/link';
-
-function ImdbSeriesCarousel() {
-  return (
-    <div className="space-y-3 px-4 md:px-8">
-      <h2 className="text-lg font-bold text-white">IMDb Top 10 Series</h2>
-      <Carousel
-        opts={{
-          align: "start",
-          dragFree: true,
-        }}
-        className="w-full"
-      >
-        <CarouselContent>
-          {imdbTop10Series.map((series) => (
-            <CarouselItem key={series.id} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-              <Link href={series.imdbUrl} target="_blank" rel="noopener noreferrer">
-                <div className="group">
-                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[2/3] transition-transform duration-200 ease-in-out group-hover:scale-105">
-                    <CardContent className="p-0 flex items-center justify-center h-full">
-                      <Image
-                        src={series.imageUrl}
-                        alt={series.title}
-                        width={270}
-                        height={400}
-                        className="object-cover w-full h-full"
-                      />
-                    </CardContent>
-                  </Card>
-                  <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
-                    {series.title}
-                  </p>
-                </div>
-              </Link>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex" />
-        <CarouselNext className="hidden md:flex" />
-      </Carousel>
-    </div>
-  );
-}
-
 
 export default function HomePage() {
   const { t, getCategoryIcon } = useTranslation();
@@ -304,9 +260,6 @@ export default function HomePage() {
                 </div>
             </div>
           )}
-          <div className="py-4">
-             <ImdbSeriesCarousel />
-          </div>
         </div>
         
         {isManaging && (
