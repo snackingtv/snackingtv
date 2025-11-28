@@ -63,8 +63,6 @@ interface VideoCardProps {
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
   bufferSize: string;
-  onScrollPrev: () => void;
-  onScrollNext: () => void;
 }
 
 // Define the Channel type
@@ -1510,8 +1508,6 @@ export function VideoCard({
   videoQuality,
   onQualityLevelsChange,
   bufferSize,
-  onScrollPrev,
-  onScrollNext,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1817,28 +1813,7 @@ export function VideoCard({
               </Tooltip>
             </div>
           
-          <div className={cn("absolute left-4 md:left-6 top-1/2 -translate-y-1/2 hidden md:flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollPrev(); }}>
-                  <ChevronUp size={24} className="drop-shadow-lg" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Vorheriger Kanal</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-12 w-12 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); onScrollNext(); }}>
-                  <ChevronDown size={24} className="drop-shadow-lg" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Nächster Kanal</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+          
 
 
           <div className="absolute inset-0 flex items-center justify-center">

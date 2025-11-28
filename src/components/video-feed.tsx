@@ -101,13 +101,6 @@ export function VideoFeed({
   const preloadUrls = usePreload(emblaApi, feedItems);
   const { t } = useTranslation();
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
   
   useEffect(() => {
     if (activeChannel && emblaApi && !localVideoItem) {
@@ -197,8 +190,6 @@ export function VideoFeed({
                   videoQuality={videoQuality}
                   onQualityLevelsChange={onQualityLevelsChange}
                   bufferSize={bufferSize}
-                  onScrollPrev={scrollPrev}
-                  onScrollNext={scrollNext}
                 />
               </div>
             ))}
