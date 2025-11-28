@@ -114,6 +114,16 @@ export default function HomePage() {
 
   const allChannelsToShow = searchTerm ? filteredChannels : userChannels || [];
 
+  const getPlayerUrlForYoutube = (video: YouTubeVideo) => {
+    const channelData = {
+      name: video.title,
+      url: video.videoUrl,
+      logo: video.thumbnailUrl,
+      group: 'YouTube'
+    };
+    return `/player?channel=${encodeURIComponent(JSON.stringify(channelData))}`;
+  };
+
   return (
     <main className="h-screen w-screen overflow-y-auto bg-background text-foreground">
       <div className="flex h-full w-full flex-col app-fade-in">
@@ -142,42 +152,42 @@ export default function HomePage() {
         </header>
 
         <div className="flex-grow overflow-y-auto pt-8">
+           <div className="space-y-3 px-4 md:px-8">
+                 <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
+                   <CarouselContent>
+                     <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                       <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
+                          <div className="group">
+                            <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
+                              <Plus className="h-8 w-8 text-zinc-400 group-hover:text-white" />
+                            </Card>
+                            <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white text-center">
+                              {t('addChannel')}
+                            </p>
+                          </div>
+                        } />
+                     </CarouselItem>
+                     <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                       <DeviceStorageButton />
+                     </CarouselItem>
+                     {[...Array(3)].map((_, index) => (
+                      <CarouselItem key={`placeholder-${index}`} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
+                          <div className="group">
+                              <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
+                              </Card>
+                              <p className="mt-2 text-xs text-zinc-300 truncate invisible">
+                                -
+                              </p>
+                          </div>
+                      </CarouselItem>
+                     ))}
+                   </CarouselContent>
+                   <CarouselPrevious className="hidden md:flex" />
+                   <CarouselNext className="hidden md:flex" />
+                 </Carousel>
+               </div>
           {userChannels && userChannels.length > 0 ? (
-            <div className="space-y-8">
-               <div className="space-y-3 px-4 md:px-8">
-                     <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
-                       <CarouselContent>
-                         <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-                           <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
-                              <div className="group">
-                                <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
-                                  <Plus className="h-8 w-8 text-zinc-400 group-hover:text-white" />
-                                </Card>
-                                <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white text-center">
-                                  {t('addChannel')}
-                                </p>
-                              </div>
-                            } />
-                         </CarouselItem>
-                         <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-                           <DeviceStorageButton />
-                         </CarouselItem>
-                         {[...Array(3)].map((_, index) => (
-                          <CarouselItem key={`placeholder-${index}`} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-                              <div className="group">
-                                  <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
-                                  </Card>
-                                  <p className="mt-2 text-xs text-zinc-300 truncate invisible">
-                                    -
-                                  </p>
-                              </div>
-                          </CarouselItem>
-                         ))}
-                       </CarouselContent>
-                       <CarouselPrevious className="hidden md:flex" />
-                       <CarouselNext className="hidden md:flex" />
-                     </Carousel>
-                   </div>
+            <div className="space-y-8 mt-8">
               {isManaging ? (
                 <div className="px-4 md:px-8">
                   <div className="flex items-center justify-between mb-4">
@@ -251,7 +261,7 @@ export default function HomePage() {
                 </>
               )}
             </div>
-          ) : (
+          ) : !searchTerm ? (
              <div className="flex flex-col items-center justify-center h-full text-center text-white p-8">
                 <div className="p-4 bg-black/50 rounded-lg">
                     <h2 className="text-2xl font-bold mb-4">{t('noChannelsAvailable')}</h2>
@@ -260,15 +270,20 @@ export default function HomePage() {
                     } />
                 </div>
             </div>
+          ) : (
+             <ChannelCarousel
+                title={`${t('searchPlaceholder')} "${searchTerm}"`}
+                channels={filteredChannels}
+              />
           )}
 
           <div className="space-y-3 px-4 md:px-8 mt-8">
-            <div className="text-lg font-bold text-white">Top 10 YouTube Videos</div>
+            <div className="text-lg font-bold text-white">Neueste Videos</div>
             <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
               <CarouselContent>
                 {topYoutubeVideos.map((video) => (
                   <CarouselItem key={video.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8">
-                    <a href={video.videoUrl} target="_blank" rel="noopener noreferrer">
+                    <Link href={getPlayerUrlForYoutube(video)}>
                       <div className="group">
                         <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
                           <CardContent className="p-0 flex items-center justify-center h-full">
@@ -285,7 +300,7 @@ export default function HomePage() {
                           {video.title}
                         </p>
                       </div>
-                    </a>
+                    </Link>
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -308,5 +323,3 @@ export default function HomePage() {
     </main>
   );
 }
-
-    
