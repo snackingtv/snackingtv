@@ -95,7 +95,7 @@ export function VideoFeed({
   const [emblaRef, emblaApi] = useEmblaCarousel({
     axis: 'y',
     loop: false,
-    draggable: !localVideoItem, // Disable dragging for local videos
+    draggable: false, // Disable dragging for local videos
   });
   const [activeIndex, setActiveIndex] = useState(0);
   const preloadUrls = usePreload(emblaApi, feedItems);
