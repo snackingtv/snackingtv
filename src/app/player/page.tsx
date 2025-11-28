@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { VideoFeed } from '@/components/video-feed';
 import { SplashScreen } from '@/components/splash-screen';
 import { M3uChannel } from '@/lib/m3u-parser';
 import { Video } from '@/lib/videos';
@@ -10,7 +9,7 @@ import { collection, query, where } from 'firebase/firestore';
 import { Settings, Home, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
-import { SettingsSheetContent } from '@/components/video-card';
+import { SettingsSheetContent, VideoCard } from '@/components/video-card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslation } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
@@ -41,7 +40,6 @@ function PlayerPageContent() {
   
   const [favoriteChannels, setFavoriteChannels] = useState<string[]>([]);
   
-  const [feedItems, setFeedItems] = useState<(M3uChannel | Video)[]>([]);
   const [localVideoItem, setLocalVideoItem] = useState<Video | null>(null);
   
   const localVideoFile = useLocalVideoStore((state) => state.file);
@@ -59,7 +57,6 @@ function PlayerPageContent() {
   
   let isAppLoading = isUserLoading || areChannelsLoading;
   
-  // If we have a local video file, we are not "loading" in the traditional sense
   if (localVideoFile) {
     isAppLoading = false;
   }
@@ -73,7 +70,6 @@ function PlayerPageContent() {
         author: 'Local',
         avatarId: 'avatar5',
       });
-      // We don't clear it here anymore, the component lifecycle in VideoCard will handle object URL.
     }
   }, [localVideoFile]);
 
@@ -99,7 +95,7 @@ function PlayerPageContent() {
 
   useEffect(() => {
     const channelData = searchParams.get('channel');
-    if (channelData && !localVideoItem) {
+    if (channelData) {
       try {
         const decodedChannel = JSON.parse(decodeURIComponent(channelData));
         setActiveChannel(decodedChannel);
@@ -107,8 +103,13 @@ function PlayerPageContent() {
         console.error("Failed to parse channel data from URL:", e);
       }
     }
-  }, [searchParams, localVideoItem]);
+  }, [searchParams]);
 
+  useEffect(() => {
+    if (localVideoItem) {
+      setActiveChannel(localVideoItem);
+    }
+  }, [localVideoItem]);
   
   const handleBufferSizeChange = (size: string) => {
     setBufferSize(size);
@@ -172,45 +173,17 @@ function PlayerPageContent() {
     return () => clearInterval(timerId);
   }, []);
 
-  useEffect(() => {
-    const combinedFeed: (M3uChannel | Video)[] = [];
-    const combinedUrls = new Set<string>();
-
-    if (userChannels) {
-      userChannels.forEach((channel) => {
-        if (!combinedUrls.has(channel.url)) {
-          combinedFeed.push(channel);
-          combinedUrls.add(channel.url);
-        }
-      });
-    }
-    setFeedItems(combinedFeed);
-  }, [userChannels]);
-
-  useEffect(() => {
-     if (localVideoItem) {
-      setActiveChannel(localVideoItem);
-    } else if (feedItems.length > 0 && !activeChannel) {
-        // If there's no active channel from URL, set the first from the feed.
-        const channelFromUrl = searchParams.get('channel');
-        if (!channelFromUrl) {
-            setActiveChannel(feedItems[0]);
-        }
-    }
-  }, [feedItems, activeChannel, searchParams, localVideoItem]);
-
-  const handleActiveIndexChange = useCallback((index: number) => {
-    if (localVideoItem) return;
-    if (feedItems[index]) {
-        setActiveChannel(feedItems[index]);
-    } else {
-        setActiveChannel(null);
-    }
-  }, [feedItems, localVideoItem]);
-  
   if (isAppLoading) {
     return <SplashScreen version="v5" />;
   }
+  
+  const placeholderVideo: Video = {
+    id: 'placeholder',
+    url: '',
+    title: t('noChannelsAvailable'),
+    author: 'Tivio',
+    avatarId: 'iptv_placeholder'
+  };
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
@@ -276,23 +249,24 @@ function PlayerPageContent() {
                 )}
             </div>
 
-            <VideoFeed 
-              feedItems={feedItems}
-              activeChannel={activeChannel}
-              onProgressUpdate={setProgress}
-              onDurationChange={setDuration}
-              activeVideoRef={activeVideoRef}
-              localVideoItem={localVideoItem}
-              favoriteChannels={favoriteChannels}
-              onToggleFavorite={handleToggleFavorite}
-              onActiveIndexChange={handleActiveIndexChange}
-              showCaptions={showCaptions}
-              videoQuality={videoQuality}
-              onQualityLevelsChange={setQualityLevels}
-              bufferSize={bufferSize}
-              addedChannels={userChannels || []}
-            />
-
+            <div className="h-full w-full">
+              <VideoCard
+                video={activeChannel || placeholderVideo}
+                isActive={true}
+                addedChannels={userChannels || []}
+                isFavorite={!!activeChannel?.url && typeof activeChannel.url === 'string' && favoriteChannels.includes(activeChannel.url)}
+                onToggleFavorite={handleToggleFavorite}
+                onProgressUpdate={setProgress}
+                onDurationChange={setDuration}
+                activeVideoRef={activeVideoRef}
+                localVideoItem={localVideoItem}
+                showCaptions={showCaptions}
+                videoQuality={videoQuality}
+                onQualityLevelsChange={setQualityLevels}
+                bufferSize={bufferSize}
+              />
+            </div>
+            
           </TooltipProvider>
         </div>
     </main>
