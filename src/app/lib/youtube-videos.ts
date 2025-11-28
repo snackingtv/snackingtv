@@ -31,7 +31,7 @@ export const topYoutubeVideos: YouTubeVideo[] = [
     videoUrl: 'https://www.youtube.com/watch?v=L_jWHffIx5E',
   },
   {
-    id_:'u9prcUCHlqM',
+    id: 'u9prcUCHlqM',
     title: 'The Weeknd - Blinding Lights (Official Video)',
     thumbnailUrl: 'https://i.ytimg.com/vi/u9prcUCHlqM/maxresdefault.jpg',
     videoUrl: 'https://www.youtube.com/watch?v=u9prcUCHlqM'
