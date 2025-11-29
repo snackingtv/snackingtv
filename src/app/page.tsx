@@ -21,9 +21,10 @@ import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { DeviceStorageButton } from '@/components/device-storage';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 
 export default function HomePage() {
-  const { t, getCategoryIcon } = useTranslation();
+  const { t, tCategory } = useTranslation();
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -64,6 +65,18 @@ export default function HomePage() {
     return userChannels?.filter(c => favoriteChannels.includes(c.url)) || [];
   }, [userChannels, favoriteChannels]);
   
+  const groupedChannels = useMemo(() => {
+    if (!userChannels) return {};
+    return userChannels.reduce((acc, channel) => {
+      const group = channel.group || 'Uncategorized';
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(channel);
+      return acc;
+    }, {} as Record<string, WithId<M3uChannel>[]>);
+  }, [userChannels]);
+
   const handleToggleSelect = (channelId: string) => {
     setSelectedChannels(prev => {
       const newSelection = new Set(prev);
@@ -140,7 +153,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="flex-grow overflow-y-auto pt-8">
+        <div className="flex-grow overflow-y-auto pt-8 pb-8">
            <div className="space-y-3 px-4 md:px-8">
                  <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
                    <CarouselContent>
@@ -247,6 +260,18 @@ export default function HomePage() {
                     channels={userChannels}
                     onManageClick={() => setIsManaging(true)}
                   />
+                  <div className="my-8 px-4 md:px-8">
+                    <Separator />
+                  </div>
+                  {Object.entries(groupedChannels)
+                    .sort(([groupA], [groupB]) => tCategory(groupA).localeCompare(tCategory(groupB)))
+                    .map(([group, channels]) => (
+                      <ChannelCarousel
+                        key={group}
+                        title={tCategory(group)}
+                        channels={channels}
+                      />
+                  ))}
                 </>
               )}
             </div>
@@ -280,3 +305,5 @@ export default function HomePage() {
     </main>
   );
 }
+
+    
