@@ -278,7 +278,7 @@ export default function HomePage() {
           )}
 
           <div className="space-y-3 px-4 md:px-8 mt-8">
-            <div className="text-lg font-bold text-white">{t('viraleVideos')}</div>
+            <div className="text-lg font-bold text-white">{t('videosForKids')}</div>
             <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
               <CarouselContent>
                 {topYoutubeVideos.map((video) => (
