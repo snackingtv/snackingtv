@@ -187,9 +187,14 @@ export default function HomePage() {
                    <CarouselPrevious className="hidden md:flex" />
                    <CarouselNext className="hidden md:flex" />
                  </Carousel>
-               </div>
+            </div>
+
+            <div className="my-8 px-4 md:px-8">
+              <Separator />
+            </div>
+
           {userChannels && userChannels.length > 0 ? (
-            <div className="space-y-8 mt-8">
+            <div className="space-y-8">
               {isManaging ? (
                 <div className="px-4 md:px-8">
                   <div className="flex items-center justify-between mb-4">
