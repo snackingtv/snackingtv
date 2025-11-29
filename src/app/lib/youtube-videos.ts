@@ -7,40 +7,34 @@ export interface YouTubeVideo {
 
 export const topYoutubeVideos: YouTubeVideo[] = [
   {
-    id: 'mP36tq-g45E',
-    title: 'I Built 100 Wells In Africa',
-    thumbnailUrl: 'https://i.ytimg.com/vi/mP36tq-g45E/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=mP36tq-g45E',
+    id: 'dQw4w9WgXcQ',
+    title: 'Rick Astley - Never Gonna Give You Up',
+    thumbnailUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
   },
   {
-    id: 'zO2rA7t1a30',
-    title: 'I Survived A Plane Crash',
-    thumbnailUrl: 'https://i.ytimg.com/vi/zO2rA7t1a30/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=zO2rA7t1a30',
+    id: 'jNQXAC9IVRw',
+    title: 'Me at the zoo',
+    thumbnailUrl: 'https://i.ytimg.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
   },
   {
-    id: 'kXX61wN_E_M',
-    title: "World's Largest Jello Pool- Can you swim in it?",
-    thumbnailUrl: 'https://i.ytimg.com/vi/kXX61wN_E_M/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=kXX61wN_E_M',
-  },
-  {
-    id: 'g_it_x3yHw8',
-    title: '$1 vs $1,000,000,000 House!',
-    thumbnailUrl: 'https://i.ytimg.com/vi/g_it_x3yHw8/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=g_it_x3yHw8',
-  },
-  {
-    id: 'YlI5C-42_m8',
-    title: 'Automower® NERA (German)',
-    thumbnailUrl: 'https://i.ytimg.com/vi/YlI5C-42_m8/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=YlI5C-42_m8'
+    id: '9bZkp7q19f0',
+    title: 'PSY - GANGNAM STYLE(강남스타일) M/V',
+    thumbnailUrl: 'https://i.ytimg.com/vi/9bZkp7q19f0/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=9bZkp7q19f0',
   },
   {
     id: 'fLexgOvhW3U',
     title: 'Luis Fonsi - Despacito ft. Daddy Yankee',
     thumbnailUrl: 'https://i.ytimg.com/vi/fLexgOvhW3U/maxresdefault.jpg',
     videoUrl: 'https://www.youtube.com/watch?v=fLexgOvhW3U',
+  },
+  {
+    id: 'YlI5C-42_m8',
+    title: 'Automower® NERA (German)',
+    thumbnailUrl: 'https://i.ytimg.com/vi/YlI5C-42_m8/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=YlI5C-42_m8'
   },
   {
     id: '2Vv-BfVoq4g',
@@ -61,9 +55,15 @@ export const topYoutubeVideos: YouTubeVideo[] = [
     videoUrl: 'https://www.youtube.com/watch?v=L_jWHffIx5E',
   },
   {
-    id: '9bZkp7q19f0',
-    title: 'PSY - GANGNAM STYLE(강남스타일) M/V',
-    thumbnailUrl: 'https://i.ytimg.com/vi/9bZkp7q19f0/maxresdefault.jpg',
-    videoUrl: 'https://www.youtube.com/watch?v=9bZkp7q19f0',
+    id: 'g_it_x3yHw8',
+    title: '$1 vs $1,000,000,000 House!',
+    thumbnailUrl: 'https://i.ytimg.com/vi/g_it_x3yHw8/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=g_it_x3yHw8',
+  },
+  {
+    id: 'kXX61wN_E_M',
+    title: "World's Largest Jello Pool- Can you swim in it?",
+    thumbnailUrl: 'https://i.ytimg.com/vi/kXX61wN_E_M/maxresdefault.jpg',
+    videoUrl: 'https://www.youtube.com/watch?v=kXX61wN_E_M',
   },
 ];

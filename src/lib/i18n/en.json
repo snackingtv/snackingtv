@@ -193,5 +193,8 @@
   "cat_documentary": "Documentary",
   "cat_series": "Series",
   "cat_general": "General",
-  "cat_uncategorized": "Uncategorized"
+  "cat_uncategorized": "Uncategorized",
+  "viraleVideos": "Viral Videos",
+  "neuesteVideos": "Latest Videos",
+  "russian": "Russian"
 }
