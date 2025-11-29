@@ -21,7 +21,6 @@ import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { DeviceStorageButton } from '@/components/device-storage';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Link from 'next/link';
-import { topYoutubeVideos, YouTubeVideo } from '@/app/lib/youtube-videos';
 
 export default function HomePage() {
   const { t, getCategoryIcon } = useTranslation();
@@ -113,16 +112,6 @@ export default function HomePage() {
   }
 
   const allChannelsToShow = searchTerm ? filteredChannels : userChannels || [];
-
-  const getPlayerUrlForYoutube = (video: YouTubeVideo) => {
-    const channelData = {
-      name: video.title,
-      url: video.videoUrl,
-      logo: video.thumbnailUrl,
-      group: 'YouTube'
-    };
-    return `/player?channel=${encodeURIComponent(JSON.stringify(channelData))}`;
-  };
 
   return (
     <main className="h-screen w-screen overflow-y-auto bg-background text-foreground">
@@ -276,38 +265,6 @@ export default function HomePage() {
                 channels={filteredChannels}
               />
           )}
-
-          <div className="space-y-3 px-4 md:px-8 mt-8">
-            <div className="text-lg font-bold text-white">{t('videosForKids')}</div>
-            <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
-              <CarouselContent>
-                {topYoutubeVideos.map((video) => (
-                  <CarouselItem key={video.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 xl:basis-1/8">
-                    <Link href={getPlayerUrlForYoutube(video)}>
-                      <div className="group">
-                        <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105">
-                          <CardContent className="p-0 flex items-center justify-center h-full">
-                            <Image
-                              src={video.thumbnailUrl}
-                              alt={video.title}
-                              width={1920}
-                              height={1080}
-                              className="object-cover w-full h-full"
-                            />
-                          </CardContent>
-                        </Card>
-                        <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
-                          {video.title}
-                        </p>
-                      </div>
-                    </Link>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="hidden md:flex" />
-              <CarouselNext className="hidden md:flex" />
-            </Carousel>
-          </div>
         </div>
         
         {isManaging && (
