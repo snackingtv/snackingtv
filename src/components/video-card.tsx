@@ -1431,69 +1431,6 @@ function formatTime(seconds: number) {
 }
 
 
-function PlayerControls({
-  playerRef,
-  isPlaying,
-  onPlayPause,
-  played,
-  duration,
-  onSeek,
-  volume,
-  onVolumeChange,
-  isMuted,
-  onMuteToggle,
-}: {
-  playerRef: ReactPlayer | null;
-  isPlaying: boolean;
-  onPlayPause: () => void;
-  played: number;
-  duration: number;
-  onSeek: (value: number) => void;
-  volume: number;
-  onVolumeChange: (value: number) => void;
-  isMuted: boolean;
-  onMuteToggle: () => void;
-}) {
-  return (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent pointer-events-auto">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-4 text-white">
-          <button onClick={onPlayPause} className="p-2">
-            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-          </button>
-          
-          <div className="text-xs font-mono">{formatTime(played * duration)}</div>
-
-          <Slider
-            min={0}
-            max={0.999999}
-            step={0.0001}
-            value={[played]}
-            onValueChange={(value) => onSeek(value[0])}
-            className="w-full"
-          />
-
-          <div className="text-xs font-mono">{formatTime(duration)}</div>
-
-          <div className="flex items-center gap-2">
-            <button onClick={onMuteToggle}>
-              {isMuted || volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
-            </button>
-            <Slider
-              min={0}
-              max={1}
-              step={0.05}
-              value={[isMuted ? 0 : volume]}
-              onValueChange={(value) => onVolumeChange(value[0])}
-              className="w-24"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function VideoCard({ 
   video, 
   isActive, 
@@ -1604,18 +1541,6 @@ export function VideoCard({
   const sourceUrl = localVideoUrl || (isActive && typeof video.url === 'string' ? video.url : undefined);
   const isYoutubeOrTwitch = typeof sourceUrl === 'string' && (sourceUrl.includes('youtube.com') || sourceUrl.includes('twitch.tv'));
 
-
-  const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const target = e.target as HTMLElement;
-    if (isPlaceholder || target.closest('[data-radix-collection-item]') || target.closest('button') || target.closest('[role=slider]')) {
-      return;
-    }
-
-    if (activeVideoRef.current) {
-       setIsPlaying(prev => !prev);
-    }
-  };
-
   const handleInteraction = useCallback(() => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
@@ -1626,13 +1551,22 @@ export function VideoCard({
     }, 3000);
   }, []);
 
+  const handleVideoClick = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Let clicks on controls pass through
+    const target = e.target as HTMLElement;
+    if (target.closest('.player-controls') || isPlaceholder) {
+      return;
+    }
+    handleInteraction();
+    setIsPlaying(prev => !prev);
+  };
+
   useEffect(() => {
     const videoContainer = containerRef.current;
     videoContainer?.addEventListener('mousemove', handleInteraction);
-    videoContainer?.addEventListener('click', handleInteraction);
+    // No click listener here to avoid double toggling play/pause
     return () => {
       videoContainer?.removeEventListener('mousemove', handleInteraction);
-      videoContainer?.removeEventListener('click', handleInteraction);
       if (controlsTimeoutRef.current) {
         clearTimeout(controlsTimeoutRef.current);
       }
@@ -1674,11 +1608,12 @@ export function VideoCard({
   useEffect(() => {
       if (isActive) {
           setIsPlaying(true);
+          handleInteraction();
       } else {
           setIsPlaying(false);
           setPlayed(0);
       }
-  }, [isActive]);
+  }, [isActive, handleInteraction]);
 
 
   const handleSeek = (value: number) => {
@@ -1696,6 +1631,10 @@ export function VideoCard({
   const handleMuteToggle = () => {
     setIsMuted(prev => !prev);
   };
+  
+  const handlePlayPause = () => {
+    setIsPlaying(p => !p);
+  };
 
   const shouldShowOverlay = (showControls || !isPlaying) && !isYoutubeOrTwitch;
 
@@ -1705,8 +1644,8 @@ export function VideoCard({
       <div
         ref={containerRef}
         className={cn(
-          'relative w-full h-full bg-background flex items-center justify-center',
-          !shouldShowOverlay && isPlaying && !isPlaceholder ? 'cursor-none' : 'cursor-auto'
+          'relative w-full h-full bg-black flex items-center justify-center overflow-hidden group/player',
+          !shouldShowOverlay && isPlaying && !isPlaceholder ? 'cursor-none' : 'cursor-pointer'
         )}
         onClick={handleVideoClick}
       >
@@ -1762,99 +1701,157 @@ export function VideoCard({
                       },
                   },
               }}
-              style={{ objectFit: 'contain' }}
+              style={{ objectFit: 'contain', pointerEvents: 'none' }}
           />
         )}
         
-        <div
-          className="absolute inset-0 pointer-events-none"
-        >
-
-          <div className={cn("absolute right-4 md:right-6 top-1/2 -translate-y-1/2 flex flex-col items-center space-y-4 pointer-events-auto transition-opacity duration-300", shouldShowOverlay && !isPlaceholder ? 'opacity-100' : 'opacity-0')}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); if (typeof video.url === 'string') onToggleFavorite(video.url); }}>
-                        <Star size={24} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>{t('favorites')}</p>
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
-                      <Share2 size={24} className="drop-shadow-lg" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>{t('shareChannel')}</p>
-                  </TooltipContent>
-                </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-12 w-12 flex-col gap-1 text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full"
+        {/* Overlays and Controls */}
+        {!isYoutubeOrTwitch && !isPlaceholder && (
+          <div
+            className="absolute inset-0"
+          >
+              {/* Center Play/Pause Button & Buffering Spinner */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {isBuffering && (
+                  <div className="text-white">
+                    <Loader className="animate-spin h-12 w-12" />
+                  </div>
+                )}
+                {!isPlaying && !isBuffering && (
+                  <button
+                    className="pointer-events-auto rounded-full bg-black/50 p-4 transition-transform hover:scale-110"
                     onClick={(e) => {
                       e.stopPropagation();
-                      toggleFullScreen();
+                      handlePlayPause();
                     }}
                   >
-                    {isFullScreen ? <Minimize size={24} className="drop-shadow-lg" /> : <Maximize size={24} className="drop-shadow-lg" />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          
-          
-
-
-          <div className="absolute inset-0 flex items-center justify-center">
-            {isBuffering && (
-              <div className="text-white">
-                <Loader className="animate-spin h-8 w-8" />
+                    <Play
+                      className="h-16 w-16 text-white drop-shadow-lg"
+                      fill="currentColor"
+                    />
+                  </button>
+                )}
               </div>
-            )}
-             {!isPlaying && !isBuffering && !isYoutubeOrTwitch && !isPlaceholder && (
-              <button
-                className="pointer-events-auto"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsPlaying(true);
-                }}
-              >
-                <Play
-                  className="h-20 w-20 text-white/70 drop-shadow-lg"
-                  fill="currentColor"
-                />
-              </button>
-            )}
-          </div>
-           {(!isYoutubeOrTwitch && !isPlaceholder) && (
-            <div className={cn('absolute inset-x-0 bottom-0 transition-opacity duration-300', shouldShowOverlay ? 'opacity-100' : 'opacity-0')}>
-              <PlayerControls
-                playerRef={activeVideoRef.current}
-                isPlaying={isPlaying}
-                onPlayPause={() => setIsPlaying(p => !p)}
-                played={played}
-                duration={duration}
-                onSeek={handleSeek}
-                volume={volume}
-                onVolumeChange={handleVolumeChange}
-                isMuted={isMuted}
-                onMuteToggle={handleMuteToggle}
-              />
-            </div>
-          )}
-        </div>
 
+              {/* Control Bar */}
+              <div
+                className={cn(
+                  'player-controls absolute bottom-0 left-0 right-0 p-3 pb-4 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300',
+                  shouldShowOverlay ? 'opacity-100' : 'opacity-0'
+                )}
+                onClick={e => e.stopPropagation()}
+              >
+                  <div className="flex flex-col gap-2">
+                    {/* Progress Bar */}
+                    <div className="group/progress relative flex items-center">
+                        <Slider
+                            min={0}
+                            max={0.999999}
+                            step={0.0001}
+                            value={[played]}
+                            onValueChange={(value) => handleSeek(value[0])}
+                            className="w-full h-1 group-hover/progress:h-2 transition-all duration-200"
+                        />
+                    </div>
+                  
+                    {/* Main Controls */}
+                    <div className="flex items-center justify-between gap-4 text-white">
+                      {/* Left Controls */}
+                      <div className="flex items-center gap-3">
+                        <button onClick={handlePlayPause}>
+                          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+                        </button>
+                        <div className="flex items-center gap-2 group/volume">
+                          <button onClick={handleMuteToggle}>
+                            {isMuted || volume === 0 ? <VolumeX size={24} /> : <Volume2 size={24} />}
+                          </button>
+                          <div className="w-0 group-hover/volume:w-24 transition-all duration-200">
+                             <Slider
+                                min={0}
+                                max={1}
+                                step={0.05}
+                                value={[isMuted ? 0 : volume]}
+                                onValueChange={handleVolumeChange}
+                            />
+                          </div>
+                        </div>
+                        <div className="text-xs font-mono select-none">
+                          {formatTime(played * duration)} / {formatTime(duration)}
+                        </div>
+                      </div>
+
+                      {/* Right Controls */}
+                      <div className="flex items-center gap-3">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-auto w-auto p-2 text-white hover:bg-white/20 hover:text-white" onClick={(e) => { e.stopPropagation(); if (typeof video.url === 'string') onToggleFavorite(video.url); }}>
+                                  <Star size={20} className={`drop-shadow-lg transition-colors ${isFavorite ? 'text-yellow-400 fill-yellow-400' : ''}`} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{t('favorites')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-auto w-auto p-2 text-white hover:bg-white/20 hover:text-white" onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                                <Share2 size={20} className="drop-shadow-lg" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{t('shareChannel')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+
+                          <Sheet>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SheetTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-auto w-auto p-2 text-white hover:bg-white/20 hover:text-white">
+                                    <Settings size={20} className="drop-shadow-lg"/>
+                                  </Button>
+                                </SheetTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p>{t('settings')}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <SettingsSheetContent
+                              showClock={false} // Clock is handled on parent page
+                              onToggleClock={() => {}} // Dummy function
+                              showCaptions={showCaptions}
+                              onToggleCaptions={onToggleCaptions}
+                              quality={videoQuality}
+                              onQualityChange={onQualityChange}
+                              qualityLevels={qualityLevels}
+                              bufferSize={bufferSize}
+                              onBufferSizeChange={onBufferSizeChange}
+                            />
+                          </Sheet>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost" size="icon" className="h-auto w-auto p-2 text-white hover:bg-white/20 hover:text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFullScreen();
+                              }}
+                            >
+                              {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>{isFullScreen ? t('exitFullscreen') : t('fullscreen')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        )}
       </div>
     </TooltipProvider>
   );
