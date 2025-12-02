@@ -261,6 +261,7 @@ function PlayerPageContent() {
                 activeVideoRef={activeVideoRef}
                 localVideoItem={localVideoItem}
                 showCaptions={showCaptions}
+                onToggleCaptions={handleToggleCaptions}
                 videoQuality={videoQuality}
                 onQualityLevelsChange={setQualityLevels}
                 bufferSize={bufferSize}

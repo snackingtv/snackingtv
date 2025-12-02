@@ -60,6 +60,7 @@ interface VideoCardProps {
   activeVideoRef: MutableRefObject<ReactPlayer | null>;
   localVideoItem: Video | null;
   showCaptions: boolean;
+  onToggleCaptions: () => void;
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
   bufferSize: string;
@@ -1442,6 +1443,7 @@ export function VideoCard({
   activeVideoRef, 
   localVideoItem, 
   showCaptions,
+  onToggleCaptions,
   videoQuality,
   onQualityLevelsChange,
   bufferSize,
@@ -1823,10 +1825,10 @@ export function VideoCard({
                               showCaptions={showCaptions}
                               onToggleCaptions={onToggleCaptions}
                               quality={videoQuality}
-                              onQualityChange={onQualityChange}
+                              onQualityChange={() => {}} // This should be handled in parent
                               qualityLevels={qualityLevels}
                               bufferSize={bufferSize}
-                              onBufferSizeChange={onBufferSizeChange}
+                              onBufferSizeChange={() => {}} // This should be handled in parent
                             />
                           </Sheet>
                         
