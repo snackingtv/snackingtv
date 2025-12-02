@@ -264,6 +264,7 @@ function PlayerPageContent() {
                 onToggleCaptions={handleToggleCaptions}
                 videoQuality={videoQuality}
                 onQualityLevelsChange={setQualityLevels}
+                qualityLevels={qualityLevels}
                 bufferSize={bufferSize}
               />
             </div>

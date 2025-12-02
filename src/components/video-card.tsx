@@ -63,6 +63,7 @@ interface VideoCardProps {
   onToggleCaptions: () => void;
   videoQuality: string;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
+  qualityLevels: { label: string; level: number }[];
   bufferSize: string;
 }
 
@@ -1446,6 +1447,7 @@ export function VideoCard({
   onToggleCaptions,
   videoQuality,
   onQualityLevelsChange,
+  qualityLevels,
   bufferSize,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
