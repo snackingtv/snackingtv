@@ -62,9 +62,11 @@ interface VideoCardProps {
   showCaptions: boolean;
   onToggleCaptions: () => void;
   videoQuality: string;
+  onQualityChange: (quality: string) => void;
   onQualityLevelsChange: (levels: { label: string; level: number }[]) => void;
   qualityLevels: { label: string; level: number }[];
   bufferSize: string;
+  onBufferSizeChange: (size: string) => void;
 }
 
 // Define the Channel type
@@ -1446,9 +1448,11 @@ export function VideoCard({
   showCaptions,
   onToggleCaptions,
   videoQuality,
+  onQualityChange,
   onQualityLevelsChange,
   qualityLevels,
   bufferSize,
+  onBufferSizeChange,
 }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1827,10 +1831,10 @@ export function VideoCard({
                               showCaptions={showCaptions}
                               onToggleCaptions={onToggleCaptions}
                               quality={videoQuality}
-                              onQualityChange={() => {}} // This should be handled in parent
+                              onQualityChange={onQualityChange}
                               qualityLevels={qualityLevels}
                               bufferSize={bufferSize}
-                              onBufferSizeChange={() => {}} // This should be handled in parent
+                              onBufferSizeChange={onBufferSizeChange}
                             />
                           </Sheet>
                         

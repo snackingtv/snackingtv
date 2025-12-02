@@ -217,32 +217,6 @@ function PlayerPageContent() {
                     <p>Neu laden</p>
                   </TooltipContent>
                 </Tooltip>
-
-                <Sheet>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SheetTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0">
-                          <Settings size={20} className="drop-shadow-lg"/>
-                        </Button>
-                      </SheetTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{t('settings')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <SettingsSheetContent
-                    showClock={showClock}
-                    onToggleClock={handleToggleClock}
-                    showCaptions={showCaptions}
-                    onToggleCaptions={handleToggleCaptions}
-                    quality={videoQuality}
-                    onQualityChange={handleQualityChange}
-                    qualityLevels={qualityLevels}
-                    bufferSize={bufferSize}
-                    onBufferSizeChange={handleBufferSizeChange}
-                  />
-                </Sheet>
                 
                 {showClock && (
                   <div className="z-30 font-light text-2xl text-white" style={{ fontFamily: 'Inter, sans-serif', textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
@@ -270,6 +244,7 @@ function PlayerPageContent() {
                 qualityLevels={qualityLevels}
                 bufferSize={bufferSize}
                 onQualityChange={handleQualityChange}
+                onBufferSizeChange={handleBufferSizeChange}
               />
             </div>
             
