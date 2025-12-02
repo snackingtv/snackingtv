@@ -22,6 +22,7 @@ import { DeviceStorageButton } from '@/components/device-storage';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function HomePage() {
   const { t, tCategory } = useTranslation();
@@ -193,108 +194,122 @@ export default function HomePage() {
               <Separator />
             </div>
 
-          {userChannels && userChannels.length > 0 ? (
-            <div className="space-y-8">
-              {isManaging ? (
-                <div className="px-4 md:px-8">
-                  <div className="flex items-center justify-between mb-4">
-                     <div className="flex items-center gap-2">
-                        <Checkbox 
-                          id="select-all" 
-                          onCheckedChange={() => handleSelectAll(allChannelsToShow)} 
-                          checked={allChannelsToShow.length > 0 && allChannelsToShow.every(c => selectedChannels.has(c.id))}
-                          aria-label={t('selectAll')}
-                        />
-                        <label htmlFor="select-all" className="text-sm font-medium">{t('selectAll')} ({selectedChannels.size}/{allChannelsToShow.length})</label>
-                    </div>
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsManaging(false);
-                          setSelectedChannels(new Set());
-                        }}
-                      >
-                        {t('done')}
-                      </Button>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {allChannelsToShow.map(channel => (
-                      <div key={channel.id} className="relative group" onClick={() => handleToggleSelect(channel.id)}>
-                        <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 cursor-pointer">
-                          <div className="p-0 flex items-center justify-center h-full relative">
-                            <Image
-                              src={channel.logo}
-                              alt={channel.name}
-                              width={100}
-                              height={100}
-                              className="object-contain w-full h-full p-2"
-                              onError={(e) => e.currentTarget.src = `https://picsum.photos/seed/${channel.name}/100/100`}
+            <Tabs defaultValue="all" className="w-full">
+              <div className="px-4 md:px-8">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="all">{t('tab_all_channels')}</TabsTrigger>
+                    <TabsTrigger value="categories">{t('tab_categories')}</TabsTrigger>
+                </TabsList>
+              </div>
+
+              {userChannels && userChannels.length > 0 ? (
+                <div className="mt-6">
+                  {isManaging ? (
+                    <div className="px-4 md:px-8">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <Checkbox 
+                              id="select-all" 
+                              onCheckedChange={() => handleSelectAll(allChannelsToShow)} 
+                              checked={allChannelsToShow.length > 0 && allChannelsToShow.every(c => selectedChannels.has(c.id))}
+                              aria-label={t('selectAll')}
                             />
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity opacity-0 group-hover:opacity-100">
-                               <Checkbox checked={selectedChannels.has(channel.id)} className="h-6 w-6 border-2" />
-                            </div>
-                            {selectedChannels.has(channel.id) && (
-                               <div className="absolute inset-0 border-2 border-primary rounded-lg bg-primary/20 flex items-center justify-center">
-                                   <Checkbox checked={true} className="h-6 w-6 border-2" />
-                               </div>
-                            )}
-                          </div>
-                        </Card>
-                        <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
-                          {channel.name}
-                        </p>
+                            <label htmlFor="select-all" className="text-sm font-medium">{t('selectAll')} ({selectedChannels.size}/{allChannelsToShow.length})</label>
+                        </div>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                              setIsManaging(false);
+                              setSelectedChannels(new Set());
+                            }}
+                          >
+                            {t('done')}
+                          </Button>
                       </div>
-                    ))}
-                  </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        {allChannelsToShow.map(channel => (
+                          <div key={channel.id} className="relative group" onClick={() => handleToggleSelect(channel.id)}>
+                            <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 cursor-pointer">
+                              <div className="p-0 flex items-center justify-center h-full relative">
+                                <Image
+                                  src={channel.logo}
+                                  alt={channel.name}
+                                  width={100}
+                                  height={100}
+                                  className="object-contain w-full h-full p-2"
+                                  onError={(e) => e.currentTarget.src = `https://picsum.photos/seed/${channel.name}/100/100`}
+                                />
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center transition-opacity opacity-0 group-hover:opacity-100">
+                                  <Checkbox checked={selectedChannels.has(channel.id)} className="h-6 w-6 border-2" />
+                                </div>
+                                {selectedChannels.has(channel.id) && (
+                                  <div className="absolute inset-0 border-2 border-primary rounded-lg bg-primary/20 flex items-center justify-center">
+                                      <Checkbox checked={true} className="h-6 w-6 border-2" />
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                            <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white">
+                              {channel.name}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : searchTerm ? (
+                    <ChannelCarousel
+                        title={`${t('searchPlaceholder')} "${searchTerm}"`}
+                        channels={filteredChannels}
+                      />
+                  ) : (
+                    <>
+                      <TabsContent value="all" className="mt-0">
+                        <div className="space-y-8">
+                          {favoriteChannelItems.length > 0 && (
+                            <ChannelCarousel
+                              title={t('favorites')}
+                              channels={favoriteChannelItems}
+                            />
+                          )}
+                          <ChannelCarousel
+                            title={t('allChannels')}
+                            channels={userChannels}
+                            onManageClick={() => setIsManaging(true)}
+                          />
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="categories" className="mt-0">
+                        <div className="space-y-8">
+                          {Object.entries(groupedChannels)
+                            .sort(([groupA], [groupB]) => tCategory(groupA).localeCompare(tCategory(groupB)))
+                            .map(([group, channels]) => (
+                              <ChannelCarousel
+                                key={group}
+                                title={tCategory(group)}
+                                channels={channels}
+                              />
+                          ))}
+                        </div>
+                      </TabsContent>
+                    </>
+                  )}
                 </div>
-              ) : searchTerm ? (
-                 <ChannelCarousel
+              ) : !searchTerm ? (
+                <div className="flex flex-col items-center justify-center h-full text-center text-white p-8 mt-6">
+                    <div className="p-4 bg-black/50 rounded-lg">
+                        <h2 className="text-2xl font-bold mb-4">{t('noChannelsAvailable')}</h2>
+                        <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
+                          <Button><Plus className="mr-2 h-4 w-4" /> {t('addChannel')}</Button>
+                        } />
+                    </div>
+                </div>
+              ) : (
+                <ChannelCarousel
                     title={`${t('searchPlaceholder')} "${searchTerm}"`}
                     channels={filteredChannels}
                   />
-              ) : (
-                <>
-                  {favoriteChannelItems.length > 0 && (
-                    <ChannelCarousel
-                      title={t('favorites')}
-                      channels={favoriteChannelItems}
-                    />
-                  )}
-                   <ChannelCarousel
-                    title={t('allChannels')}
-                    channels={userChannels}
-                    onManageClick={() => setIsManaging(true)}
-                  />
-                  <div className="my-8 px-4 md:px-8">
-                    <Separator />
-                  </div>
-                  {Object.entries(groupedChannels)
-                    .sort(([groupA], [groupB]) => tCategory(groupA).localeCompare(tCategory(groupB)))
-                    .map(([group, channels]) => (
-                      <ChannelCarousel
-                        key={group}
-                        title={tCategory(group)}
-                        channels={channels}
-                      />
-                  ))}
-                </>
               )}
-            </div>
-          ) : !searchTerm ? (
-             <div className="flex flex-col items-center justify-center h-full text-center text-white p-8">
-                <div className="p-4 bg-black/50 rounded-lg">
-                    <h2 className="text-2xl font-bold mb-4">{t('noChannelsAvailable')}</h2>
-                    <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
-                      <Button><Plus className="mr-2 h-4 w-4" /> {t('addChannel')}</Button>
-                    } />
-                </div>
-            </div>
-          ) : (
-             <ChannelCarousel
-                title={`${t('searchPlaceholder')} "${searchTerm}"`}
-                channels={filteredChannels}
-              />
-          )}
+            </Tabs>
         </div>
         
         {isManaging && (
@@ -310,5 +325,3 @@ export default function HomePage() {
     </main>
   );
 }
-
-    

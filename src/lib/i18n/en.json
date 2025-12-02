@@ -195,5 +195,7 @@
   "cat_general": "General",
   "cat_uncategorized": "Uncategorized",
   "neuesteVideos": "Latest Videos",
-  "russian": "Russian"
+  "russian": "Russian",
+  "tab_all_channels": "All Channels",
+  "tab_categories": "Categories"
 }

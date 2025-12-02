@@ -195,5 +195,7 @@
   "cat_series": "Сериалы",
   "cat_general": "Общие",
   "cat_uncategorized": "Без категории",
-  "neuesteVideos": "Последние видео"
+  "neuesteVideos": "Последние видео",
+  "tab_all_channels": "Все каналы",
+  "tab_categories": "Категории"
 }
