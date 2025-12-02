@@ -45,6 +45,8 @@ function PlayerPageContent() {
   const localVideoFile = useLocalVideoStore((state) => state.file);
   const clearLocalVideoFile = useLocalVideoStore((state) => state.clearFile);
 
+  const [reloadKey, setReloadKey] = useState(0);
+
   const userChannelsQuery = useMemoFirebase(
     () =>
       user
@@ -206,7 +208,7 @@ function PlayerPageContent() {
                       variant="ghost"
                       size="icon"
                       className="text-white bg-black/20 backdrop-blur-sm hover:bg-black/40 rounded-full h-10 w-10 flex-shrink-0"
-                      onClick={() => window.location.reload()}
+                      onClick={() => setReloadKey(prevKey => prevKey + 1)}
                     >
                       <RefreshCw size={20} className="drop-shadow-lg" />
                     </Button>
@@ -251,6 +253,7 @@ function PlayerPageContent() {
 
             <div className="h-full w-full">
               <VideoCard
+                key={reloadKey}
                 video={activeChannel || placeholderVideo}
                 isActive={true}
                 addedChannels={userChannels || []}
@@ -266,6 +269,7 @@ function PlayerPageContent() {
                 onQualityLevelsChange={setQualityLevels}
                 qualityLevels={qualityLevels}
                 bufferSize={bufferSize}
+                onQualityChange={handleQualityChange}
               />
             </div>
             
