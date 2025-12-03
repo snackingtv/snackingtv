@@ -19,6 +19,7 @@ import { deleteChannels } from '@/firebase/firestore/deletions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetTrigger } from '@/components/ui/sheet';
 import { DeviceStorageButton } from '@/components/device-storage';
+import { VpnSheet } from '@/components/vpn-sheet';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
@@ -173,6 +174,9 @@ export default function HomePage() {
                 </div>
                 <div className="w-32">
                   <DeviceStorageButton />
+                </div>
+                <div className="w-32">
+                  <VpnSheet />
                 </div>
               </div>
             </div>

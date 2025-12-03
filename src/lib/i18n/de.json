@@ -197,5 +197,20 @@
   "neuesteVideos": "Neueste Videos",
   "russian": "Russisch",
   "tab_all_channels": "Alle Kanäle",
-  "tab_categories": "Kategorien"
+  "tab_categories": "Kategorien",
+  "vpn_title": "VPN",
+  "vpn_connect": "Verbinden",
+  "vpn_disconnect": "Trennen",
+  "vpn_connected_to": "Verbunden mit {server}",
+  "vpn_status_connected": "Verbunden",
+  "vpn_status_connecting": "Verbinde...",
+  "vpn_status_disconnected": "Nicht verbunden",
+  "vpn_status_disconnecting": "Trenne...",
+  "vpn_change_server_error_title": "Server kann nicht geändert werden",
+  "vpn_change_server_error_desc": "Bitte trennen Sie die Verbindung, bevor Sie den Server wechseln.",
+  "vpn_connected_title": "VPN Verbunden",
+  "vpn_connected_desc": "Sie sind jetzt sicher mit {server} verbunden.",
+  "vpn_disconnected_title": "VPN Getrennt",
+  "vpn_disconnected_desc": "Die Verbindung zu {server} wurde getrennt.",
+  "vpn_disclaimer": "Dies ist eine simulierte VPN-Funktion zu Demonstrationszwecken."
 }

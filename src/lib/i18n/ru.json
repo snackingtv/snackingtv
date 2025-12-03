@@ -197,5 +197,20 @@
   "cat_uncategorized": "Без категории",
   "neuesteVideos": "Последние видео",
   "tab_all_channels": "Все каналы",
-  "tab_categories": "Категории"
+  "tab_categories": "Категории",
+  "vpn_title": "VPN",
+  "vpn_connect": "Подключить",
+  "vpn_disconnect": "Отключить",
+  "vpn_connected_to": "Подключено к {server}",
+  "vpn_status_connected": "Подключено",
+  "vpn_status_connecting": "Подключение...",
+  "vpn_status_disconnected": "Не подключено",
+  "vpn_status_disconnecting": "Отключение...",
+  "vpn_change_server_error_title": "Не удается сменить сервер",
+  "vpn_change_server_error_desc": "Пожалуйста, отключитесь перед сменой сервера.",
+  "vpn_connected_title": "VPN подключен",
+  "vpn_connected_desc": "Вы теперь безопасно подключены к {server}.",
+  "vpn_disconnected_title": "VPN отключен",
+  "vpn_disconnected_desc": "Вы были отключены от {server}.",
+  "vpn_disclaimer": "Это смоделированная функция VPN для демонстрационных целей."
 }
