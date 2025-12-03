@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
 import { useLocalVideoStore } from '@/lib/local-video-store';
+import { Card } from './ui/card';
 
 interface VideoCardProps {
   video: Video | M3uChannel;
@@ -414,7 +415,6 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
   const isCancelledRef = useRef(false);
   const onlineChannelsRef = useRef<M3uChannel[]>([]);
   
-  // TOS State
   const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
   const [onTosAccepted, setOnTosAccepted] = useState<(() => void) | null>(null);
 
@@ -698,7 +698,7 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
 
   const isDisabled = isUserLoading || isLoading;
   
-  const content = (
+  const sheetBody = (
     <>
       <SheetHeader>
           <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
@@ -756,18 +756,12 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
 
   return (
     <>
-      {trigger ? (
-         <Sheet>
-            <SheetTrigger asChild>{trigger}</SheetTrigger>
-            <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
-              {content}
-            </SheetContent>
-         </Sheet>
-      ) : (
-         <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
-           {content}
-         </SheetContent>
-      )}
+      <Sheet>
+        {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
+        <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+          {sheetBody}
+        </SheetContent>
+      </Sheet>
       
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
         <AlertDialogContent>
