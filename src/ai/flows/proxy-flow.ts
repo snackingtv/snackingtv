@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview A proxy to fetch URL content to bypass CORS issues.
+ * @fileOverview A generic proxy flow to fetch URL content, optionally through another user-defined proxy.
  *
  * - fetchUrlContent - Fetches content from a given URL.
  * - UrlProxyInput - The input type for the fetchUrlContent function.
@@ -9,9 +9,11 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 const UrlProxyInputSchema = z.object({
   url: z.string().url().describe('The URL to fetch content from.'),
+  proxy: z.string().url().optional().describe('Optional proxy server to use.'),
 });
 export type UrlProxyInput = z.infer<typeof UrlProxyInputSchema>;
 
@@ -27,9 +29,15 @@ const urlProxyFlow = ai.defineFlow(
     inputSchema: UrlProxyInputSchema,
     outputSchema: z.string(),
   },
-  async ({ url }) => {
+  async ({ url, proxy }) => {
     try {
-      const response = await fetch(url);
+      const options: RequestInit = {};
+      if (proxy) {
+        options.agent = new HttpsProxyAgent(proxy);
+      }
+
+      const response = await fetch(url, options);
+
       if (!response.ok) {
         const errorText = await response.text();
         // Throw an error that can be caught by the calling component
@@ -38,8 +46,8 @@ const urlProxyFlow = ai.defineFlow(
       const textContent = await response.text();
       return textContent;
     } catch (error: any) {
-      console.error(`Failed to fetch content from ${url}:`, error);
-      // Re-throw the error to be handled by the caller, adding more context if it's a fetch error
+      console.error(`Failed to fetch content from ${url} (via proxy: ${proxy || 'none'}):`, error);
+      // Re-throw the error to be handled by the caller
       if (error.cause) {
          throw new Error(`Failed to fetch from ${url}: ${error.message} - Cause: ${error.cause}`);
       }

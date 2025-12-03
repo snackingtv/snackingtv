@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, ChevronDown, Loader, Power, Globe } from 'lucide-react';
+import { Shield, Loader, Power, Globe, Check, X } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { Card } from '@/components/ui/card';
 import {
@@ -12,92 +12,62 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useProxyStore } from '@/lib/proxy-store';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'disconnecting';
-
-interface Server {
-  name: string;
-  flag: string; // emoji flag
-}
-
-const mockServers: Server[] = [
-  { name: 'Germany', flag: '🇩🇪' },
-  { name: 'United States', flag: '🇺🇸' },
-  { name: 'United Kingdom', flag: '🇬🇧' },
-  { name: 'Japan', flag: '🇯🇵' },
-  { name: 'Canada', flag: '🇨🇦' },
-];
 
 export function VpnSheet() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { proxyUrl, setProxyUrl, clearProxyUrl } = useProxyStore();
+  
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
-  const [selectedServer, setSelectedServer] = useState<Server>(mockServers[0]);
+  const [inputUrl, setInputUrl] = useState('');
 
   useEffect(() => {
-    const storedStatus = localStorage.getItem('vpnStatus') as ConnectionStatus;
-    const storedServer = localStorage.getItem('vpnServer');
-    if (storedStatus && storedStatus !== 'connecting' && storedStatus !== 'disconnecting') {
-        setStatus(storedStatus);
+    if (proxyUrl) {
+      setStatus('connected');
+      setInputUrl(proxyUrl);
+    } else {
+      setStatus('disconnected');
+      setInputUrl('');
     }
-    if (storedServer) {
-        const server = mockServers.find(s => s.name === storedServer);
-        if (server) {
-            setSelectedServer(server);
-        }
-    }
-  }, []);
+  }, [proxyUrl]);
 
   const handleConnectToggle = () => {
     if (status === 'connected') {
       setStatus('disconnecting');
       setTimeout(() => {
-        setStatus('disconnected');
-        localStorage.setItem('vpnStatus', 'disconnected');
-        toast({ title: t('vpn_disconnected_title'), description: t('vpn_disconnected_desc', { server: selectedServer.name }) });
-      }, 1500);
+        clearProxyUrl();
+        toast({ title: t('proxy_disconnected_title'), description: t('proxy_disconnected_desc') });
+      }, 1000);
     } else if (status === 'disconnected') {
+      if (!inputUrl || !inputUrl.startsWith('http')) {
+        toast({ variant: 'destructive', title: t('proxy_invalid_url_title'), description: t('proxy_invalid_url_desc') });
+        return;
+      }
       setStatus('connecting');
       setTimeout(() => {
-        setStatus('connected');
-        localStorage.setItem('vpnStatus', 'connected');
-        localStorage.setItem('vpnServer', selectedServer.name);
-        toast({ title: t('vpn_connected_title'), description: t('vpn_connected_desc', { server: selectedServer.name }) });
-      }, 2000);
-    }
-  };
-
-  const handleServerSelect = (server: Server) => {
-    if (status === 'disconnected') {
-      setSelectedServer(server);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: t('vpn_change_server_error_title'),
-        description: t('vpn_change_server_error_desc'),
-      });
+        setProxyUrl(inputUrl);
+        toast({ title: t('proxy_connected_title'), description: t('proxy_connected_desc') });
+      }, 1500);
     }
   };
 
   const getStatusInfo = () => {
     switch (status) {
       case 'connected':
-        return { text: t('vpn_status_connected'), color: 'text-green-400' };
+        return { text: t('proxy_status_connected'), color: 'text-green-400' };
       case 'connecting':
-        return { text: t('vpn_status_connecting'), color: 'text-yellow-400' };
+        return { text: t('proxy_status_connecting'), color: 'text-yellow-400' };
       case 'disconnecting':
-        return { text: t('vpn_status_disconnecting'), color: 'text-yellow-400' };
+        return { text: t('proxy_status_disconnecting'), color: 'text-yellow-400' };
       case 'disconnected':
       default:
-        return { text: t('vpn_status_disconnected'), color: 'text-red-400' };
+        return { text: t('proxy_status_disconnected'), color: 'text-red-400' };
     }
   };
 
@@ -132,32 +102,25 @@ export function VpnSheet() {
                     </div>
                 </div>
                 <p className={cn("font-semibold", statusInfo.color)}>{statusInfo.text}</p>
-                {status === 'connected' && <p className="text-sm text-muted-foreground">{t('vpn_connected_to', { server: selectedServer.name })}</p>}
+                {status === 'connected' && <p className="text-sm text-muted-foreground break-all">{proxyUrl}</p>}
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between" disabled={isLoading || status === 'connected'}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{selectedServer.flag}</span>
-                    <span>{selectedServer.name}</span>
-                  </div>
-                  <ChevronDown />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
-                {mockServers.map((server) => (
-                  <DropdownMenuItem key={server.name} onSelect={() => handleServerSelect(server)}>
-                    <span className="text-2xl mr-2">{server.flag}</span>
-                    <span>{server.name}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="space-y-2">
+                <label htmlFor="proxy-url" className="text-sm font-medium">{t('proxy_server_url')}</label>
+                <div className="flex gap-2">
+                    <Input
+                        id="proxy-url"
+                        placeholder="http://user:pass@host:port"
+                        value={inputUrl}
+                        onChange={(e) => setInputUrl(e.target.value)}
+                        disabled={isLoading || status === 'connected'}
+                    />
+                </div>
+            </div>
 
             <Button 
                 onClick={handleConnectToggle} 
-                disabled={isLoading}
+                disabled={isLoading || (status === 'disconnected' && !inputUrl)}
                 className={cn("w-full h-12 text-lg", status === 'connected' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700')}
             >
                 {isLoading ? (
@@ -165,7 +128,7 @@ export function VpnSheet() {
                 ) : (
                     <>
                         <Power className="mr-2" />
-                        {status === 'connected' ? t('vpn_disconnect') : t('vpn_connect')}
+                        {status === 'connected' ? t('proxy_disconnect') : t('proxy_connect')}
                     </>
                 )}
             </Button>

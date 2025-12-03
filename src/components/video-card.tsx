@@ -27,7 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -49,6 +49,7 @@ import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
 import { useLocalVideoStore } from '@/lib/local-video-store';
 import { Card } from './ui/card';
+import { useProxyStore } from '@/lib/proxy-store';
 
 interface VideoCardProps {
   video: Video | M3uChannel;
@@ -403,6 +404,8 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
   const { t } = useTranslation();
   const { toast } = useToast();
   const firestore = useFirestore();
+  const proxyUrl = useProxyStore(state => state.proxyUrl);
+
   const [channelLink, setChannelLink] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -623,7 +626,7 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
   
       // Assume it's a playlist URL (M3U/M3U8)
       try {
-        const m3uContent = await fetchM3u({ url: cleanedLink });
+        const m3uContent = await fetchM3u({ url: cleanedLink, proxy: proxyUrl ?? undefined });
         if (!m3uContent) {
           toast({ variant: 'destructive', title: t('channelAddErrorTitle'), description: t('channelAddErrorDescription') });
           setIsLoading(false);
@@ -671,7 +674,7 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
   
   const isDisabled = isUserLoading || isLoading;
 
-  const sheetContent = (
+  const sheetBody = (
       <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
         <SheetHeader>
             <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
@@ -753,8 +756,8 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
   return (
     <>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
-        {sheetContent}
+        {trigger ? <SheetTrigger asChild>{trigger}</SheetTrigger> : null}
+        {isSheetOpen && sheetBody}
       </Sheet>
       
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
