@@ -417,6 +417,7 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
   
   const [isTosDialogOpen, setIsTosDialogOpen] = useState(false);
   const [onTosAccepted, setOnTosAccepted] = useState<(() => void) | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const checkTos = (callback: () => void) => {
     if (localStorage.getItem('tosAccepted') === 'true') {
@@ -668,97 +669,92 @@ export function AddChannelSheetContent({ user, isUserLoading, trigger }: { user:
     setIsLoading(false);
   };
   
-  if (isVerifying) {
-    return (
-      <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
-        <SheetHeader>
-          <SheetTitle className="text-center">{t('checkingChannelsTitle')}</SheetTitle>
-        </SheetHeader>
-        <div className="p-4 space-y-4 text-center">
-            <Progress value={verificationProgress} />
-            <div className="flex justify-around text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Wifi className="h-4 w-4 text-green-500" />
-                <span>{t('online', { count: onlineCount })}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <WifiOff className="h-4 w-4 text-red-500" />
-                <span>{t('offline', { count: offlineCount })}</span>
-              </div>
-              <span>{t('total', { count: totalCount })}</span>
-            </div>
-            <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
-            <Button onClick={handleCancelVerification} variant="outline" className="w-full">
-              {t('cancelVerification')}
-            </Button>
-        </div>
-      </SheetContent>
-    );
-  }
-
   const isDisabled = isUserLoading || isLoading;
-  
-  const sheetBody = (
-    <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
+
+  const sheetContent = (
+      <SheetContent side="bottom" className="h-auto rounded-t-lg mx-2 mb-2">
         <SheetHeader>
             <SheetTitle className="text-center">{t('addChannel')}</SheetTitle>
         </SheetHeader>
-        <div className="p-4 space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
-            <div className="flex gap-2">
-              <Input
-                id="channel-link"
-                placeholder="https://.../playlist.m3u"
-                value={channelLink}
-                onChange={(e) => setChannelLink(e.target.value)}
-                disabled={!user || isDisabled}
-                className="flex-grow"
-              />
-              <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
-                {isLoading ? <Loader className="animate-spin" /> : t('add')}
+        {isVerifying ? (
+          <div className="p-4 space-y-4 text-center">
+              <Progress value={verificationProgress} />
+              <div className="flex justify-around text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Wifi className="h-4 w-4 text-green-500" />
+                  <span>{t('online', { count: onlineCount })}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <WifiOff className="h-4 w-4 text-red-500" />
+                  <span>{t('offline', { count: offlineCount })}</span>
+                </div>
+                <span>{t('total', { count: totalCount })}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">{verificationProgress}% {t('complete')}</p>
+              <Button onClick={handleCancelVerification} variant="outline" className="w-full">
+                {t('cancelVerification')}
               </Button>
-            </div>
           </div>
-          
-          <div className="relative">
-            <Separator />
-            <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
-          </div>
+        ) : (
+          <>
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="channel-link" className="text-sm font-medium">{t('channelLink')}</label>
+                <div className="flex gap-2">
+                  <Input
+                    id="channel-link"
+                    placeholder="https://.../playlist.m3u"
+                    value={channelLink}
+                    onChange={(e) => setChannelLink(e.target.value)}
+                    disabled={!user || isDisabled}
+                    className="flex-grow"
+                  />
+                  <Button onClick={handleAddFromUrl} disabled={!user || isDisabled || !channelLink}>
+                    {isLoading ? <Loader className="animate-spin" /> : t('add')}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="relative">
+                <Separator />
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-sm text-muted-foreground">{t('or')}</span>
+              </div>
 
-          <div className='flex flex-col space-y-2'>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".m3u,.m3u8"
-              className="hidden"
-              disabled={!user || isDisabled}
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="outline"
-              className="w-full"
-              disabled={!user || isDisabled}
-            >
-              {isLoading && !isVerifying ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
-              {t('uploadFile')}
-            </Button>
-          </div>
-        </div>
-        <div className="p-4 border-t border-border">
-          <div className="text-center text-xs text-muted-foreground">
-              Build ❤️ 1.1.25
-          </div>
-        </div>
+              <div className='flex flex-col space-y-2'>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".m3u,.m3u8"
+                  className="hidden"
+                  disabled={!user || isDisabled}
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  className="w-full"
+                  disabled={!user || isDisabled}
+                >
+                  {isLoading && !isVerifying ? <Loader className="animate-spin mr-2" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {t('uploadFile')}
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 border-t border-border">
+              <div className="text-center text-xs text-muted-foreground">
+                  Build ❤️ 1.1.25
+              </div>
+            </div>
+          </>
+        )}
     </SheetContent>
   );
 
   return (
     <>
-      <Sheet>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
-        {sheetBody}
+        {sheetContent}
       </Sheet>
       
       <AlertDialog open={isTosDialogOpen} onOpenChange={setIsTosDialogOpen}>
