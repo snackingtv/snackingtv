@@ -23,6 +23,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { kidsVideos, dokuVideos, musicVideos, gamingVideos, tutorialVideos, lifestyleVideos } from '@/app/lib/youtube-videos';
 
 export default function HomePage() {
   const { t, tCategory } = useTranslation();
@@ -34,6 +35,7 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isManaging, setIsManaging] = useState(false);
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
+  const [youtubeSearchTerm, setYoutubeSearchTerm] = useState('');
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteChannels');
@@ -156,27 +158,23 @@ export default function HomePage() {
 
         <div className="flex-grow overflow-y-auto pt-8 pb-8">
            <div className="space-y-3 px-4 md:px-8">
-                 <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
-                   <CarouselContent>
-                     <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-                       <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
-                          <div className="group">
-                            <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
-                              <Plus className="h-8 w-8 text-zinc-400 group-hover:text-white" />
-                            </Card>
-                            <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white text-center">
-                              {t('addChannel')}
-                            </p>
-                          </div>
-                        } />
-                     </CarouselItem>
-                     <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-                       <DeviceStorageButton />
-                     </CarouselItem>
-                   </CarouselContent>
-                   <CarouselPrevious className="hidden md:flex" />
-                   <CarouselNext className="hidden md:flex" />
-                 </Carousel>
+             <div className="flex justify-center items-center gap-4">
+               <div className="w-32">
+                 <AddChannelSheetContent user={user} isUserLoading={isUserLoading} trigger={
+                    <div className="group">
+                      <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
+                        <Plus className="h-8 w-8 text-zinc-400 group-hover:text-white" />
+                      </Card>
+                      <p className="mt-2 text-xs text-zinc-300 truncate group-hover:text-white text-center">
+                        {t('addChannel')}
+                      </p>
+                    </div>
+                  } />
+                </div>
+                <div className="w-32">
+                  <DeviceStorageButton />
+                </div>
+              </div>
             </div>
 
             <div className="my-8 px-4 md:px-8">
