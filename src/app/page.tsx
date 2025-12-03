@@ -173,17 +173,6 @@ export default function HomePage() {
                      <CarouselItem className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
                        <DeviceStorageButton />
                      </CarouselItem>
-                     {[...Array(3)].map((_, index) => (
-                      <CarouselItem key={`placeholder-${index}`} className="basis-1/4 sm:basis-1/5 md:basis-1/6 lg:basis-1/8 xl:basis-1/10">
-                          <div className="group">
-                              <Card className="overflow-hidden border border-zinc-700 bg-zinc-900 aspect-[16/9] transition-transform duration-200 ease-in-out group-hover:scale-105 flex items-center justify-center">
-                              </Card>
-                              <p className="mt-2 text-xs text-zinc-300 truncate invisible">
-                                -
-                              </p>
-                          </div>
-                      </CarouselItem>
-                     ))}
                    </CarouselContent>
                    <CarouselPrevious className="hidden md:flex" />
                    <CarouselNext className="hidden md:flex" />
