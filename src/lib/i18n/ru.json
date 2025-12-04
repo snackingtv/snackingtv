@@ -212,5 +212,6 @@
   "proxy_status_disconnected": "Не подключено",
   "proxy_status_disconnecting": "Отключение...",
   "proxy_invalid_url_title": "Неверный URL прокси",
-  "proxy_invalid_url_desc": "Пожалуйста, введите действительный URL, начинающийся с http или https."
+  "proxy_invalid_url_desc": "Пожалуйста, введите действительный URL, начинающийся с http или https.",
+  "proxy_example_info_1": "Примеры общедоступных прокси-серверов можно найти на"
 }

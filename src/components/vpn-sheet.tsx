@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyStore } from '@/lib/proxy-store';
+import Link from 'next/link';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'disconnecting';
 
@@ -116,6 +117,13 @@ export function VpnSheet() {
                         disabled={isLoading || status === 'connected'}
                     />
                 </div>
+                 <p className="text-xs text-muted-foreground">
+                    {t('proxy_example_info_1')}{' '}
+                    <Link href="https://www.vpngate.net" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        vpngate.net
+                    </Link>
+                    .
+                </p>
             </div>
 
             <Button 
