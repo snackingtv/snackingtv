@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import type { Video } from '@/lib/videos';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase, initiateAnonymousSignIn, initiateGoogleSignIn } from '@/firebase';
+import { useAuth, useFirestore, useUser, initiateEmailSignIn, initiateEmailSignUp, useCollection, useMemoFirebase, initiateAnonymousSignIn } from '@/firebase';
 import { Input } from '@/components/ui/input';
 import { signOut, User, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { useTranslation } from '@/lib/i18n';
@@ -938,15 +938,6 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
     }
   };
 
-  const handleGoogleSignIn = () => {
-    if (!auth) return;
-    initiateGoogleSignIn(auth);
-    toast({
-      title: t('loading'),
-      description: t('attemptingLogin'),
-    });
-  };
-
   const languageSelector = (
     <div className="px-4 py-2 space-y-2">
       <p className="text-sm font-medium text-center text-muted-foreground">{t('language')}</p>
@@ -1225,12 +1216,6 @@ export function AuthSheetContent({ initialTab = 'login' }: { initialTab?: 'login
                   <Separator />
                   <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-background px-2 text-xs text-muted-foreground">{t('or')}</span>
               </div>
-              <Button variant="outline" className="w-full mt-4" onClick={handleGoogleSignIn}>
-                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                  <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512S0 403.3 0 261.8 106.5 11.8 244 11.8S488 120.3 488 261.8zm-244 0c0-66.7-54.1-120.8-120.8-120.8S12.4 195.1 12.4 261.8s54.1 120.8 120.8 120.8S244 328.5 244 261.8zm225.5-1.3c0-108.9-88.8-197.6-197.6-197.6s-197.6 88.8-197.6 197.6 88.8 197.6 197.6 197.6 197.6-88.8 197.6-197.6z"></path>
-                </svg>
-                {t('signInWithGoogle')}
-              </Button>
               <Button variant="link" className="w-full mt-2" onClick={handleGuestLogin}>{t('continueAsGuest')}</Button>
           </div>
         </div>
